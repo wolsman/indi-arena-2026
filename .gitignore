@@ -1,0 +1,18 @@
+# Vercel lokale koppeling en secrets
+.vercel
+.env*
+
+# Afhankelijkheden
+node_modules/
+
+# Playwright
+test-results/
+playwright-report/
+
+# Origineel (zware) bronbestand van de wallpaper — alleen de .jpg gaat live
+assets/oranje-held.png
+
+# Systeem
+.DS_Store
+Thumbs.db
+*.log

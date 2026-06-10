@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0e1a" />
+<title>Indi-Arena 2026 · De live cockpit van de Indicium WK Poule</title>
+<meta name="description" content="Live ranglijst, Henk's commentaar en voorspellings-radar voor de Indicium WK Poule 2026." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace']
+        },
+        colors: {
+          ink: '#0a0e1a', ink2: '#0f1525', ink3: '#1a2238',
+          line: '#22304d',
+          oranje: '#ff6b00', oranje2: '#ff8a2a',
+          veld: '#0eb84a', goud: '#ffd700', rood: '#ff3b5c'
+        }
+      }
+    }
+  }
+</script>
+<link rel="stylesheet" href="styles.css" />
+<script>
+  // ── Auth-gate ─────────────────────────────────────────
+  // Check of bezoeker is ingelogd, anders redirect naar login.
+  (function(){
+    var ok = localStorage.getItem('indi-arena-auth') === '1';
+    var exp = +(localStorage.getItem('indi-arena-auth-exp') || 0);
+    if (!ok || exp < Date.now()) {
+      localStorage.removeItem('indi-arena-auth');
+      localStorage.removeItem('indi-arena-auth-exp');
+      window.location.replace('./login.html');
+    }
+  })();
+</script>
+</head>
+<body class="bg-ink text-white font-sans antialiased min-h-screen">
+
+<!-- BG mesh gradient -->
+<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+  <div class="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-oranje opacity-10 blur-3xl"></div>
+  <div class="absolute top-1/3 -right-32 w-[700px] h-[700px] rounded-full bg-veld opacity-10 blur-3xl"></div>
+  <div class="absolute -bottom-32 left-1/3 w-[500px] h-[500px] rounded-full bg-goud opacity-5 blur-3xl"></div>
+</div>
+
+<!-- Top nav -->
+<header class="sticky top-0 z-40 backdrop-blur-md bg-ink/70 border-b border-line">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-oranje to-veld grid place-items-center font-black text-ink">IA</div>
+      <div>
+        <div class="font-bold tracking-tight">Indi-Arena <span class="text-oranje">2026</span></div>
+        <div class="text-[11px] text-white/50 -mt-0.5">Live cockpit · Indicium WK Poule</div>
+      </div>
+    </div>
+    <nav class="hidden md:flex items-center gap-1 text-sm">
+      <a href="#vandaag" class="nav-link">Vandaag</a>
+      <a href="#ranglijst" class="nav-link">Ranglijst</a>
+      <a href="#radar" class="nav-link">Wedstrijden</a>
+      <a href="#dna" class="nav-link">Pool-DNA</a>
+      <a href="#hallofame" class="nav-link">Hall of Fame</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <div id="countdownPill" class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink2 border border-line text-xs font-mono">
+        <span class="w-2 h-2 rounded-full bg-rood animate-pulse"></span>
+        <span id="countdownTxt">—</span>
+        <span id="countdownSuffix" class="text-white/40">tot de aftrap</span>
+      </div>
+      <button id="meBtn" onclick="openMeModal(true)" class="text-xs px-3 py-1.5 rounded-full bg-ink2 border border-line text-white/70 hover:text-white hover:border-oranje transition" title="Wissel speler">
+        <span id="meBtnLabel">— wie ben jij? —</span>
+      </button>
+      <button onclick="if(confirm('Uitloggen?')){localStorage.clear();location.replace('./login.html');}" class="text-xs px-3 py-1.5 rounded-full bg-ink2 border border-line text-white/50 hover:text-white hover:border-oranje transition" title="Uitloggen">↩</button>
+    </div>
+  </div>
+</header>
+
+<!-- ========================= VANDAAG ========================= -->
+<section id="vandaag" class="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-12">
+  <div class="grid lg:grid-cols-12 gap-6">
+    <!-- LEFT: vandaag-card -->
+    <div class="lg:col-span-7">
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest mb-2">VANDAAG · <span id="todayDate">—</span></div>
+      <h1 id="heroTitle" class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95]"></h1>
+      <p id="heroLead" class="text-lg text-white/70 mt-5 max-w-2xl"></p>
+      <div id="todayMatches" class="mt-4 flex flex-wrap gap-2"></div>
+
+      <!-- Henk-monoloog -->
+      <div class="mt-6 relative pl-12 pr-4 py-4 rounded-2xl border border-oranje/30 bg-oranje/5">
+        <div class="absolute -left-3 top-4 w-10 h-10 rounded-full bg-gradient-to-br from-oranje to-rood grid place-items-center font-black text-ink text-sm shadow-lg shadow-oranje/30">H</div>
+        <div class="flex items-center gap-2 text-[11px] uppercase tracking-widest text-oranje font-bold mb-1">
+          <span>Henk · vandaag</span>
+        </div>
+        <div id="henkToday" class="text-white/90 leading-relaxed">…</div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mt-6">
+        <button onclick="document.getElementById('ranglijst').scrollIntoView({behavior:'smooth'})" class="quick-action">
+          <div class="qa-num" id="qaPlayers">—</div>
+          <div class="qa-label">spelers</div>
+        </button>
+        <button onclick="document.getElementById('radar').scrollIntoView({behavior:'smooth'})" class="quick-action">
+          <div class="qa-num">104</div>
+          <div class="qa-label">wedstrijden</div>
+        </button>
+        <button onclick="document.getElementById('dna').scrollIntoView({behavior:'smooth'})" class="quick-action">
+          <div class="qa-num">7</div>
+          <div class="qa-label">favorieten</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: top-of-pool preview -->
+    <div class="lg:col-span-5">
+      <div class="relative">
+        <div class="absolute -inset-1 rounded-2xl bg-gradient-to-br from-oranje/40 via-veld/30 to-goud/30 blur-2xl"></div>
+        <div class="relative rounded-2xl bg-ink2/80 backdrop-blur border border-line p-5 shadow-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <div class="text-[11px] uppercase tracking-widest text-white/40 font-semibold">Top van de poule</div>
+              <div id="heroBoardSub" class="text-sm text-white/60 mt-0.5">—</div>
+            </div>
+            <div id="standBadge" class="px-2 py-1 rounded-full bg-ink/60 border border-line text-[11px] font-semibold text-white/60">—</div>
+          </div>
+          <div id="heroLeaderboard" class="space-y-2"></div>
+          <div class="mt-4 pt-4 border-t border-line text-xs text-white/50">
+            Klik op iemand om zijn/haar pool-profiel te openen.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status tiles -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
+    <div class="status-tile" style="--c:#0eb84a">
+      <div class="status-num" id="cntComplete">—</div>
+      <div class="status-label">Helemaal klaar</div>
+      <div class="status-sub">alles ingevuld, klaar voor de aftrap</div>
+    </div>
+    <div class="status-tile" style="--c:#ffd700">
+      <div class="status-num" id="cntGroep">—</div>
+      <div class="status-label">Groepsfase compleet</div>
+      <div class="status-sub">72 van de 104 ingevuld</div>
+    </div>
+    <div class="status-tile" style="--c:#ff8a2a">
+      <div class="status-num" id="cntBezig">—</div>
+      <div class="status-label">Onderweg</div>
+      <div class="status-sub">begonnen, maar nog niet compleet</div>
+    </div>
+    <div class="status-tile" style="--c:#ff3b5c">
+      <div class="status-num" id="cntNul">—</div>
+      <div class="status-label">Nog op nul</div>
+      <div class="status-sub">geen enkele wedstrijd ingevuld</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= RANGLIJST ========================= -->
+<section id="ranglijst" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
+    <div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">01 · De ranglijst</div>
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Wie klimt, wie zakt</h2>
+      <p class="text-white/60 mt-2 max-w-2xl">Na elke wedstrijd opnieuw. Klik op een naam voor het profiel — en Henks oordeel.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="chip-btn active" data-filter="all">Iedereen</button>
+      <button class="chip-btn" data-filter="complete">Klaar</button>
+      <button class="chip-btn" data-filter="groep">Groepsfase af</button>
+      <button class="chip-btn" data-filter="bezig">Bezig</button>
+      <button class="chip-btn" data-filter="nul">Op 0</button>
+    </div>
+  </div>
+
+  <div class="rounded-2xl bg-ink2/60 border border-line overflow-hidden">
+    <div class="lb-head grid grid-cols-12 px-4 py-3 text-[11px] uppercase tracking-widest text-white/40 font-semibold border-b border-line">
+      <div class="col-span-1">Pos</div>
+      <div class="col-span-5">Speler</div>
+      <div class="col-span-2 text-center col-hide">Ingevuld</div>
+      <div class="col-span-1 text-center col-hide">W</div>
+      <div class="col-span-1 text-center col-hide">T</div>
+      <div class="col-span-2 text-right pr-2">Punten</div>
+    </div>
+    <div id="leaderboard"></div>
+  </div>
+</section>
+
+<!-- ========================= MATCH RADAR ========================= -->
+<section id="radar" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
+    <div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">02 · Wedstrijdradar</div>
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">De eerstvolgende wedstrijden</h2>
+      <p class="text-white/60 mt-2 max-w-2xl">Wat verwacht de groep, wie wijkt af — en wat zegt Henk?</p>
+    </div>
+  </div>
+  <div id="matchRadar" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- ========================= POOL-DNA ========================= -->
+<section id="dna" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
+    <div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">03 · Pool-DNA</div>
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Wat verwacht de groep?</h2>
+      <p class="text-white/60 mt-2 max-w-2xl">De favoriete wereldkampioenen en topscorers van de poule — met Henks commentaar erbij.</p>
+    </div>
+  </div>
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="rounded-2xl bg-ink2/60 border border-line p-5">
+      <div class="text-xs uppercase tracking-widest text-white/40 font-semibold mb-3">Wereldkampioen — favorieten</div>
+      <div id="championPicks" class="space-y-2"></div>
+      <div id="championHenk" class="mt-4 henk-quote">…</div>
+    </div>
+    <div class="rounded-2xl bg-ink2/60 border border-line p-5">
+      <div class="text-xs uppercase tracking-widest text-white/40 font-semibold mb-3">Topscorer — favorieten</div>
+      <div id="topscorerPicks" class="space-y-2"></div>
+      <div id="topscorerHenk" class="mt-4 henk-quote">…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= ACHIEVEMENTS ========================= -->
+<section id="hallofame" class="max-w-7xl mx-auto px-4 sm:px-6 mb-20">
+  <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
+    <div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">04 · Hall of Fame</div>
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Negen badges, nul eigenaren</h2>
+      <p class="text-white/60 mt-2 max-w-2xl">Allemaal nog te verdienen zodra de bal rolt. Wie pakt de eerste?</p>
+    </div>
+  </div>
+  <div id="badges" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- ========================= FOOTER ========================= -->
+<footer class="border-t border-line bg-ink2/60">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid md:grid-cols-3 gap-6 text-sm text-white/60">
+    <div>
+      <div class="font-bold text-white mb-1">Indi-Arena 2026</div>
+      <div>Een interne tool voor de Indicium WK Poule 2026. Bron: wkpooltjes.nl. Commentaar: Henk.</div>
+    </div>
+    <div>
+      <div class="font-bold text-white mb-1">Status</div>
+      <div id="lastSync">Stand van: —</div>
+    </div>
+    <div>
+      <div class="font-bold text-white mb-1">Voor Indicium</div>
+      <div>Veel succes met je voorspellingen. Tot in de ranglijst.</div>
+    </div>
+  </div>
+</footer>
+
+<!-- =================== PLAYER MODAL =================== -->
+<div id="playerModal" class="modal-overlay hidden">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closePlayerModal()">×</button>
+    <div id="playerModalBody"></div>
+  </div>
+</div>
+
+<!-- =================== WIE-BEN-JIJ MODAL =================== -->
+<div id="meModal" class="modal-overlay hidden">
+  <div class="modal-inner" style="max-width:480px;">
+    <div class="text-center mb-6">
+      <div class="inline-block w-14 h-14 rounded-xl bg-gradient-to-br from-oranje to-veld grid place-items-center font-black text-ink text-xl mb-3">IA</div>
+      <h2 class="text-2xl font-black tracking-tight">Welkom in de Arena</h2>
+      <p class="text-white/60 mt-1">Eerst even: <strong class="text-white">wie ben jij?</strong></p>
+    </div>
+    <div class="space-y-3">
+      <label class="block text-xs font-bold uppercase tracking-widest text-white/50">Jouw spelersnaam</label>
+      <select id="meSelect" class="w-full px-4 py-3 rounded-xl bg-ink border border-line focus:border-oranje focus:outline-none transition text-base font-semibold">
+        <option value="">— kies je naam —</option>
+      </select>
+      <button id="meConfirm" class="w-full py-3 rounded-xl bg-oranje text-ink font-bold hover:bg-oranje2 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        Open mijn cockpit →
+      </button>
+      <div class="text-xs text-white/40 text-center pt-2">
+        Staat je naam er niet bij? Stuur Dennis even een berichtje.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== HENK BUBBLE (persistent) =================== -->
+<div id="henkBubble" class="henk-bubble hidden">
+  <button class="henk-bubble-close" onclick="document.getElementById('henkBubble').classList.add('hidden')">×</button>
+  <div class="henk-avatar">H</div>
+  <div class="henk-body">
+    <div class="henk-name">Henk</div>
+    <div class="henk-text" id="henkBubbleText">…</div>
+    <button id="henkNewBtn" class="henk-newbtn">↻ nog één dan</button>
+  </div>
+</div>
+<button id="henkToggle" class="henk-toggle">
+  <span>H</span>
+</button>
+
+<!-- Confetti canvas -->
+<canvas id="confetti" class="fixed inset-0 pointer-events-none z-30"></canvas>
+
+<script src="data/pool-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

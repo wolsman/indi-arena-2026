@@ -1,0 +1,17 @@
+node_modules
+scripts/
+.github/
+assets/oranje-held.png
+package.json
+package-lock.json
+DEPLOY.md
+README.md
+UPDATE.md
+AUTOMATISERING.md
+AANKONDIGINGSMAIL.md
+mail-preview.html
+mail-plain.txt
+update.bat
+*.log
+.DS_Store
+Thumbs.db

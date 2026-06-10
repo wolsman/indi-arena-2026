@@ -1,0 +1,57 @@
+name: Indi-Arena data-update
+
+# Wanneer draait dit?
+on:
+  schedule:
+    # Cron staat in UTC. Nederland is in de zomer UTC+2.
+    # 06:00 UTC = 08:00 NL  → verse stand bij de koffie
+    # 16:00 UTC = 18:00 NL  → bijwerken voor de avondwedstrijden
+    - cron: '0 6 * * *'
+    - cron: '0 16 * * *'
+  # Handmatig starten kan altijd via de "Run workflow"-knop in GitHub.
+  workflow_dispatch:
+
+# De job mag terugschrijven naar de repo (de bijgewerkte data committen).
+permissions:
+  contents: write
+
+# Geen twee runs tegelijk.
+concurrency:
+  group: pool-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo uitchecken
+        uses: actions/checkout@v4
+
+      - name: Node.js installeren
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Playwright (browser) installeren
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Data ophalen van wkpooltjes
+        env:
+          WKPOOL_EMAIL: ${{ secrets.WKPOOL_EMAIL }}
+          WKPOOL_PASSWORD: ${{ secrets.WKPOOL_PASSWORD }}
+        run: npm run scrape
+
+      - name: Wijzigingen committen (indien er iets veranderd is)
+        run: |
+          git config user.name  "indi-arena-bot"
+          git config user.email "indi-arena-bot@users.noreply.github.com"
+          if git diff --quiet -- data/pool-data.js; then
+            echo "Geen wijzigingen in de stand — niets te committen."
+          else
+            git add data/pool-data.js
+            git commit -m "Auto-update poulestand $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "Stand bijgewerkt en gepusht — Vercel deployt nu automatisch."
+          fi
