@@ -7,9 +7,9 @@
 window.POOL_META = {
   poolId: 423,
   name: "Indicium WK Poule 2026",
-  totalPlayers: 48,
+  totalPlayers: 49,
   capacityMax: 75,
-  syncedAt: "2026-06-10T12:55:49.361Z",
+  syncedAt: "2026-06-10T17:55:15.873Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -29,10 +29,10 @@ window.POOL_PLAYERS = [
   { name: "StudentjeIndicium", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "Mauricio1980", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "AlinevanVuuren", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Wisselbeker", matches: 2, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Wisselbeker", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Roantuit", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "Robertosxs", matches: 104, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Reboss", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "Reboss", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Mobicontrol", matches: 53, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Brokkenpiloot", matches: 17, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Katinkadeb", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
@@ -41,7 +41,7 @@ window.POOL_PLAYERS = [
   { name: "Raymond de Haas", matches: 3, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "ScheidsTon", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "THEGOAT37", matches: 31, winner: false, topscorer: false, paid: true, points: 0 },
-  { name: "WesleyMerwe", matches: 10, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "WesleyMerwe", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Daisy010", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "Erol_Ulu", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Givano", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
@@ -60,13 +60,14 @@ window.POOL_PLAYERS = [
   { name: "JoycevanRiet", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Heer", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Pepijndh", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
-  { name: "Cornelis2026", matches: 1, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Cornelis2026", matches: 5, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Wkkipje", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "MaureenGLA", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "GeorgeV.", matches: 1, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "GeorgeV.", matches: 72, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "ikgajuichen", matches: 104, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "JanCandiano", matches: 0, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Bo.", matches: 24, winner: false, topscorer: false, paid: false, points: 0 }
+  { name: "JanCandiano", matches: 20, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Bo.", matches: 24, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "Koninkie", matches: 0, winner: false, topscorer: false, paid: false, points: 0 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
