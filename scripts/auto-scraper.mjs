@@ -36,7 +36,7 @@ if (!EMAIL || !PASS) {
 }
 
 // Parsen + bestand opbouwen gebeurt in Node; scrapen in de browsercontext.
-function buildJs(players, existing) {
+function buildJs(players, existing, results, standings) {
   // prevPos bepalen uit de vorige puntenstand in het huidige bestand
   const oldPoints = new Map();
   const re = /name:\s*"([^"]+)"[^}]*points:\s*(\d+)/g;
@@ -61,6 +61,12 @@ function buildJs(players, existing) {
   next = next.replace(/totalPlayers:\s*\d+/, `totalPlayers: ${players.length}`);
   next = next.replace(/pointsAvailable:\s*(true|false)/, `pointsAvailable: ${anyPoints}`);
   next = next.replace(/window\.POOL_PLAYERS\s*=\s*\[[\s\S]*?\n\];/, `window.POOL_PLAYERS = [\n${playersJs}\n];`);
+  if (results) {
+    next = next.replace(/window\.POOL_RESULTS\s*=\s*\{[\s\S]*?\};/, `window.POOL_RESULTS = ${JSON.stringify(results)};`);
+  }
+  if (standings) {
+    next = next.replace(/window\.POOL_STANDINGS\s*=\s*\{[\s\S]*?\};/, `window.POOL_STANDINGS = ${JSON.stringify(standings)};`);
+  }
   return next;
 }
 
@@ -175,8 +181,49 @@ const run = async () => {
 
     if (data.players.length < 10) throw new Error('Verdacht weinig spelers — scrape afgebroken om geen lege data te committen.');
 
+    // 4) Uitslagen van het publieke speelschema
+    console.log('  ⟳ uitslagen ophalen…');
+    await page.goto(`${BASE}/fixtures/`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const results = await page.evaluate(() => {
+      const norm = (s) => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+      const out = {};
+      document.querySelectorAll('table tr').forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td')).map(c => c.innerText.trim());
+        if (cells.length < 6) return;
+        const home = cells[1], away = cells[2], uitslag = cells[5];
+        const m = uitslag.match(/(\d+)\s*-\s*(\d+)/);
+        if (home && away && m) out[norm(home) + '|' + norm(away)] = `${m[1]}-${m[2]}`;
+      });
+      return out;
+    });
+    console.log(`  ✓ ${Object.keys(results).length} uitslagen gevonden`);
+
+    // 5) Groepsstanden
+    console.log('  ⟳ groepsstanden ophalen…');
+    await page.goto(`${BASE}/standings/`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const standings = await page.evaluate(() => {
+      const text = document.body.innerText;
+      const parts = text.split(/POULE\s+([A-L])/);
+      const res = {};
+      for (let i = 1; i < parts.length; i += 2) {
+        const letter = parts[i];
+        const block = parts[i+1] || '';
+        const teams = [];
+        block.split('\n').forEach(line => {
+          const m = line.trim().match(/^(\d)\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(-?\d+)$/);
+          if (m && teams.length < 4) teams.push({
+            team: m[2].trim(), played: +m[3], w: +m[4], g: +m[5], v: +m[6], points: +m[7], saldo: +m[8]
+          });
+        });
+        if (teams.length) res[letter] = teams;
+      }
+      return res;
+    });
+    const anyPlayed = Object.values(standings).some(g => g.some(t => t.played > 0));
+    console.log(`  ✓ ${Object.keys(standings).length} groepen${anyPlayed ? ' (met gespeelde wedstrijden)' : ' (nog 0-0)'}`);
+
     const existing = readFileSync(OUT_FILE, 'utf8');
-    writeFileSync(OUT_FILE, buildJs(data.players, existing), 'utf8');
+    writeFileSync(OUT_FILE, buildJs(data.players, existing, results, standings), 'utf8');
     console.log('  ✓ data/pool-data.js bijgewerkt');
   } finally {
     await browser.close();

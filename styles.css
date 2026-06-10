@@ -601,6 +601,113 @@ html { scroll-behavior: smooth; }
 body.henk-open .henk-toggle { display: none; }
 
 /* ============================================================
+   MIJN COCKPIT
+   ============================================================ */
+.cockpit-card {
+  background: linear-gradient(135deg, rgba(255,107,0,.10), rgba(14,184,74,.06));
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  padding: 1.4rem;
+}
+.cockpit-empty {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+.cockpit-head { display: flex; align-items: center; gap: 1rem; }
+.cockpit-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--oranje), var(--veld));
+  color: var(--ink); font-weight: 900; font-size: 1.4rem;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.cockpit-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: .7rem; margin-top: 1.2rem;
+}
+.cockpit-stat {
+  background: rgba(10,14,26,.5); border: 1px solid var(--line);
+  border-radius: .8rem; padding: .8rem; text-align: center;
+}
+.cockpit-stat .v {
+  font-size: 1.6rem; font-weight: 800; line-height: 1;
+  background: linear-gradient(135deg, var(--oranje), var(--goud));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.cockpit-stat .l {
+  font-size: .65rem; text-transform: uppercase; letter-spacing: .08em;
+  color: rgba(255,255,255,.5); font-weight: 600; margin-top: .35rem;
+}
+.cockpit-warn {
+  margin-top: 1rem; padding: .8rem 1rem; border-radius: .7rem;
+  background: rgba(255,215,0,.10); border: 1px solid rgba(255,215,0,.3);
+  font-size: .88rem; color: #ffe680;
+}
+
+/* ============================================================
+   SPEELSCHEMA
+   ============================================================ */
+.sched-chip {
+  padding: .4rem .9rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
+  background: rgba(15,21,37,.6); border: 1px solid var(--line); color: rgba(255,255,255,.65);
+  transition: all .15s;
+}
+.sched-chip:hover { color: #fff; }
+.sched-chip.active { background: var(--oranje); border-color: var(--oranje); color: var(--ink); }
+
+.sched-grid {
+  columns: 2; column-gap: 1rem;
+}
+@media (max-width: 720px) { .sched-grid { columns: 1; } }
+.sched-day {
+  break-inside: avoid; margin-bottom: 1rem;
+  background: rgba(15,21,37,.5); border: 1px solid var(--line); border-radius: 1rem;
+  padding: .5rem .9rem 1rem;
+}
+.sched-day.is-today { border-color: rgba(255,107,0,.5); background: rgba(255,107,0,.05); }
+.sched-daylabel {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+  font-weight: 700; color: rgba(255,255,255,.5); padding: .6rem .2rem .5rem;
+  border-bottom: 1px solid rgba(34,48,77,.5); margin-bottom: .4rem;
+}
+.sched-day.is-today .sched-daylabel { color: var(--oranje); }
+.sched-row {
+  display: grid; grid-template-columns: 2.6rem 1fr auto 1fr; align-items: center;
+  gap: .5rem; padding: .35rem .2rem; font-size: .88rem;
+}
+.sched-time { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: rgba(255,255,255,.45); }
+.sched-team { font-weight: 600; }
+.sched-team.home { text-align: right; }
+.sched-team.away { text-align: left; }
+.sched-score {
+  font-family: 'JetBrains Mono', monospace; font-weight: 700; min-width: 3rem; text-align: center;
+  color: var(--goud);
+}
+
+/* ============================================================
+   GROEPEN
+   ============================================================ */
+.group-card {
+  background: rgba(15,21,37,.6); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem 1.1rem;
+}
+.group-title { font-weight: 800; font-size: 1.05rem; margin-bottom: .6rem; }
+.group-cols {
+  display: grid; grid-template-columns: 1.4rem 1fr 2rem; gap: .4rem;
+  font-size: .62rem; text-transform: uppercase; letter-spacing: .08em;
+  color: rgba(255,255,255,.35); font-weight: 700; padding-bottom: .35rem;
+  border-bottom: 1px solid rgba(34,48,77,.5); margin-bottom: .35rem;
+}
+.group-cols span:last-child { text-align: right; }
+.group-row {
+  display: grid; grid-template-columns: 1.4rem 1fr 2rem; gap: .4rem; align-items: center;
+  padding: .3rem 0; font-size: .9rem;
+}
+.group-row.qualify { color: #fff; }
+.group-row.qualify .gr-pos { color: var(--veld); font-weight: 800; }
+.gr-pos { color: rgba(255,255,255,.4); font-weight: 700; font-feature-settings: 'tnum'; }
+.gr-team { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gr-pts { text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {

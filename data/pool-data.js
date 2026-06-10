@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 48,
   capacityMax: 75,
-  syncedAt: "2026-06-10T11:39:18.868Z",
+  syncedAt: "2026-06-10T12:55:49.361Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -23,7 +23,7 @@ window.POOL_PLAYERS = [
   { name: "Kleine Flo", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Bertjuh", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Bobcorn", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "SterlinginOranje", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "UedaTopscorer", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Oppie1978", matches: 6, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "El-Toro-Loco", matches: 11, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "StudentjeIndicium", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
@@ -191,6 +191,46 @@ window.POOL_CALENDAR = [
             : i === 102 ? "Troostfinale" : "Finale";
   return { id: row[0], date: "2026-" + row[1] + ":00+02:00", home: row[2], away: row[3], phase: phase };
 });
+
+// Vlaggen, gesleuteld op genormaliseerde landnaam (kleine letters, zonder
+// accenten/spaties/koppeltekens). Zo werken zowel "Zuid-Korea" als "Zuid Korea".
+window.POOL_FLAGS = {
+  mexico:"🇲🇽", zuidafrika:"🇿🇦", zuidkorea:"🇰🇷", tsjechie:"🇨🇿",
+  canada:"🇨🇦", bosnie:"🇧🇦", qatar:"🇶🇦", zwitserland:"🇨🇭",
+  usa:"🇺🇸", paraguay:"🇵🇾", australie:"🇦🇺", turkije:"🇹🇷",
+  brazilie:"🇧🇷", marokko:"🇲🇦", haiti:"🇭🇹", schotland:"🏴",
+  duitsland:"🇩🇪", curacao:"🇨🇼", ecuador:"🇪🇨", ivoorkust:"🇨🇮",
+  nederland:"🇳🇱", japan:"🇯🇵", zweden:"🇸🇪", tunesie:"🇹🇳",
+  spanje:"🇪🇸", kaapverdie:"🇨🇻", uruguay:"🇺🇾", saoediarabie:"🇸🇦",
+  belgie:"🇧🇪", egypte:"🇪🇬", iran:"🇮🇷", nieuwzeeland:"🇳🇿",
+  frankrijk:"🇫🇷", senegal:"🇸🇳", noorwegen:"🇳🇴", irak:"🇮🇶",
+  argentinie:"🇦🇷", algerije:"🇩🇿", oostenrijk:"🇦🇹", jordanie:"🇯🇴",
+  portugal:"🇵🇹", congo:"🇨🇬", colombia:"🇨🇴", oezbekistan:"🇺🇿",
+  engeland:"🇬🇧", kroatie:"🇭🇷", ghana:"🇬🇭", panama:"🇵🇦"
+};
+
+// Groepsindeling A–L (vast). De stand per groep wordt door de scraper gevuld
+// in POOL_STANDINGS zodra er gespeeld is.
+window.POOL_GROUPS = [
+  { groep:"A", teams:["Mexico","Zuid-Korea","Zuid-Afrika","Tsjechië"] },
+  { groep:"B", teams:["Canada","Zwitserland","Qatar","Bosnië"] },
+  { groep:"C", teams:["Brazilië","Marokko","Schotland","Haïti"] },
+  { groep:"D", teams:["USA","Paraguay","Australië","Turkije"] },
+  { groep:"E", teams:["Duitsland","Curaçao","Ecuador","Ivoorkust"] },
+  { groep:"F", teams:["Nederland","Japan","Zweden","Tunesië"] },
+  { groep:"G", teams:["België","Egypte","Iran","Nieuw-Zeeland"] },
+  { groep:"H", teams:["Spanje","Kaapverdië","Uruguay","Saoedi-Arabië"] },
+  { groep:"I", teams:["Frankrijk","Senegal","Noorwegen","Irak"] },
+  { groep:"J", teams:["Argentinië","Oostenrijk","Algerije","Jordanië"] },
+  { groep:"K", teams:["Portugal","Colombia","Oezbekistan","Congo"] },
+  { groep:"L", teams:["Engeland","Kroatië","Ghana","Panama"] }
+];
+
+// Dynamisch — door de scraper gevuld.
+//   POOL_RESULTS:   { "mexico|zuidafrika": "2-0", ... }  (genormaliseerde sleutel home|away)
+//   POOL_STANDINGS: { "A": [ { team, played, w, g, v, points, saldo } ], ... }
+window.POOL_RESULTS = {};
+window.POOL_STANDINGS = {"A":[{"team":"Tsjechië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Zuid Korea","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Zuid Afrika","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Mexico","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"B":[{"team":"Zwitserland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Qatar","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Bosnië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Canada","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"D":[{"team":"Turkije","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Australië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Paraguay","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"USA","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"C":[{"team":"Marokko","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Brazilië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Schotland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Haiti","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"E":[{"team":"Curacao","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Duitsland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Ecuador","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Ivoorkust","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"F":[{"team":"Tunesië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Zweden","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Japan","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Nederland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"H":[{"team":"Kaapverdie","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Spanje","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Uruguay","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Saoedi-Arabie","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"G":[{"team":"Egypte","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"België","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Nieuw Zeeland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Iran","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"I":[{"team":"Noorwegen","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Irak","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Senegal","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Frankrijk","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"J":[{"team":"Jordanie","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Oostenrijk","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Algerije","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Argentinië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"L":[{"team":"Kroatië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Engeland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Panama","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Ghana","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"K":[{"team":"Colombia","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Oezbekistan","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Congo","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Portugal","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}]};
 
 // Wedstrijd-radar: de eerste zes duels, met consensus en Henks blik.
 window.POOL_MATCHES_UPCOMING = [

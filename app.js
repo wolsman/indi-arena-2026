@@ -19,6 +19,22 @@ function bucket(p) {
   return 'bezig';
 }
 
+// Genormaliseerde landnaam → sleutel voor vlaggen en uitslagen.
+function norm(name) {
+  return (name || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // accenten weg
+    .replace(/[^a-z0-9]/g, '');                        // spaties/koppels/punten weg
+}
+function flagFor(name) {
+  return (window.POOL_FLAGS && POOL_FLAGS[norm(name)]) || '';
+}
+// Uitslag van een wedstrijd (of null) — kijkt in POOL_RESULTS op home|away.
+function resultFor(m) {
+  const key = norm(m.home) + '|' + norm(m.away);
+  return (window.POOL_RESULTS && POOL_RESULTS[key]) || null;
+}
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -151,6 +167,7 @@ function openMeModal() {
     if (!sel.value) return;
     setMyName(sel.value);
     $('#meModal').classList.add('hidden');
+    renderMyCockpit();
     renderHeroLeaderboard();
     renderLeaderboard($('.chip-btn.active')?.dataset.filter || 'all');
   };
@@ -466,6 +483,145 @@ function renderBadges() {
 }
 
 // ============================================================
+// MIJN COCKPIT — persoonlijk paneel
+// ============================================================
+function renderMyCockpit() {
+  const sec = $('#myCockpit');
+  if (!sec) return;
+  const me = getMyName();
+  if (!me) {
+    sec.innerHTML = `
+      <div class="cockpit-empty">
+        <div>
+          <div class="font-bold text-lg">Wie ben jij?</div>
+          <div class="text-white/60 text-sm mt-1">Kies je naam en je ziet hier je eigen cockpit: stand, punten en wat je nog mist.</div>
+        </div>
+        <button onclick="openMeModal()" class="px-4 py-2 rounded-xl bg-oranje text-ink font-bold hover:bg-oranje2 transition whitespace-nowrap">Kies je naam →</button>
+      </div>`;
+    return;
+  }
+  const p = POOL_PLAYERS.find(x => isMe(x.name));
+  if (!p) { sec.innerHTML = ''; return; }
+
+  const ranked = sortedPlayers();
+  const pos = ranked.findIndex(x => x.name === p.name) + 1;
+  const pts = pointsMode();
+  const missing = 104 - p.matches;
+  const henkTake = HENK.player_takes[p.name] || HENK.player_takes.default;
+
+  // Waarschuwing: nog wedstrijden in te vullen vóór hun aftrap?
+  let warn = '';
+  if (missing > 0) {
+    warn = `<div class="cockpit-warn">⚠ Je mist nog <strong>${missing}</strong> ${missing === 1 ? 'wedstrijd' : 'wedstrijden'}. Vul ze in op wkpooltjes — tot één minuut vóór elke aftrap kan het nog.</div>`;
+  } else if (!p.winner || !p.topscorer) {
+    warn = `<div class="cockpit-warn">⚠ Je wedstrijden staan, maar je ${!p.winner && !p.topscorer ? 'wereldkampioen én topscorer' : !p.winner ? 'wereldkampioen' : 'topscorer'} ontbreekt nog.</div>`;
+  } else if (!p.paid) {
+    warn = `<div class="cockpit-warn">⚠ Je voorspelling is compleet — alleen je inleg staat nog open.</div>`;
+  }
+
+  sec.innerHTML = `
+    <div class="cockpit-head">
+      <div class="cockpit-avatar">${getInitial(p.name)}</div>
+      <div class="flex-1">
+        <div class="text-[11px] uppercase tracking-widest text-oranje font-bold">Mijn cockpit</div>
+        <div class="text-2xl font-black leading-tight">${p.name}</div>
+      </div>
+      <button onclick="openMeModal()" class="text-xs px-3 py-1.5 rounded-full bg-ink border border-line text-white/60 hover:text-white hover:border-oranje transition">wisselen</button>
+    </div>
+    <div class="cockpit-stats">
+      <div class="cockpit-stat"><div class="v">${pos > 0 ? '#' + pos : '—'}</div><div class="l">positie</div></div>
+      <div class="cockpit-stat"><div class="v">${pts ? p.points : '—'}<span class="text-white/30 text-sm">${pts ? ' pt' : ''}</span></div><div class="l">punten</div></div>
+      <div class="cockpit-stat"><div class="v">${p.matches}<span class="text-white/30 text-sm">/104</span></div><div class="l">ingevuld</div></div>
+      <div class="cockpit-stat"><div class="v">${p.paid ? '✓' : '✗'}</div><div class="l">betaald</div></div>
+    </div>
+    ${warn}
+    <div class="henk-quote mt-4"><strong class="text-oranje">Henk over jou:</strong><br/>${henkTake}</div>`;
+}
+
+// ============================================================
+// SPEELSCHEMA — per dag, met fasefilter en uitslagen
+// ============================================================
+let scheduleFilter = 'all';
+function matchPhaseClass(phase) {
+  return phase === 'Groepsfase' ? 'group' : 'knockout';
+}
+function renderSchedule() {
+  const wrap = $('#schedule');
+  if (!wrap) return;
+  let list = POOL_CALENDAR.slice();
+  if (scheduleFilter === 'group')    list = list.filter(m => m.phase === 'Groepsfase');
+  if (scheduleFilter === 'knockout') list = list.filter(m => m.phase !== 'Groepsfase');
+
+  // Groeperen per dag
+  const days = {};
+  list.forEach(m => {
+    const d = new Date(m.date);
+    const key = d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+    (days[key] = days[key] || []).push(m);
+  });
+
+  const todayStr = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+  wrap.innerHTML = Object.entries(days).map(([day, matches]) => `
+    <div class="sched-day ${day === todayStr ? 'is-today' : ''}">
+      <div class="sched-daylabel">${day === todayStr ? '▶ Vandaag · ' : ''}${day}</div>
+      ${matches.map(m => {
+        const t = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+        const res = resultFor(m);
+        const fH = flagFor(m.home), fA = flagFor(m.away);
+        return `
+          <div class="sched-row">
+            <span class="sched-time">${t}</span>
+            <span class="sched-team home">${m.home} ${fH}</span>
+            <span class="sched-score">${res ? res.replace('-', ' - ') : '<span class="text-white/25">—</span>'}</span>
+            <span class="sched-team away">${fA} ${m.away}</span>
+          </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+$$('.sched-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.sched-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    scheduleFilter = btn.dataset.phase;
+    renderSchedule();
+  });
+});
+
+// ============================================================
+// GROEPEN A–L
+// ============================================================
+function renderGroups() {
+  const wrap = $('#groups');
+  if (!wrap) return;
+  wrap.innerHTML = POOL_GROUPS.map(g => {
+    const standings = window.POOL_STANDINGS && POOL_STANDINGS[g.groep];
+    const played = standings && standings.some(s => s.played > 0);
+    let rows;
+    if (standings && standings.length && played) {
+      rows = standings.map((s, i) => `
+        <div class="group-row ${i < 2 ? 'qualify' : ''}">
+          <span class="gr-pos">${i + 1}</span>
+          <span class="gr-team">${flagFor(s.team)} ${s.team}</span>
+          <span class="gr-pts">${s.points}</span>
+        </div>`).join('');
+    } else {
+      rows = g.teams.map(t => `
+        <div class="group-row">
+          <span class="gr-pos">·</span>
+          <span class="gr-team">${flagFor(t)} ${t}</span>
+          <span class="gr-pts text-white/25">0</span>
+        </div>`).join('');
+    }
+    return `
+      <div class="group-card">
+        <div class="group-title">Groep ${g.groep}</div>
+        <div class="group-cols"><span>#</span><span>Team</span><span>Ptn</span></div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
 // FOOTER
 // ============================================================
 function renderFooter() {
@@ -554,10 +710,13 @@ window.addEventListener('DOMContentLoaded', () => {
   setMyName(getMyName());
   updateCountdown();
   renderToday();
+  renderMyCockpit();
   fillStatusTiles();
   renderHeroLeaderboard();
   renderLeaderboard();
   renderMatchRadar();
+  renderSchedule();
+  renderGroups();
   renderDNA();
   renderBadges();
   renderFooter();

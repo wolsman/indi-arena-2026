@@ -65,9 +65,9 @@
     <nav class="hidden md:flex items-center gap-1 text-sm">
       <a href="#vandaag" class="nav-link">Vandaag</a>
       <a href="#ranglijst" class="nav-link">Ranglijst</a>
-      <a href="#radar" class="nav-link">Wedstrijden</a>
+      <a href="#schema" class="nav-link">Speelschema</a>
+      <a href="#groepen" class="nav-link">Groepen</a>
       <a href="#dna" class="nav-link">Pool-DNA</a>
-      <a href="#hallofame" class="nav-link">Hall of Fame</a>
     </nav>
     <div class="flex items-center gap-2">
       <div id="countdownPill" class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink2 border border-line text-xs font-mono">
@@ -164,6 +164,11 @@
   </div>
 </section>
 
+<!-- ========================= MIJN COCKPIT ========================= -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+  <div id="myCockpit" class="cockpit-card"></div>
+</section>
+
 <!-- ========================= RANGLIJST ========================= -->
 <section id="ranglijst" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
   <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
@@ -206,11 +211,40 @@
   <div id="matchRadar" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </section>
 
+<!-- ========================= SPEELSCHEMA ========================= -->
+<section id="schema" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
+    <div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">03 · Speelschema</div>
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Alle 104 wedstrijden</h2>
+      <p class="text-white/60 mt-2 max-w-2xl">Per dag, met de Nederlandse aanvangstijd. Uitslagen verschijnen zodra ze gespeeld zijn.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="sched-chip active" data-phase="all">Alles</button>
+      <button class="sched-chip" data-phase="group">Groepsfase</button>
+      <button class="sched-chip" data-phase="knockout">Knock-out</button>
+    </div>
+  </div>
+  <div id="schedule" class="sched-grid"></div>
+</section>
+
+<!-- ========================= GROEPEN ========================= -->
+<section id="groepen" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
+    <div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">04 · Groepen</div>
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">De twaalf groepen</h2>
+      <p class="text-white/60 mt-2 max-w-2xl">48 landen, twaalf groepen van vier. De bovenste twee gaan door — de stand loopt mee zodra er gespeeld wordt.</p>
+    </div>
+  </div>
+  <div id="groups" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+</section>
+
 <!-- ========================= POOL-DNA ========================= -->
 <section id="dna" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
   <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
     <div>
-      <div class="text-oranje text-xs font-bold uppercase tracking-widest">03 · Pool-DNA</div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">05 · Pool-DNA</div>
       <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Wat verwacht de groep?</h2>
       <p class="text-white/60 mt-2 max-w-2xl">De favoriete wereldkampioenen en topscorers van de poule — met Henks commentaar erbij.</p>
     </div>
@@ -233,7 +267,7 @@
 <section id="hallofame" class="max-w-7xl mx-auto px-4 sm:px-6 mb-20">
   <div class="flex items-end justify-between mb-6 gap-4 flex-wrap">
     <div>
-      <div class="text-oranje text-xs font-bold uppercase tracking-widest">04 · Hall of Fame</div>
+      <div class="text-oranje text-xs font-bold uppercase tracking-widest">06 · Hall of Fame</div>
       <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Negen badges, nul eigenaren</h2>
       <p class="text-white/60 mt-2 max-w-2xl">Allemaal nog te verdienen zodra de bal rolt. Wie pakt de eerste?</p>
     </div>
