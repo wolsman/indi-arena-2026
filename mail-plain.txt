@@ -12,18 +12,23 @@ Om dat verhaal voor iedereen zichtbaar te maken, is er INDI-ARENA 2026:
 een live cockpit waar je per moment ziet wat er in de poule gebeurt.
 
 Wat je daar vindt:
-- De ranglijst die meebeweegt na elke wedstrijd
-- Per speler: hoe ver hij/zij is + Henk's persoonlijke take
-- Wat de groep voorspelt voor de eerstvolgende krakers
-- Henk, onze vaste analist met kantinepraat in de aderen
-- Negen achievement-badges die nog te verdienen zijn
+- De ranglijst die na elke wedstrijd meebeweegt
+- Je eigen cockpit: je positie, je punten en wat je nog mist
+  (kies bij binnenkomst even je naam)
+- Het volledige speelschema met uitslagen en de groepsstanden A t/m L
+- Wat de groep verwacht voor de wereldtitel en de topscorer
+- Henk, onze vaste analist met kantinepraat in de aderen, die overal
+  een mening over heeft
+
+De stand werkt zichzelf twee keer per dag automatisch bij — je ziet dus
+altijd de actuele situatie.
 
 
 ┌─────────────────────────────────────────────────┐
 │  ▸ TOEGANG                                       │
 │                                                  │
 │  Open hier:                                      │
-│  https://indi-arena-2026v3.vercel.app/             │
+│  https://indi-arena-2026v3.vercel.app/           │
 │                                                  │
 │  Wachtwoord:                                     │
 │  indiciumwkpoule2026                             │
@@ -36,7 +41,7 @@ blijf je 30 dagen ingelogd.)
 HENK VOORAF:
 "Tot nu toe was deze poule een spreadsheet en een groepsapp. Vanaf morgen
 is het een live wedstrijd. Drie mensen zijn helemaal klaar, negentien
-hebben de groepsfase af — en tien staan nog op nul. Dat laatste cijfer
+hebben de groepsfase af — en elf staan nog op nul. Dat laatste cijfer
 gaat vóór donderdagavond 21:00 omlaag, daar reken ik op. Veel succes."
 
 

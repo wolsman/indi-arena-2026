@@ -601,6 +601,31 @@ html { scroll-behavior: smooth; }
 body.henk-open .henk-toggle { display: none; }
 
 /* ============================================================
+   NU LIVE — balk
+   ============================================================ */
+.livebar {
+  display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  background: linear-gradient(90deg, rgba(255,59,92,.18), rgba(255,107,0,.08));
+  border: 1px solid rgba(255,59,92,.4);
+  border-radius: .9rem; padding: .7rem 1rem; margin-bottom: .6rem;
+}
+.live-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--rood);
+  box-shadow: 0 0 0 0 rgba(255,59,92,.7); animation: livepulse 1.4s infinite;
+}
+@keyframes livepulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,59,92,.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(255,59,92,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,59,92,0); }
+}
+.live-label {
+  font-size: .7rem; font-weight: 800; letter-spacing: .12em; color: var(--rood);
+}
+.live-match { font-weight: 700; }
+.live-match .live-vs { color: var(--goud); font-family: 'JetBrains Mono', monospace; margin: 0 .2rem; }
+.live-meta { font-size: .72rem; color: rgba(255,255,255,.5); margin-left: auto; }
+
+/* ============================================================
    MIJN COCKPIT
    ============================================================ */
 .cockpit-card {

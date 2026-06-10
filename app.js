@@ -483,6 +483,38 @@ function renderBadges() {
 }
 
 // ============================================================
+// NU LIVE — indicator op basis van aftraptijden (client-side)
+// ============================================================
+const LIVE_WINDOW_MIN = 120; // een wedstrijd loopt ~2 uur (incl. rust/blessuretijd)
+
+function liveMatches() {
+  const now = Date.now();
+  return POOL_CALENDAR.filter(m => {
+    const start = new Date(m.date).getTime();
+    const elapsed = (now - start) / 60000;
+    return elapsed >= 0 && elapsed <= LIVE_WINDOW_MIN;
+  }).map(m => ({ ...m, elapsed: Math.floor((now - new Date(m.date).getTime()) / 60000) }));
+}
+
+function renderLiveNow() {
+  const el = $('#liveNow');
+  if (!el) return;
+  const live = liveMatches();
+  if (!live.length) { el.innerHTML = ''; return; }
+  el.innerHTML = live.map(m => {
+    const kickoff = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    const res = resultFor(m);
+    return `
+      <div class="livebar">
+        <span class="live-dot"></span>
+        <span class="live-label">LIVE</span>
+        <span class="live-match">${flagFor(m.home)} ${m.home} <span class="live-vs">${res ? res.replace('-', ' - ') : '–'}</span> ${m.away} ${flagFor(m.away)}</span>
+        <span class="live-meta">afgetrapt ${kickoff} · ±${m.elapsed}'</span>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
 // MIJN COCKPIT — persoonlijk paneel
 // ============================================================
 function renderMyCockpit() {
@@ -709,6 +741,7 @@ document.addEventListener('keydown', (e) => {
 window.addEventListener('DOMContentLoaded', () => {
   setMyName(getMyName());
   updateCountdown();
+  renderLiveNow();
   renderToday();
   renderMyCockpit();
   fillStatusTiles();
@@ -721,6 +754,9 @@ window.addEventListener('DOMContentLoaded', () => {
   renderBadges();
   renderFooter();
   setTimeout(() => confettiBurst(40), 600);
+
+  // Live-indicator en klok elke minuut verversen.
+  setInterval(renderLiveNow, 60_000);
 
   if (!getMyName()) {
     setTimeout(() => openMeModal(), 800);
