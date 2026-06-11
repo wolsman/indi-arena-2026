@@ -50,13 +50,15 @@ export default async function handler(req, res) {
       minute: (f.fixture && f.fixture.status && f.fixture.status.elapsed) ?? null,
       league: (f.league && f.league.name) || ''
     });
-    const live = all.map(map);
-    // Diagnose: /api/live?debug=1 toont dat de bron live data levert.
+    const mapped = all.map(map);
+    // Diagnose: /api/live?debug=1 toont álle live wedstrijden (alle competities).
     if (req.query && req.query.debug) {
-      const sample = live.slice(0, 6).map(m => `${m.home} ${m.hs}-${m.as} ${m.away} [${m.status} ${m.minute || ''}'] (${m.league})`);
+      const sample = mapped.slice(0, 8).map(m => `${m.home} ${m.hs}-${m.as} ${m.away} [${m.status} ${m.minute || ''}'] (${m.league})`);
       res.status(200).send(JSON.stringify({ totalLive: all.length, sample }));
       return;
     }
+    // Normale respons: alleen WK-wedstrijden.
+    const live = mapped.filter(m => /world\s*cup/i.test(m.league));
     res.status(200).send(JSON.stringify({ matches: live, ts: Date.now() }));
   } catch (e) {
     res.status(200).send(JSON.stringify({ matches: [], note: 'error' }));
