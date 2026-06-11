@@ -106,8 +106,11 @@ const run = async () => {
 
     // 3) Ledenlijst + ranglijst ophalen en parsen in de browsercontext
     const data = await page.evaluate(async ({ poolID, profileID }) => {
-      const post = async (submodule) => {
-        const params = new URLSearchParams({ A: 'S', module: 'pool', submodule, poolID: String(poolID), profileID: String(profileID) });
+      // De ledenlijst en ranglijst zijn gepagineerd op 50 per pagina
+      // (parameter currentPage). We lopen alle pagina's door tot een
+      // pagina niets nieuws meer oplevert.
+      const post = async (submodule, pageNr) => {
+        const params = new URLSearchParams({ A: 'S', module: 'pool', submodule, poolID: String(poolID), profileID: String(profileID), currentPage: String(pageNr) });
         const r = await fetch('/data/getContentXML.php', { method: 'POST', body: params, credentials: 'include' });
         return await r.text();
       };
@@ -116,37 +119,43 @@ const run = async () => {
         const d = doc.querySelector('Data');
         return d ? (d.getAttribute('Content') || d.textContent) : '';
       };
+      const MAX_PAGES = 6; // 50/pagina → ruim genoeg voor max. 75 spelers
 
-      // --- Leden ---
-      const memberDiv = document.createElement('div');
-      memberDiv.innerHTML = contentOf(await post('memberlistPool'));
+      // --- Leden (alle pagina's) ---
       const players = [];
-      memberDiv.querySelectorAll('tr').forEach(row => {
-        const nameEl = row.querySelector('.player-info-container');
-        if (!nameEl) return;
-        const name = nameEl.innerText.trim();
-        if (!name) return;
-        const tip = row.querySelector('.toggletip');
-        const title = tip ? tip.getAttribute('title') || '' : '';
-        const mm = title.match(/Aantal wedstrijden voorspeld:\s*(\d+)/);
-        const wm = title.match(/Winnaar[^<]*<span class='(available|notavailable)'>/);
-        const tm = title.match(/Topscorer[^<]*<span class='(available|notavailable)'>/);
-        const vm = title.match(/Voornaam:\s*([^<]+)</);
-        const paidEl = row.querySelector('input.hasPayed');
-        players.push({
-          name,
-          voornaam: vm ? vm[1].trim() : '',
-          matches: mm ? parseInt(mm[1], 10) : 0,
-          winner: wm ? wm[1] === 'available' : false,
-          topscorer: tm ? tm[1] === 'available' : false,
-          paid: paidEl ? paidEl.checked : false,
-          points: 0
+      const seen = new Set();
+      for (let pg = 1; pg <= MAX_PAGES; pg++) {
+        const div = document.createElement('div');
+        div.innerHTML = contentOf(await post('memberlistPool', pg));
+        let added = 0;
+        div.querySelectorAll('tr').forEach(row => {
+          const nameEl = row.querySelector('.player-info-container');
+          if (!nameEl) return;
+          const name = nameEl.innerText.trim();
+          if (!name || seen.has(name.toLowerCase())) return; // dedup: overlap/herhaalde pagina
+          seen.add(name.toLowerCase());
+          const tip = row.querySelector('.toggletip');
+          const title = tip ? tip.getAttribute('title') || '' : '';
+          const mm = title.match(/Aantal wedstrijden voorspeld:\s*(\d+)/);
+          const wm = title.match(/Winnaar[^<]*<span class='(available|notavailable)'>/);
+          const tm = title.match(/Topscorer[^<]*<span class='(available|notavailable)'>/);
+          const vm = title.match(/Voornaam:\s*([^<]+)</);
+          const paidEl = row.querySelector('input.hasPayed');
+          players.push({
+            name,
+            voornaam: vm ? vm[1].trim() : '',
+            matches: mm ? parseInt(mm[1], 10) : 0,
+            winner: wm ? wm[1] === 'available' : false,
+            topscorer: tm ? tm[1] === 'available' : false,
+            paid: paidEl ? paidEl.checked : false,
+            points: 0
+          });
+          added++;
         });
-      });
+        if (added === 0) break; // geen nieuwe spelers meer → klaar
+      }
 
-      // --- Ranglijst (punten) ---
-      const rankDiv = document.createElement('div');
-      rankDiv.innerHTML = contentOf(await post('rankingPool'));
+      // --- Ranglijst (alle pagina's) → puntenmap ---
       const byName = new Map(players.map(p => [p.name.toLowerCase(), p]));
       const byVoornaam = new Map();
       players.forEach(p => {
@@ -156,20 +165,29 @@ const run = async () => {
         }
       });
       let matched = 0;
-      rankDiv.querySelectorAll('tr').forEach(row => {
-        const text = row.innerText.replace(/\s+/g, ' ').trim();
-        const pm = text.match(/(\d+)\s*\+\s*(\d+)/);
-        if (!pm) return;
-        const total = parseInt(pm[1], 10);
-        const display = text
-          .replace(/^\d+\.\s*\([^)]*\)\s*/, '')
-          .replace(/\s*\(beheerder\)/i, '')
-          .replace(/(\d+)\s*\+\s*(\d+).*/, '')
-          .trim().toLowerCase();
-        if (!display) return;
-        const p = byName.get(display) || byVoornaam.get(display);
-        if (p) { p.points = total; matched++; }
-      });
+      const seenRank = new Set();
+      for (let pg = 1; pg <= MAX_PAGES; pg++) {
+        const div = document.createElement('div');
+        div.innerHTML = contentOf(await post('rankingPool', pg));
+        let added = 0;
+        div.querySelectorAll('tr').forEach(row => {
+          const text = row.innerText.replace(/\s+/g, ' ').trim();
+          const pm = text.match(/(\d+)\s*\+\s*(\d+)/);
+          if (!pm) return;
+          const total = parseInt(pm[1], 10);
+          const display = text
+            .replace(/^\d+\.\s*\([^)]*\)\s*/, '')
+            .replace(/\s*\(beheerder\)/i, '')
+            .replace(/(\d+)\s*\+\s*(\d+).*/, '')
+            .trim().toLowerCase();
+          if (!display || seenRank.has(display)) return;
+          seenRank.add(display);
+          added++;
+          const p = byName.get(display) || byVoornaam.get(display);
+          if (p) { p.points = total; matched++; }
+        });
+        if (added === 0) break;
+      }
 
       players.forEach(p => delete p.voornaam);
       return { players, matched };

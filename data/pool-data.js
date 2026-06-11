@@ -7,9 +7,9 @@
 window.POOL_META = {
   poolId: 423,
   name: "Indicium WK Poule 2026",
-  totalPlayers: 50,
+  totalPlayers: 51,
   capacityMax: 75,
-  syncedAt: "2026-06-11T07:15:32.700Z",
+  syncedAt: "2026-06-11T07:40:00.159Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -24,7 +24,7 @@ window.POOL_PLAYERS = [
   { name: "Bertjuh", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Bobcorn", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "UedaTopscorer", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Oppie1978", matches: 6, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Oppie1978", matches: 24, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "El-Toro-Loco", matches: 11, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "StudentjeIndicium", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "Mauricio1980", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
@@ -67,8 +67,9 @@ window.POOL_PLAYERS = [
   { name: "ikgajuichen", matches: 104, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "JanCandiano", matches: 20, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Bo.", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Koninkie", matches: 72, winner: true, topscorer: true, paid: false, points: 0 },
-  { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: false, points: 0 }
+  { name: "Koninkie", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 0 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
