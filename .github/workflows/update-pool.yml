@@ -39,7 +39,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Dependencies installeren
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Chromium installeren (browser uit cache, alleen OS-libs vers)
         run: npx playwright install --with-deps chromium
