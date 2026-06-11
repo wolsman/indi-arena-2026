@@ -8,6 +8,7 @@
     "scrape": "node scripts/auto-scraper.mjs"
   },
   "devDependencies": {
-    "playwright": "^1.48.0"
+    "playwright": "^1.48.0",
+    "vercel": "^54.11.0"
   }
 }

@@ -80,5 +80,10 @@ jobs:
             echo "  ⚠ Secret VERCEL_TOKEN ontbreekt — site wordt niet automatisch live gezet."
             exit 0
           fi
-          npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+          # Officiele CI-flow: lokaal bouwen + prebuilt uploaden. Een gewone
+          # remote 'vercel deploy' bleef op status UNKNOWN hangen en kreeg het
+          # productiedomein niet; prebuilt wordt wel READY en krijgt de alias.
+          npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+          npx vercel build --prod --token "$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
           echo "  ✓ live gezet op productie"
