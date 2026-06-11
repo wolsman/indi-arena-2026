@@ -36,7 +36,7 @@ if (!EMAIL || !PASS) {
 }
 
 // Parsen + bestand opbouwen gebeurt in Node; scrapen in de browsercontext.
-function buildJs(players, existing, results, standings) {
+function buildJs(players, existing, results, standings, predictions) {
   // prevPos bepalen uit de vorige puntenstand in het huidige bestand
   const oldPoints = new Map();
   const re = /name:\s*"([^"]+)"[^}]*points:\s*(\d+)/g;
@@ -66,6 +66,9 @@ function buildJs(players, existing, results, standings) {
   }
   if (standings) {
     next = next.replace(/window\.POOL_STANDINGS\s*=\s*\{[\s\S]*?\};/, `window.POOL_STANDINGS = ${JSON.stringify(standings)};`);
+  }
+  if (predictions) {
+    next = next.replace(/window\.POOL_PREDICTIONS\s*=\s*\{[\s\S]*?\};/, `window.POOL_PREDICTIONS = ${JSON.stringify(predictions)};`);
   }
   return next;
 }
@@ -251,8 +254,47 @@ const run = async () => {
       console.warn(`  ⚠ groepsstanden overgeslagen (${e.message}) — vorige standen blijven staan`);
     }
 
+    // 6) Voorspellingen per wedstrijd — zichtbaar zodra een wedstrijd is gestart.
+    //    We bewaren alleen de gestarte/gespeelde wedstrijden (meer dan 1 pick),
+    //    gesleuteld op blok-index (= kalendervolgorde), gecapt op de laatste 14.
+    let predictions = null;
+    try {
+      console.log('  ⟳ voorspellingen per wedstrijd ophalen…');
+      predictions = await page.evaluate(async ({ poolID, profileID }) => {
+        const params = new URLSearchParams({ A:'S', module:'pool', submodule:'compareResultsPool', poolID:String(poolID), profileID:String(profileID) });
+        const r = await fetch('/data/getContentXML.php', { method:'POST', body:params, credentials:'include' });
+        const t = await r.text();
+        const d = new DOMParser().parseFromString(t, 'text/xml').querySelector('Data');
+        const html = d ? (d.getAttribute('Content') || d.textContent) : '';
+        const div = document.createElement('div'); div.innerHTML = html;
+        const blocks = Array.from(div.querySelectorAll('.match-compare-table'));
+        const out = {};
+        blocks.forEach((b, i) => {
+          const items = Array.from(b.querySelectorAll('.match-compare-table-item'));
+          if (items.length <= 1) return; // alleen gestarte wedstrijden (ieders picks zichtbaar)
+          const picks = items.map(it => {
+            const p = it.querySelector('.player'); const s = it.querySelector('.score');
+            const score = s ? s.innerText.replace(/\s+/g,'').replace(/(\d+)-(\d+)/, '$1-$2') : '';
+            const sm = score.match(/(\d+)-(\d+)/);
+            return { player: p ? p.innerText.trim() : '?', h: sm?+sm[1]:null, a: sm?+sm[2]:null };
+          }).filter(x => x.h !== null);
+          if (picks.length) out[i] = picks;
+        });
+        return out;
+      }, { poolID: POOL_ID, profileID: PROFILE_ID });
+      // Cap op de 14 hoogste indices (meest recent gestart) om het bestand klein te houden.
+      const idxs = Object.keys(predictions).map(Number).sort((a,b)=>a-b);
+      if (idxs.length > 14) {
+        const keep = idxs.slice(-14);
+        predictions = Object.fromEntries(keep.map(i => [i, predictions[i]]));
+      }
+      console.log(`  ✓ voorspellingen voor ${Object.keys(predictions).length} gestarte wedstrijd(en)`);
+    } catch (e) {
+      console.warn(`  ⚠ voorspellingen overgeslagen (${e.message})`);
+    }
+
     const existing = readFileSync(OUT_FILE, 'utf8');
-    writeFileSync(OUT_FILE, buildJs(data.players, existing, results, standings), 'utf8');
+    writeFileSync(OUT_FILE, buildJs(data.players, existing, results, standings, predictions), 'utf8');
     console.log('  ✓ data/pool-data.js bijgewerkt');
   } finally {
     await browser.close();

@@ -3,10 +3,10 @@ name: Indi-Arena data-update
 # Wanneer draait dit?
 on:
   schedule:
-    # Cron staat in UTC. Tijdens het toernooi elk uur, zodat de stand kort
-    # na elke wedstrijd meeloopt. (De stand kan nooit verser zijn dan
-    # wkpooltjes zelf — die verwerkt uitslagen op zijn eigen tempo.)
-    - cron: '0 * * * *'
+    # Cron staat in UTC. Tijdens het toernooi elke 30 minuten, zodat zowel
+    # de onthulde voorspellingen (bij aftrap) als de uitslag (bij rust/einde)
+    # snel meelopen. (Kan nooit verser zijn dan wkpooltjes zelf.)
+    - cron: '*/30 * * * *'
   # Handmatig starten kan altijd via de "Run workflow"-knop in GitHub.
   workflow_dispatch:
 

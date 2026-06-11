@@ -515,6 +515,128 @@ function renderLiveNow() {
 }
 
 // ============================================================
+// LIVE ARENA — voorspellingen van de poule per gestarte wedstrijd
+// ============================================================
+function predictionsFor(idx) {
+  return (window.POOL_PREDICTIONS && (POOL_PREDICTIONS[idx] || POOL_PREDICTIONS[String(idx)])) || null;
+}
+
+// Verdeling van de picks: thuiswinst / gelijk / uitwinst + exacte scores.
+function pickStats(picks) {
+  let h = 0, d = 0, a = 0;
+  const exact = {};
+  picks.forEach(p => {
+    if (p.h > p.a) h++; else if (p.h < p.a) a++; else d++;
+    const k = p.h + '-' + p.a;
+    exact[k] = (exact[k] || 0) + 1;
+  });
+  const exactSorted = Object.entries(exact).sort((x, y) => y[1] - x[1]);
+  return { h, d, a, total: picks.length, exact: exactSorted };
+}
+
+// De meest tegendraadse voorspeller (afwijkend van de meerderheid).
+function boldestPick(picks, stats) {
+  const major = stats.h >= stats.d && stats.h >= stats.a ? 'h' : (stats.a >= stats.d ? 'a' : 'd');
+  const against = picks.filter(p => {
+    const o = p.h > p.a ? 'h' : (p.h < p.a ? 'a' : 'd');
+    return o !== major;
+  });
+  const pool = against.length ? against : picks;
+  // grootste doelsaldo-afwijking = meest gedurfd
+  return pool.slice().sort((x, y) => Math.abs(y.h - y.a) - Math.abs(x.h - x.a))[0];
+}
+
+// Henks scherpe live-take per wedstrijd, op basis van de échte picks (+ uitslag).
+function henkMatchTake(m, picks, result) {
+  const s = pickStats(picks);
+  const bold = boldestPick(picks, s);
+  const topScore = s.exact[0] ? s.exact[0][0].replace('-', ' - ') : '?';
+  const topScoreN = s.exact[0] ? s.exact[0][1] : 0;
+
+  if (result) {
+    const [rh, ra] = result.split('-').map(Number);
+    const exactWinners = picks.filter(p => p.h === rh && p.a === ra).map(p => p.player);
+    const tendErr = picks.filter(p => {
+      const po = p.h > p.a ? 'h' : (p.h < p.a ? 'a' : 'd');
+      const ro = rh > ra ? 'h' : (rh < ra ? 'a' : 'd');
+      return po !== ro;
+    });
+    if (exactWinners.length) {
+      const names = exactWinners.slice(0, 4).join(', ') + (exactWinners.length > 4 ? ` +${exactWinners.length - 4}` : '');
+      return `Eindstand ${rh}-${ra}. Held${exactWinners.length > 1 ? 'en' : ''} van de wedstrijd: <strong>${names}</strong> — exact goed. De rest mag toekijken.`;
+    }
+    if (tendErr.length === picks.length) {
+      return `Eindstand ${rh}-${ra}. Niemand had de juiste afloop. De hele poule zit ernaast — collectief geheugenverlies, mooi om te zien.`;
+    }
+    return `Eindstand ${rh}-${ra}. Niemand had 'm exact, maar ${picks.length - tendErr.length} van de ${picks.length} had de juiste afloop. ${tendErr.length ? `<strong>${tendErr[0].player}</strong> en ${tendErr.length - 1} ander${tendErr.length - 1 === 1 ? '' : 'en'} zaten er compleet naast.` : ''}`;
+  }
+
+  // Live (nog geen uitslag)
+  const homePct = Math.round((s.h / s.total) * 100);
+  if (s.h >= s.total * 0.85) {
+    return `${s.h} van de ${s.total} gokt op winst voor ${m.home} — ${homePct}%, bijna unaniem. <strong>${bold.player}</strong> wijkt af met ${bold.h}-${bold.a}. Eén dwarsdenker, of één die het beter weet?`;
+  }
+  if (Math.abs(s.h - s.a) <= 2) {
+    return `Verdeelde poule: ${s.h}× ${m.home}, ${s.a}× ${m.away}, ${s.d}× gelijk. Niemand durft hier hardop iets te roepen. <strong>${bold.player}</strong> dan nog het meest, met ${bold.h}-${bold.a}.`;
+  }
+  return `De poule leunt naar ${s.h >= s.a ? m.home : m.away} (populairste uitslag: ${topScore}, ${topScoreN}×). <strong>${bold.player}</strong> gaat tegen de stroom in met ${bold.h}-${bold.a} — die kan straks de held of de pineut zijn.`;
+}
+
+function arenaMatches() {
+  if (!window.POOL_PREDICTIONS) return [];
+  const now = Date.now();
+  return Object.keys(POOL_PREDICTIONS).map(k => {
+    const idx = +k;
+    const m = POOL_CALENDAR[idx];
+    if (!m) return null;
+    const picks = POOL_PREDICTIONS[k];
+    const result = resultFor(m);
+    const start = new Date(m.date).getTime();
+    const live = !result && now >= start && (now - start) <= LIVE_WINDOW_MIN * 60000;
+    return { idx, m, picks, result, live, start };
+  }).filter(Boolean).sort((a, b) => b.start - a.start).slice(0, 6);
+}
+
+function renderArena() {
+  const wrap = $('#arena');
+  if (!wrap) return;
+  const matches = arenaMatches();
+  if (!matches.length) {
+    wrap.innerHTML = `<div class="arena-empty">De Arena opent zodra de eerste wedstrijd begint — dan onthult de poule alle voorspellingen en gaat Henk los.</div>`;
+    return;
+  }
+  wrap.innerHTML = matches.map(({ m, picks, result, live }) => {
+    const s = pickStats(picks);
+    const total = s.total || 1;
+    const when = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    const status = result
+      ? `<span class="arena-final">${result.replace('-', ' - ')}</span>`
+      : (live ? `<span class="arena-live"><span class="live-dot"></span> LIVE</span>` : `<span class="arena-soon">${when}</span>`);
+    const top3 = s.exact.slice(0, 3).map(([sc, n]) =>
+      `<span class="ascore">${sc.replace('-', '-')}<b>${n}×</b></span>`).join('');
+    return `
+      <div class="arena-card ${live ? 'is-live' : ''} ${result ? 'is-final' : ''}">
+        <div class="arena-head">
+          <div class="arena-teams">${flagFor(m.home)} ${m.home} <span class="arena-vs">—</span> ${m.away} ${flagFor(m.away)}</div>
+          ${status}
+        </div>
+        <div class="arena-dist">
+          <div class="ad-seg veld" style="flex:${s.h || 0.001}" title="${m.home}: ${s.h}"></div>
+          <div class="ad-seg grijs" style="flex:${s.d || 0.001}" title="gelijk: ${s.d}"></div>
+          <div class="ad-seg oranje" style="flex:${s.a || 0.001}" title="${m.away}: ${s.a}"></div>
+        </div>
+        <div class="arena-legend">
+          <span class="text-veld">${s.h}× ${m.home}</span>
+          <span>${s.d}× gelijk</span>
+          <span class="text-oranje">${s.a}× ${m.away}</span>
+        </div>
+        <div class="arena-scores">${top3}</div>
+        <div class="arena-henk">${henkMatchTake(m, picks, result)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
 // MIJN COCKPIT — persoonlijk paneel
 // ============================================================
 function renderMyCockpit() {
@@ -743,6 +865,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateCountdown();
   renderLiveNow();
   renderToday();
+  renderArena();
   renderMyCockpit();
   fillStatusTiles();
   renderHeroLeaderboard();
@@ -755,8 +878,8 @@ window.addEventListener('DOMContentLoaded', () => {
   renderFooter();
   setTimeout(() => confettiBurst(40), 600);
 
-  // Live-indicator en klok elke minuut verversen.
-  setInterval(renderLiveNow, 60_000);
+  // Live-indicator, klok en arena elke minuut verversen.
+  setInterval(() => { renderLiveNow(); renderArena(); }, 60_000);
 
   if (!getMyName()) {
     setTimeout(() => openMeModal(), 800);

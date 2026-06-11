@@ -7,9 +7,9 @@
 window.POOL_META = {
   poolId: 423,
   name: "Indicium WK Poule 2026",
-  totalPlayers: 52,
+  totalPlayers: 54,
   capacityMax: 75,
-  syncedAt: "2026-06-11T13:11:36.701Z",
+  syncedAt: "2026-06-11T19:41:06.207Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -26,7 +26,7 @@ window.POOL_PLAYERS = [
   { name: "UedaTopscorer", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Oppie1978", matches: 24, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "El-Toro-Loco", matches: 11, winner: false, topscorer: false, paid: true, points: 0 },
-  { name: "StudentjeIndicium", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "StudentjeIndicium", matches: 3, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Mauricio1980", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "AlinevanVuuren", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Wisselbeker", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
@@ -42,15 +42,15 @@ window.POOL_PLAYERS = [
   { name: "ScheidsTon", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "THEGOAT37", matches: 31, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "WesleyMerwe", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Daisy010", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "Daisy010", matches: 14, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Erol_Ulu", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Givano", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "VanderLans", matches: 1, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Trauner_in_Oranje", matches: 0, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Trauner_in_Oranje", matches: 1, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Keepertje", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "John0504", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Rugnummer67", matches: 5, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Norman.P", matches: 0, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Norman.P", matches: 2, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "StanleyBoessen", matches: 72, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "GonnyDebode", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Marlayne", matches: 26, winner: true, topscorer: true, paid: true, points: 0 },
@@ -60,7 +60,7 @@ window.POOL_PLAYERS = [
   { name: "JoycevanRiet", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Heer", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Pepijndh", matches: 0, winner: false, topscorer: false, paid: true, points: 0 },
-  { name: "Cornelis2026", matches: 5, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Cornelis2026", matches: 29, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Wkkipje", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "MaureenGLA", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "GeorgeV.", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
@@ -70,7 +70,9 @@ window.POOL_PLAYERS = [
   { name: "Koninkie", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "RoanTuit(messi)", matches: 0, winner: false, topscorer: false, paid: false, points: 0 }
+  { name: "RoanTuit(messi)", matches: 7, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Christopheramboz", matches: 9, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: false, points: 0 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
@@ -234,6 +236,9 @@ window.POOL_GROUPS = [
 //   POOL_RESULTS:   { "mexico|zuidafrika": "2-0", ... }  (genormaliseerde sleutel home|away)
 //   POOL_STANDINGS: { "A": [ { team, played, w, g, v, points, saldo } ], ... }
 window.POOL_RESULTS = {};
+// Voorspellingen per gestarte wedstrijd (scraper). Sleutel = kalender-index
+// (POOL_CALENDAR[i]); waarde = [{player, h, a}].
+window.POOL_PREDICTIONS = {"0":[{"player":"Dennis","h":2,"a":0},{"player":"Crazy Dutchman","h":2,"a":0},{"player":"Bertjuh","h":2,"a":0},{"player":"Oppie1978","h":2,"a":1},{"player":"Raymond de Haas","h":1,"a":0},{"player":"JoycevanRiet","h":2,"a":1},{"player":"Bo.","h":2,"a":0},{"player":"Bobcorn","h":1,"a":0},{"player":"El-Toro-Loco","h":2,"a":1},{"player":"StudentjeIndicium","h":2,"a":0},{"player":"AlinevanVuuren","h":2,"a":1},{"player":"Robertosxs","h":2,"a":0},{"player":"Reboss","h":2,"a":0},{"player":"Mobicontrol","h":2,"a":0},{"player":"Brokkenpiloot","h":2,"a":1},{"player":"Katinkadeb","h":2,"a":0},{"player":"BornBjorg","h":3,"a":1},{"player":"Fseton","h":3,"a":0},{"player":"WesleyMerwe","h":1,"a":0},{"player":"Daisy010","h":0,"a":0},{"player":"Givano","h":2,"a":1},{"player":"Trauner_in_Oranje","h":2,"a":0},{"player":"John0504","h":3,"a":1},{"player":"Rugnummer67","h":2,"a":1},{"player":"StanleyBoessen","h":1,"a":1},{"player":"GonnyDebode","h":2,"a":0},{"player":"Marlayne","h":3,"a":1},{"player":"Jules-","h":2,"a":2},{"player":"JanCandiano","h":3,"a":2},{"player":"Harro1","h":2,"a":0},{"player":"JRHJNB","h":2,"a":0},{"player":"Heer","h":2,"a":0},{"player":"Wkkipje","h":2,"a":0},{"player":"GeorgeV.","h":2,"a":1},{"player":"Martijnmeestervoorspeller","h":2,"a":0},{"player":"Christopheramboz","h":2,"a":0},{"player":"Carlo","h":3,"a":1},{"player":"Erol","h":2,"a":0},{"player":"Jan","h":2,"a":1},{"player":"Jeroen","h":2,"a":0},{"player":"Kees","h":2,"a":0},{"player":"Kleine Flo","h":2,"a":0},{"player":"Marco","h":1,"a":0},{"player":"Maureen","h":2,"a":1},{"player":"Maurice","h":2,"a":0},{"player":"Norman","h":2,"a":0},{"player":"Roan","h":2,"a":0},{"player":"Ruud","h":2,"a":0},{"player":"Tom","h":2,"a":1},{"player":"Ton","h":1,"a":1}]};
 window.POOL_STANDINGS = {"A":[{"team":"Tsjechië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Zuid Korea","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Zuid Afrika","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Mexico","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"B":[{"team":"Zwitserland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Qatar","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Bosnië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Canada","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"D":[{"team":"Turkije","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Australië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Paraguay","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"USA","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"C":[{"team":"Marokko","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Brazilië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Schotland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Haiti","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"E":[{"team":"Curacao","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Duitsland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Ecuador","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Ivoorkust","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"F":[{"team":"Tunesië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Zweden","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Japan","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Nederland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"H":[{"team":"Kaapverdie","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Spanje","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Uruguay","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Saoedi-Arabie","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"G":[{"team":"Egypte","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"België","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Nieuw Zeeland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Iran","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"I":[{"team":"Noorwegen","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Irak","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Senegal","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Frankrijk","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"J":[{"team":"Jordanie","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Oostenrijk","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Algerije","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Argentinië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"L":[{"team":"Kroatië","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Engeland","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Panama","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Ghana","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}],"K":[{"team":"Colombia","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Oezbekistan","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Congo","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0},{"team":"Portugal","played":0,"w":0,"g":0,"v":0,"points":0,"saldo":0}]};
 
 // Wedstrijd-radar: de eerste zes duels, met consensus en Henks blik.

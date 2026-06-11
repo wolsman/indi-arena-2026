@@ -626,6 +626,55 @@ body.henk-open .henk-toggle { display: none; }
 .live-meta { font-size: .72rem; color: rgba(255,255,255,.5); margin-left: auto; }
 
 /* ============================================================
+   LIVE ARENA
+   ============================================================ */
+.arena-empty {
+  background: rgba(15,21,37,.6); border: 1px dashed var(--line);
+  border-radius: 1rem; padding: 1.6rem; color: rgba(255,255,255,.55);
+  grid-column: 1 / -1; text-align: center;
+}
+.arena-card {
+  background: rgba(15,21,37,.6); border: 1px solid var(--line);
+  border-radius: 1rem; padding: 1.1rem 1.2rem;
+}
+.arena-card.is-live { border-color: rgba(255,59,92,.45); background: rgba(255,59,92,.05); }
+.arena-card.is-final { border-color: rgba(14,184,74,.35); }
+.arena-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.arena-teams { font-weight: 800; font-size: 1.05rem; }
+.arena-vs { color: rgba(255,255,255,.3); margin: 0 .25rem; }
+.arena-live { display: inline-flex; align-items: center; gap: .35rem; font-size: .72rem; font-weight: 800; letter-spacing: .1em; color: var(--rood); }
+.arena-final { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.2rem; color: var(--veld); }
+.arena-soon { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: rgba(255,255,255,.45); }
+.arena-dist {
+  display: flex; gap: 3px; height: 12px; border-radius: 6px; overflow: hidden;
+  margin: .9rem 0 .4rem; background: rgba(255,255,255,.05);
+}
+.ad-seg { transition: flex .5s; }
+.ad-seg.veld { background: var(--veld); }
+.ad-seg.grijs { background: rgba(255,255,255,.35); }
+.ad-seg.oranje { background: var(--oranje); }
+.arena-legend { display: flex; justify-content: space-between; font-size: .72rem; font-weight: 600; color: rgba(255,255,255,.6); }
+.arena-scores { display: flex; gap: .5rem; flex-wrap: wrap; margin: .7rem 0; }
+.ascore {
+  font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 600;
+  background: rgba(10,14,26,.6); border: 1px solid var(--line); border-radius: .4rem;
+  padding: .2rem .5rem; color: rgba(255,255,255,.75);
+}
+.ascore b { color: var(--goud); margin-left: .3rem; }
+.arena-henk {
+  position: relative; margin-top: .6rem; padding: .7rem .8rem .7rem 2.8rem;
+  border-radius: .7rem; background: rgba(255,107,0,.07); border: 1px solid rgba(255,107,0,.2);
+  font-size: .86rem; line-height: 1.5;
+}
+.arena-henk::before {
+  content: 'H'; position: absolute; left: .6rem; top: .65rem;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--oranje), var(--rood));
+  color: var(--ink); font-weight: 900; font-size: .75rem;
+  display: grid; place-items: center;
+}
+
+/* ============================================================
    MIJN COCKPIT
    ============================================================ */
 .cockpit-card {
