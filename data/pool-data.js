@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 50,
   capacityMax: 75,
-  syncedAt: "2026-06-11T00:12:36.501Z",
+  syncedAt: "2026-06-11T05:25:10.662Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -63,7 +63,7 @@ window.POOL_PLAYERS = [
   { name: "Cornelis2026", matches: 5, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Wkkipje", matches: 10, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "MaureenGLA", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "GeorgeV.", matches: 72, winner: false, topscorer: false, paid: true, points: 0 },
+  { name: "GeorgeV.", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "ikgajuichen", matches: 104, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "JanCandiano", matches: 20, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Bo.", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
