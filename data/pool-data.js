@@ -7,9 +7,9 @@
 window.POOL_META = {
   poolId: 423,
   name: "Indicium WK Poule 2026",
-  totalPlayers: 51,
+  totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-11T07:40:00.159Z",
+  syncedAt: "2026-06-11T10:14:49.181Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -49,7 +49,7 @@ window.POOL_PLAYERS = [
   { name: "Trauner_in_Oranje", matches: 0, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Keepertje", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "John0504", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Rugnummer67", matches: 0, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "Rugnummer67", matches: 5, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Norman.P", matches: 0, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "StanleyBoessen", matches: 72, winner: false, topscorer: false, paid: true, points: 0 },
   { name: "GonnyDebode", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
@@ -69,7 +69,8 @@ window.POOL_PLAYERS = [
   { name: "Bo.", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Koninkie", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
   { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
-  { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 0 }
+  { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 0 },
+  { name: "RoanTuit(messi)", matches: 0, winner: false, topscorer: false, paid: false, points: 0 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
