@@ -55,11 +55,22 @@ const TEAM_EN = {
 };
 function enAliases(nlName) { return TEAM_EN[norm(nlName)] || [norm(nlName)]; }
 
-window.__liveScores = {}; // genormaliseerde "home|away" → { hs, as }
+window.__liveScores = {}; // genormaliseerde "home|away" → { hs, as, status, minute, recvTs }
 
 function liveScoreFor(m) {
   const key = norm(m.home) + '|' + norm(m.away);
   return window.__liveScores[key] || null;
+}
+
+// Weergave-minuut: laat de klok lokaal elke minuut doortikken vanaf de laatst
+// opgehaalde minuut, zodat hij niet "hangt" tussen polls in. Alleen tijdens een
+// lopende helft; gecapt zodat een gemiste poll geen onzin oplevert.
+function liveMinute(ls) {
+  if (!ls || ls.minute == null) return null;
+  const running = ['1H', '2H', 'ET', 'LIVE'].includes(ls.status);
+  if (!running) return ls.minute; // rust/pauze/penalty's → bevroren
+  const ticked = Math.floor((Date.now() - (ls.recvTs || Date.now())) / 60000);
+  return ls.minute + Math.min(ticked, 5); // cap +5; volgende poll corrigeert
 }
 
 // Koppelt een API-wedstrijd aan een van onze (NL) wedstrijden.
@@ -73,7 +84,7 @@ function ingestLiveMatches(apiMatches) {
       const homeOk = hAl.some(x => x === ah || x.includes(ah) || ah.includes(x));
       const awayOk = aAl.some(x => x === aa || x.includes(aa) || aa.includes(x));
       if (homeOk && awayOk) {
-        next[norm(m.home) + '|' + norm(m.away)] = { hs: am.hs, as: am.as, status: am.status, minute: am.minute };
+        next[norm(m.home) + '|' + norm(m.away)] = { hs: am.hs, as: am.as, status: am.status, minute: am.minute, recvTs: Date.now() };
         break;
       }
     }
@@ -562,7 +573,10 @@ function renderLiveNow() {
     const kickoff = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     const ls = liveScoreFor(m);
     const score = ls ? `${ls.hs} - ${ls.as}` : '–';
-    const clock = ls && (ls.minute != null) ? `${ls.minute}'` : `afgetrapt ${kickoff} · ±${m.elapsed}'`;
+    const lm = liveMinute(ls);
+    const clock = ls && lm != null
+      ? (ls.status === 'HT' ? 'rust' : `${lm}'`)
+      : `afgetrapt ${kickoff} · ±${m.elapsed}'`;
     return `
       <div class="livebar">
         <span class="live-dot"></span>
