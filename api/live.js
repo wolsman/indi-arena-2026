@@ -14,8 +14,9 @@
    ============================================================ */
 
 export default async function handler(req, res) {
-  // Edge-cache: hooguit ~1 upstream-call per minuut, rest uit cache.
-  res.setHeader('Cache-Control', 's-maxage=50, stale-while-revalidate=120');
+  // Edge-cache: hooguit ~1 upstream-call per 2 min (max ~30/uur), rest uit
+  // cache. Houdt ons ruim binnen de 100 calls/dag van het gratis API-Sports-plan.
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=180');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   const key = process.env.FOOTBALL_API_KEY;
