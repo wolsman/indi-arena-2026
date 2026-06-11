@@ -573,8 +573,13 @@ function henkMatchTake(m, picks, result) {
 
   // Live (nog geen uitslag)
   const homePct = Math.round((s.h / s.total) * 100);
+  const boldOutcome = bold.h > bold.a ? 'h' : (bold.h < bold.a ? 'a' : 'd');
   if (s.h >= s.total * 0.85) {
-    return `${s.h} van de ${s.total} gokt op winst voor ${m.home} — ${homePct}%, bijna unaniem. <strong>${bold.player}</strong> wijkt af met ${bold.h}-${bold.a}. Eén dwarsdenker, of één die het beter weet?`;
+    const contrarian = boldOutcome !== 'h';
+    if (contrarian) {
+      return `${s.h} van de ${s.total} gokt op winst voor ${m.home} — ${homePct}%, bijna unaniem. En dan <strong>${bold.player}</strong>: ${bold.h}-${bold.a}. Eén dwarsdenker tegen de hele poule in. Lef of waanzin, we gaan het zien.`;
+    }
+    return `${s.h} van de ${s.total} gokt op winst voor ${m.home} — ${homePct}%, bijna unaniem. Niemand durft tegen de stroom in; <strong>${bold.player}</strong> ging met ${bold.h}-${bold.a} nog het meest voor de show.`;
   }
   if (Math.abs(s.h - s.a) <= 2) {
     return `Verdeelde poule: ${s.h}× ${m.home}, ${s.a}× ${m.away}, ${s.d}× gelijk. Niemand durft hier hardop iets te roepen. <strong>${bold.player}</strong> dan nog het meest, met ${bold.h}-${bold.a}.`;
