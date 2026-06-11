@@ -73,7 +73,7 @@ function ingestLiveMatches(apiMatches) {
       const homeOk = hAl.some(x => x === ah || x.includes(ah) || ah.includes(x));
       const awayOk = aAl.some(x => x === aa || x.includes(aa) || aa.includes(x));
       if (homeOk && awayOk) {
-        next[norm(m.home) + '|' + norm(m.away)] = { hs: am.hs, as: am.as, status: am.status };
+        next[norm(m.home) + '|' + norm(m.away)] = { hs: am.hs, as: am.as, status: am.status, minute: am.minute };
         break;
       }
     }
@@ -562,12 +562,13 @@ function renderLiveNow() {
     const kickoff = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     const ls = liveScoreFor(m);
     const score = ls ? `${ls.hs} - ${ls.as}` : '–';
+    const clock = ls && (ls.minute != null) ? `${ls.minute}'` : `afgetrapt ${kickoff} · ±${m.elapsed}'`;
     return `
       <div class="livebar">
         <span class="live-dot"></span>
         <span class="live-label">LIVE</span>
         <span class="live-match">${flagFor(m.home)} ${m.home} <span class="live-vs">${score}</span> ${m.away} ${flagFor(m.away)}</span>
-        <span class="live-meta">afgetrapt ${kickoff} · ±${m.elapsed}'</span>
+        <span class="live-meta">${clock}</span>
       </div>`;
   }).join('');
 }
