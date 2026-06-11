@@ -643,6 +643,7 @@ body.henk-open .henk-toggle { display: none; }
 .arena-teams { font-weight: 800; font-size: 1.05rem; }
 .arena-vs { color: rgba(255,255,255,.3); margin: 0 .25rem; }
 .arena-live { display: inline-flex; align-items: center; gap: .35rem; font-size: .72rem; font-weight: 800; letter-spacing: .1em; color: var(--rood); }
+.arena-livescore { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #fff; margin-left: .2rem; }
 .arena-final { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.2rem; color: var(--veld); }
 .arena-soon { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: rgba(255,255,255,.45); }
 .arena-dist {

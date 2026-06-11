@@ -35,6 +35,63 @@ function resultFor(m) {
   return (window.POOL_RESULTS && POOL_RESULTS[key]) || null;
 }
 
+// ── Live tussenstand (via /api/live, bron football-data.org) ──
+// Onze namen zijn Nederlands; de API gebruikt Engelse namen. Per NL-naam
+// een set genormaliseerde Engelse aliassen om de juiste wedstrijd te vinden.
+const TEAM_EN = {
+  mexico:["mexico"], zuidafrika:["southafrica"], zuidkorea:["southkorea","korearepublic","korea"],
+  tsjechie:["czechrepublic","czechia"], canada:["canada"], bosnie:["bosniaandherzegovina","bosnia"],
+  qatar:["qatar"], zwitserland:["switzerland"], usa:["usa","unitedstates"], paraguay:["paraguay"],
+  australie:["australia"], turkije:["turkey","turkiye"], brazilie:["brazil"], marokko:["morocco"],
+  haiti:["haiti"], schotland:["scotland"], duitsland:["germany"], curacao:["curacao"], ecuador:["ecuador"],
+  ivoorkust:["cotedivoire","ivorycoast"], nederland:["netherlands"], japan:["japan"], zweden:["sweden"],
+  tunesie:["tunisia"], spanje:["spain"], kaapverdie:["capeverde","caboverde"], uruguay:["uruguay"],
+  saoediarabie:["saudiarabia"], belgie:["belgium"], egypte:["egypt"], iran:["iran","iriran"],
+  nieuwzeeland:["newzealand"], frankrijk:["france"], senegal:["senegal"], noorwegen:["norway"],
+  irak:["iraq"], argentinie:["argentina"], algerije:["algeria"], oostenrijk:["austria"],
+  jordanie:["jordan"], portugal:["portugal"], colombia:["colombia"], oezbekistan:["uzbekistan"],
+  congo:["congo","drcongo","democraticrepublicofcongo"], kroatie:["croatia"], engeland:["england"],
+  ghana:["ghana"], panama:["panama"]
+};
+function enAliases(nlName) { return TEAM_EN[norm(nlName)] || [norm(nlName)]; }
+
+window.__liveScores = {}; // genormaliseerde "home|away" → { hs, as }
+
+function liveScoreFor(m) {
+  const key = norm(m.home) + '|' + norm(m.away);
+  return window.__liveScores[key] || null;
+}
+
+// Koppelt een API-wedstrijd aan een van onze (NL) wedstrijden.
+function ingestLiveMatches(apiMatches) {
+  const next = {};
+  (apiMatches || []).forEach(am => {
+    const ah = norm(am.home), aa = norm(am.away);
+    // Vind onze wedstrijd waarvan de EN-aliassen matchen.
+    for (const m of POOL_CALENDAR) {
+      const hAl = enAliases(m.home), aAl = enAliases(m.away);
+      const homeOk = hAl.some(x => x === ah || x.includes(ah) || ah.includes(x));
+      const awayOk = aAl.some(x => x === aa || x.includes(aa) || aa.includes(x));
+      if (homeOk && awayOk) {
+        next[norm(m.home) + '|' + norm(m.away)] = { hs: am.hs, as: am.as, status: am.status };
+        break;
+      }
+    }
+  });
+  window.__liveScores = next;
+}
+
+async function fetchLive() {
+  try {
+    const r = await fetch('/api/live', { cache: 'no-store' });
+    if (!r.ok) return;
+    const j = await r.json();
+    ingestLiveMatches(j.matches);
+    renderLiveNow();
+    renderArena();
+  } catch (e) { /* stil falen — site blijft werken */ }
+}
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -503,12 +560,13 @@ function renderLiveNow() {
   if (!live.length) { el.innerHTML = ''; return; }
   el.innerHTML = live.map(m => {
     const kickoff = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-    const res = resultFor(m);
+    const ls = liveScoreFor(m);
+    const score = ls ? `${ls.hs} - ${ls.as}` : '–';
     return `
       <div class="livebar">
         <span class="live-dot"></span>
         <span class="live-label">LIVE</span>
-        <span class="live-match">${flagFor(m.home)} ${m.home} <span class="live-vs">${res ? res.replace('-', ' - ') : '–'}</span> ${m.away} ${flagFor(m.away)}</span>
+        <span class="live-match">${flagFor(m.home)} ${m.home} <span class="live-vs">${score}</span> ${m.away} ${flagFor(m.away)}</span>
         <span class="live-meta">afgetrapt ${kickoff} · ±${m.elapsed}'</span>
       </div>`;
   }).join('');
@@ -546,12 +604,33 @@ function boldestPick(picks, stats) {
   return pool.slice().sort((x, y) => Math.abs(y.h - y.a) - Math.abs(x.h - x.a))[0];
 }
 
-// Henks scherpe live-take per wedstrijd, op basis van de échte picks (+ uitslag).
-function henkMatchTake(m, picks, result) {
+// Henks scherpe live-take per wedstrijd, op basis van de échte picks (+ uitslag/live stand).
+function henkMatchTake(m, picks, result, liveScore) {
   const s = pickStats(picks);
   const bold = boldestPick(picks, s);
   const topScore = s.exact[0] ? s.exact[0][0].replace('-', ' - ') : '?';
   const topScoreN = s.exact[0] ? s.exact[0][1] : 0;
+
+  // Live tussenstand bekend en nog geen eindstand → reageer op de stand.
+  if (liveScore && !result) {
+    const lh = liveScore.hs, la = liveScore.as;
+    const exactNow = picks.filter(p => p.h === lh && p.a === la).map(p => p.player);
+    const lo = lh > la ? 'h' : (lh < la ? 'a' : 'd');
+    const tendNow = picks.filter(p => {
+      const po = p.h > p.a ? 'h' : (p.h < p.a ? 'a' : 'd');
+      return po === lo;
+    }).length;
+    const lead = lh > la ? m.home : (lh < la ? m.away : null);
+    let line = `Het staat <strong>${lh}-${la}</strong>. `;
+    if (exactNow.length) {
+      line += `${exactNow.slice(0,3).join(', ')}${exactNow.length>3?` +${exactNow.length-3}`:''} heeft precies dit als eindstand — die zit nu te bidden dat de scheids vroeg affluit.`;
+    } else if (lead) {
+      line += `${tendNow} van de ${s.total} voorspelde een zege voor ${lead}; die zitten voorlopig goed. De rest moet hopen op een ommekeer.`;
+    } else {
+      line += `Een gelijkspel had bijna niemand — als dit zo blijft, ligt de hele poule op de buik.`;
+    }
+    return line;
+  }
 
   if (result) {
     const [rh, ra] = result.split('-').map(Number);
@@ -614,9 +693,12 @@ function renderArena() {
     const s = pickStats(picks);
     const total = s.total || 1;
     const when = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    const ls = live ? liveScoreFor(m) : null;
     const status = result
       ? `<span class="arena-final">${result.replace('-', ' - ')}</span>`
-      : (live ? `<span class="arena-live"><span class="live-dot"></span> LIVE</span>` : `<span class="arena-soon">${when}</span>`);
+      : (live
+          ? `<span class="arena-live"><span class="live-dot"></span> LIVE${ls ? ` <b class="arena-livescore">${ls.hs}-${ls.as}</b>` : ''}</span>`
+          : `<span class="arena-soon">${when}</span>`);
     const top3 = s.exact.slice(0, 3).map(([sc, n]) =>
       `<span class="ascore">${sc.replace('-', '-')}<b>${n}×</b></span>`).join('');
     return `
@@ -636,7 +718,7 @@ function renderArena() {
           <span class="text-oranje">${s.a}× ${m.away}</span>
         </div>
         <div class="arena-scores">${top3}</div>
-        <div class="arena-henk">${henkMatchTake(m, picks, result)}</div>
+        <div class="arena-henk">${henkMatchTake(m, picks, result, ls)}</div>
       </div>`;
   }).join('');
 }
@@ -885,6 +967,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Live-indicator, klok en arena elke minuut verversen.
   setInterval(() => { renderLiveNow(); renderArena(); }, 60_000);
+
+  // Live tussenstand ophalen zodra/zolang er een wedstrijd loopt.
+  if (liveMatches().length) fetchLive();
+  setInterval(() => { if (liveMatches().length) fetchLive(); }, 60_000);
 
   if (!getMyName()) {
     setTimeout(() => openMeModal(), 800);
