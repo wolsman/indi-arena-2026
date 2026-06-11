@@ -50,25 +50,35 @@ jobs:
           WKPOOL_PASSWORD: ${{ secrets.WKPOOL_PASSWORD }}
         run: npm run scrape
 
-      - name: Wijzigingen committen + Vercel laten deployen
-        env:
-          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+      - name: Wijzigingen committen
+        id: commit
         run: |
           git config user.name  "indi-arena-bot"
           git config user.email "indi-arena-bot@users.noreply.github.com"
           if git diff --quiet -- data/pool-data.js; then
             echo "Geen wijzigingen in de stand — niets te committen."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git add data/pool-data.js
             git commit -m "Auto-update poulestand $(date -u +'%Y-%m-%d %H:%M UTC')"
             git push
             echo "Stand bijgewerkt en gepusht."
-            # Vercel deployt commits van de bot niet automatisch; daarom
-            # vuren we hier zelf een productie-deploy af via de deploy hook.
-            if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
-              echo "Vercel-deploy afvuren…"
-              curl -sS -X POST "$VERCEL_DEPLOY_HOOK" && echo "  ✓ deploy getriggerd"
-            else
-              echo "  ⚠ Secret VERCEL_DEPLOY_HOOK ontbreekt — site wordt niet automatisch live gezet."
-            fi
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Vercel zet commits van de bot niet betrouwbaar live op het
+      # productiedomein. Daarom deployen we hier zelf via de Vercel-CLI
+      # met --prod — exact de methode die het domein wél bijwerkt.
+      - name: Live zetten op Vercel (productie)
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_fPR124nS3FHhwzjGH2fbWHrt
+          VERCEL_PROJECT_ID: prj_2F4KhtTZ1Cm9xVW28qxnxwcqHBe2
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "  ⚠ Secret VERCEL_TOKEN ontbreekt — site wordt niet automatisch live gezet."
+            exit 0
+          fi
+          npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+          echo "  ✓ live gezet op productie"
