@@ -50,7 +50,9 @@ jobs:
           WKPOOL_PASSWORD: ${{ secrets.WKPOOL_PASSWORD }}
         run: npm run scrape
 
-      - name: Wijzigingen committen (indien er iets veranderd is)
+      - name: Wijzigingen committen + Vercel laten deployen
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
           git config user.name  "indi-arena-bot"
           git config user.email "indi-arena-bot@users.noreply.github.com"
@@ -60,5 +62,13 @@ jobs:
             git add data/pool-data.js
             git commit -m "Auto-update poulestand $(date -u +'%Y-%m-%d %H:%M UTC')"
             git push
-            echo "Stand bijgewerkt en gepusht — Vercel deployt nu automatisch."
+            echo "Stand bijgewerkt en gepusht."
+            # Vercel deployt commits van de bot niet automatisch; daarom
+            # vuren we hier zelf een productie-deploy af via de deploy hook.
+            if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
+              echo "Vercel-deploy afvuren…"
+              curl -sS -X POST "$VERCEL_DEPLOY_HOOK" && echo "  ✓ deploy getriggerd"
+            else
+              echo "  ⚠ Secret VERCEL_DEPLOY_HOOK ontbreekt — site wordt niet automatisch live gezet."
+            fi
           fi
