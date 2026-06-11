@@ -19,6 +19,15 @@ function bucket(p) {
   return 'bezig';
 }
 
+// Statuschip voor de ranglijst vóór er punten zijn (i.p.v. een leeg "—").
+function statusChip(p) {
+  if (p.matches === 104 && p.winner && p.topscorer) return '<span class="lb-status klaar">klaar</span>';
+  const b = bucket(p);
+  if (b === 'groep') return '<span class="lb-status groep">groepsfase</span>';
+  if (b === 'nul')   return '<span class="lb-status leeg">—</span>';
+  return '<span class="lb-status bezig">bezig</span>';
+}
+
 // Genormaliseerde landnaam → sleutel voor vlaggen en uitslagen.
 function norm(name) {
   return (name || '')
@@ -26,7 +35,20 @@ function norm(name) {
     .normalize('NFD').replace(/[̀-ͯ]/g, '') // accenten weg
     .replace(/[^a-z0-9]/g, '');                        // spaties/koppels/punten weg
 }
+// Echte vlaggen via flagcdn.com (scherpe SVG's i.p.v. emoji).
+const TEAM_ISO = {
+  mexico:'mx', zuidafrika:'za', zuidkorea:'kr', tsjechie:'cz', canada:'ca', bosnie:'ba',
+  qatar:'qa', zwitserland:'ch', usa:'us', paraguay:'py', australie:'au', turkije:'tr',
+  brazilie:'br', marokko:'ma', haiti:'ht', schotland:'gb-sct', duitsland:'de', curacao:'cw',
+  ecuador:'ec', ivoorkust:'ci', nederland:'nl', japan:'jp', zweden:'se', tunesie:'tn',
+  spanje:'es', kaapverdie:'cv', uruguay:'uy', saoediarabie:'sa', belgie:'be', egypte:'eg',
+  iran:'ir', nieuwzeeland:'nz', frankrijk:'fr', senegal:'sn', noorwegen:'no', irak:'iq',
+  argentinie:'ar', algerije:'dz', oostenrijk:'at', jordanie:'jo', portugal:'pt', colombia:'co',
+  oezbekistan:'uz', congo:'cg', kroatie:'hr', engeland:'gb-eng', panama:'pa', ghana:'gh'
+};
 function flagFor(name) {
+  const code = TEAM_ISO[norm(name)];
+  if (code) return `<img class="flag" src="https://flagcdn.com/${code}.svg" alt="" loading="lazy">`;
   return (window.POOL_FLAGS && POOL_FLAGS[norm(name)]) || '';
 }
 // Uitslag van een wedstrijd (of null) — kijkt in POOL_RESULTS op home|away.
@@ -75,6 +97,7 @@ function liveMinute(ls) {
 
 // Koppelt een API-wedstrijd aan een van onze (NL) wedstrijden.
 function ingestLiveMatches(apiMatches) {
+  const prev = window.__liveScores || {};
   const next = {};
   (apiMatches || []).forEach(am => {
     const ah = norm(am.home), aa = norm(am.away);
@@ -89,7 +112,17 @@ function ingestLiveMatches(apiMatches) {
       }
     }
   });
+  // Goal-detectie: nieuwe stand met meer doelpunten dan de vorige.
+  const goals = [];
+  if (window.__liveInit) {
+    Object.keys(next).forEach(key => {
+      const n = next[key], p = prev[key];
+      if (p && ((n.hs + n.as) > (p.hs + p.as))) goals.push({ key, ls: n });
+    });
+  }
   window.__liveScores = next;
+  window.__liveInit = true;
+  return goals;
 }
 
 async function fetchLive() {
@@ -97,10 +130,58 @@ async function fetchLive() {
     const r = await fetch('/api/live', { cache: 'no-store' });
     if (!r.ok) return;
     const j = await r.json();
-    ingestLiveMatches(j.matches);
+    const goals = ingestLiveMatches(j.matches);
     renderLiveNow();
     renderArena();
+    goals.forEach(g => fireGoal(g.key, g.ls));
   } catch (e) { /* stil falen — site blijft werken */ }
+}
+
+// Vind onze kalender-index voor een genormaliseerde "home|away"-sleutel.
+function calIndexForKey(key) {
+  for (let i = 0; i < POOL_CALENDAR.length; i++) {
+    const m = POOL_CALENDAR[i];
+    if (norm(m.home) + '|' + norm(m.away) === key) return i;
+  }
+  return -1;
+}
+
+// GOAL! — flits, confetti en een Henk-melding bij een nieuw doelpunt.
+function fireGoal(key, ls) {
+  const idx = calIndexForKey(key);
+  const m = idx >= 0 ? POOL_CALENDAR[idx] : null;
+  if (!m) return;
+  const picks = idx >= 0 ? predictionsFor(idx) : null;
+
+  // Henk-regel op basis van de nieuwe stand + voorspellingen.
+  let henk = `Doelpunt! ${m.home} ${ls.hs}-${ls.as} ${m.away}.`;
+  if (picks && picks.length) {
+    const exact = picks.filter(p => p.h === ls.hs && p.a === ls.as).map(p => p.player);
+    if (exact.length) {
+      henk = `Bij ${ls.hs}-${ls.as} juicht ${exact.slice(0,3).join(', ')}${exact.length>3?` +${exact.length-3}`:''} mee — precies hun voorspelling.`;
+    } else {
+      const lo = ls.hs > ls.as ? 'h' : (ls.hs < ls.as ? 'a' : 'd');
+      const tend = picks.filter(p => { const po = p.h>p.a?'h':(p.h<p.a?'a':'d'); return po === lo; }).length;
+      const leader = ls.hs > ls.as ? m.home : (ls.hs < ls.as ? m.away : null);
+      henk = leader
+        ? `${ls.hs}-${ls.as}. ${tend} van de ${picks.length} gokten op ${leader} — die staan er nu goed bij.`
+        : `${ls.hs}-${ls.as}, gelijk. Bijna niemand zag dit aankomen.`;
+    }
+  }
+
+  const toast = $('#goalToast');
+  if (toast) {
+    $('#goalScore').innerHTML = `${flagFor(m.home)} ${m.home} <b>${ls.hs} - ${ls.as}</b> ${m.away} ${flagFor(m.away)}`;
+    $('#goalHenk').textContent = henk;
+    toast.classList.remove('hidden');
+    void toast.offsetWidth; // restart animatie
+    toast.classList.add('show');
+    clearTimeout(window.__goalTimer);
+    window.__goalTimer = setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.classList.add('hidden'), 400); }, 7000);
+  }
+  // Flits op de live-balk + confetti.
+  document.querySelectorAll('.livebar').forEach(el => { el.classList.remove('goal-hit'); void el.offsetWidth; el.classList.add('goal-hit'); });
+  confettiBurst(70);
 }
 
 function shuffle(arr) {
@@ -392,10 +473,7 @@ function renderLeaderboard(filter = 'all') {
         <div class="col-span-5">
           <div class="lb-name">
             <div class="avatar">${getInitial(p.name)}</div>
-            <div>
-              <div>${p.name}${mine ? ' <span class="text-oranje text-[10px] font-black ml-1">JIJ</span>' : ''}</div>
-              <div class="lb-bar"><div style="width:${pct}%"></div></div>
-            </div>
+            <div>${p.name}${mine ? ' <span class="text-oranje text-[10px] font-black ml-1">JIJ</span>' : ''}</div>
           </div>
         </div>
         <div class="col-span-2 text-center col-hide">
@@ -408,7 +486,9 @@ function renderLeaderboard(filter = 'all') {
           <span class="lb-pill ${p.topscorer ? 'pill-yes' : 'pill-no'}">${p.topscorer ? '✓' : '×'}</span>
         </div>
         <div class="col-span-2 lb-pts">
-          ${pts ? `<span class="text-white">${p.points}</span> <span class="text-white/30">pt</span>${delta}` : `<span class="text-white/30">—</span>`}
+          ${pts
+            ? `<span class="text-white">${p.points}</span> <span class="text-white/30">pt</span>${delta}`
+            : statusChip(p)}
         </div>
       </div>
     `;
@@ -716,6 +796,30 @@ function renderArena() {
           : `<span class="arena-soon">${when}</span>`);
     const top3 = s.exact.slice(0, 3).map(([sc, n]) =>
       `<span class="ascore">${sc.replace('-', '-')}<b>${n}×</b></span>`).join('');
+    // Wat-als: bij de huidige live stand, wie staat er goed?
+    let watals = '';
+    if (live && ls) {
+      const exactNow = picks.filter(p => p.h === ls.hs && p.a === ls.as);
+      const lo = ls.hs > ls.as ? 'h' : (ls.hs < ls.as ? 'a' : 'd');
+      const totoNow = picks.filter(p => { const po = p.h>p.a?'h':(p.h<p.a?'a':'d'); return po === lo; });
+      const miss = picks.length - totoNow.length;
+      const meName = getMyName().toLowerCase();
+      const meExact = exactNow.some(p => p.player.toLowerCase() === meName);
+      const meToto = totoNow.some(p => p.player.toLowerCase() === meName);
+      const meTag = getMyName()
+        ? `<span class="watals-me ${meExact ? 'good' : meToto ? 'ok' : 'bad'}">${meExact ? 'jij: exact goed ✓' : meToto ? 'jij: juiste toto' : 'jij: zit ernaast'}</span>`
+        : '';
+      watals = `
+        <div class="watals">
+          <div class="watals-title">Als het ${ls.hs}-${ls.as} blijft:</div>
+          <div class="watals-row">
+            <span class="wa good">${exactNow.length}× exact</span>
+            <span class="wa ok">${totoNow.length}× juiste toto</span>
+            <span class="wa bad">${miss}× mis</span>
+            ${meTag}
+          </div>
+        </div>`;
+    }
     return `
       <div class="arena-card ${live ? 'is-live' : ''} ${result ? 'is-final' : ''}">
         <div class="arena-head">
@@ -733,6 +837,7 @@ function renderArena() {
           <span class="text-oranje">${s.a}× ${m.away}</span>
         </div>
         <div class="arena-scores">${top3}</div>
+        ${watals}
         <div class="arena-henk">${henkMatchTake(m, picks, result, ls)}</div>
       </div>`;
   }).join('');

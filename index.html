@@ -8,7 +8,7 @@
 <meta name="description" content="Live ranglijst, Henk's commentaar en voorspellings-radar voor de Indicium WK Poule 2026." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Saira+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -348,6 +348,13 @@
 <button id="henkToggle" class="henk-toggle">
   <span>H</span>
 </button>
+
+<!-- Goal-melding -->
+<div id="goalToast" class="goal-toast hidden">
+  <div class="goal-flash">⚽ GOAL</div>
+  <div class="goal-score" id="goalScore"></div>
+  <div class="goal-henk" id="goalHenk"></div>
+</div>
 
 <!-- Confetti canvas -->
 <canvas id="confetti" class="fixed inset-0 pointer-events-none z-30"></canvas>
