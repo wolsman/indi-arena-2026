@@ -3,10 +3,16 @@ name: Indi-Arena data-update
 # Wanneer draait dit?
 on:
   schedule:
-    # Cron staat in UTC. Tijdens het toernooi elke 30 minuten, zodat zowel
+    # Cron staat in UTC. Tijdens het toernooi ~elke 30 minuten, zodat zowel
     # de onthulde voorspellingen (bij aftrap) als de uitslag (bij rust/einde)
     # snel meelopen. (Kan nooit verser zijn dan wkpooltjes zelf.)
-    - cron: '*/30 * * * *'
+    #
+    # LET OP: GitHub throttle't geplande runs zwaar, vooral op :00/:30 (de
+    # drukste minuten) — die ticks worden vaak overgeslagen. Daarom een
+    # off-peak offset (7 en 37 over) i.p.v. '*/30': die worden merkbaar
+    # vaker daadwerkelijk uitgevoerd. Voor échte 30-min-zekerheid moet een
+    # externe trigger 'workflow_dispatch' aanroepen (schedule blijft grillig).
+    - cron: '7,37 * * * *'
   # Handmatig starten kan altijd via de "Run workflow"-knop in GitHub.
   workflow_dispatch:
 
