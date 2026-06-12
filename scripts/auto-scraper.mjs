@@ -174,15 +174,29 @@ const run = async () => {
         div.innerHTML = contentOf(await post('rankingPool', pg));
         let added = 0;
         div.querySelectorAll('tr').forEach(row => {
-          const text = row.innerText.replace(/\s+/g, ' ').trim();
-          const pm = text.match(/(\d+)\s*\+\s*(\d+)/);
-          if (!pm) return;
-          const total = parseInt(pm[1], 10);
-          const display = text
-            .replace(/^\d+\.\s*\([^)]*\)\s*/, '')
-            .replace(/\s*\(beheerder\)/i, '')
-            .replace(/(\d+)\s*\+\s*(\d+).*/, '')
-            .trim().toLowerCase();
+          // Rij ziet er zo uit:
+          //   kale opmaak (huidige realiteit):  "1 (-) Dennis (beheerder) ✉ 400"
+          //   oude "X + Y"-opmaak (fallback):   "1. (+3) Dennis 220 + 30"
+          const text = row.innerText
+            .replace(/[☀-➿️\u{1F000}-\u{1FFFF}]/gu, ' ') // emoji/icons (✉) eruit
+            .replace(/\s+/g, ' ').trim();
+          // strip leiding: positie + verschil-indicator, bv "1 (-)" of "12. (+3)"
+          const body = text.replace(/^\d+\.?\s*(?:\([^)]*\)\s*)?/, '');
+
+          // Punten = de PUNTEN-kolom. Eerst oude "X + Y"-opmaak proberen (totaal = X),
+          // anders het kale getal aan het eind van de rij. Naam = de rest ervóór.
+          let total, display;
+          const plus = body.match(/^(.*?)\s*(\d+)\s*\+\s*\d+/);
+          if (plus) {
+            display = plus[1];
+            total = parseInt(plus[2], 10);
+          } else {
+            const kaal = body.match(/^(.*?)\s+(\d+)\s*$/);
+            if (!kaal) return; // geen punten-getal → kop/lege rij overslaan
+            display = kaal[1];
+            total = parseInt(kaal[2], 10);
+          }
+          display = display.replace(/\s*\(beheerder\)/i, '').trim().toLowerCase();
           if (!display || seenRank.has(display)) return;
           seenRank.add(display);
           added++;
