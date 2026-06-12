@@ -7,9 +7,9 @@
 window.POOL_META = {
   poolId: 423,
   name: "Indicium WK Poule 2026",
-  totalPlayers: 54,
+  totalPlayers: 55,
   capacityMax: 75,
-  syncedAt: "2026-06-12T10:31:16.292Z",
+  syncedAt: "2026-06-12T11:01:23.008Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -72,7 +72,8 @@ window.POOL_PLAYERS = [
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 400, prevPos: 4 },
   { name: "RoanTuit(messi)", matches: 7, winner: true, topscorer: true, paid: true, points: 220, prevPos: 22 },
   { name: "Christopheramboz", matches: 9, winner: true, topscorer: true, paid: true, points: 400, prevPos: 5 },
-  { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: false, points: 0, prevPos: 54 }
+  { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: false, points: 0, prevPos: 54 },
+  { name: "WillemCo", matches: 0, winner: false, topscorer: false, paid: false, points: 0 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
