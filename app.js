@@ -718,8 +718,8 @@ function renderDNA() {
   fillList('#championPicks', POOL_DNA.champions);
   fillList('#topscorerPicks', POOL_DNA.topscorers);
 
-  $('#championHenk').innerHTML = `<strong class="text-oranje">Henk:</strong> De meeste stemmen gaan naar Spanje. Veilig, voorspelbaar, een tikje braaf. <strong>Mauricio1980</strong> gokt op Frankrijk — moedig, want de bracket is onverbiddelijk. En Nederland krijgt amper stemmen, in een poule vol Oranje-shirts. Dat mag iemand zich persoonlijk aanrekenen.`;
-  $('#topscorerHenk').innerHTML = `<strong class="text-oranje">Henk:</strong> Mbappé is favoriet, net als bij de halve wereldbevolking. Maar drie stemmen voor <strong>Vinícius</strong> — de man die naast Mbappé speelt bij Real Madrid — is gewoon slordig. En wie Yamal links laat liggen terwijl half de poule Spanje kampioen maakt, moet zijn huiswerk overdoen.`;
+  $('#championHenk').innerHTML = `<strong class="text-oranje">Henk:</strong> De meeste stemmen gaan naar Spanje. Veilig, voorspelbaar, zó braaf dat het pijn doet. <strong>Mauricio1980</strong> gokt Frankrijk — moedig, maar de bracket is onverbiddelijk en kent geen genade. En Nederland? Amper stemmen, in een poule die vól Oranje zit op vrijdag. Dat mag een paar mensen zich persoonlijk aanrekenen.`;
+  $('#topscorerHenk').innerHTML = `<strong class="text-oranje">Henk:</strong> Mbappé favoriet, net als bij de halve wereldbevolking — origineel is anders. Drie stemmen voor <strong>Vinícius</strong>, de man die naast Mbappé staat bij Real: dat is geen analyse, dat is gokken met je ogen dicht. En wie Yamal links laat liggen terwijl hij Spanje wél kampioen maakt, moet z'n huiswerk helemaal overdoen.`;
 }
 
 // ============================================================
@@ -824,11 +824,11 @@ function henkMatchTake(m, picks, result, liveScore) {
     const lead = lh > la ? m.home : (lh < la ? m.away : null);
     let line = `Het staat <strong>${lh}-${la}</strong>. `;
     if (exactNow.length) {
-      line += `${exactNow.slice(0,3).join(', ')}${exactNow.length>3?` +${exactNow.length-3}`:''} heeft precies dit als eindstand — die zit nu te bidden dat de scheids vroeg affluit.`;
+      line += `${exactNow.slice(0,3).join(', ')}${exactNow.length>3?` +${exactNow.length-3}`:''} heeft precies dit als eindstand — die zit nu met de billen samengeknepen te bidden dat de scheids vervroegd affluit.`;
     } else if (lead) {
-      line += `${tendNow} van de ${s.total} voorspelde een zege voor ${lead}; die zitten voorlopig goed. De rest moet hopen op een ommekeer.`;
+      line += `${tendNow} van de ${s.total} voorspelde een zege voor ${lead}; die zitten voorlopig goed. De rest mag hopen op een ommekeer — of vast aan een goede smoes werken.`;
     } else {
-      line += `Een gelijkspel had bijna niemand — als dit zo blijft, ligt de hele poule op de buik.`;
+      line += `Een gelijkspel had bijna niemand zien aankomen — blijft dit zo, dan ligt de hele poule plat op de buik.`;
     }
     return line;
   }
@@ -843,12 +843,12 @@ function henkMatchTake(m, picks, result, liveScore) {
     });
     if (exactWinners.length) {
       const names = exactWinners.slice(0, 4).join(', ') + (exactWinners.length > 4 ? ` +${exactWinners.length - 4}` : '');
-      return `Eindstand ${rh}-${ra}. Held${exactWinners.length > 1 ? 'en' : ''} van de wedstrijd: <strong>${names}</strong> — exact goed. De rest mag toekijken.`;
+      return `Eindstand ${rh}-${ra}. Held${exactWinners.length > 1 ? 'en' : ''} van de wedstrijd: <strong>${names}</strong> — exact goed. De rest? Toekijken en klappen voor andermans gokwerk.`;
     }
     if (tendErr.length === picks.length) {
-      return `Eindstand ${rh}-${ra}. Niemand had de juiste afloop. De hele poule zit ernaast — collectief geheugenverlies, mooi om te zien.`;
+      return `Eindstand ${rh}-${ra}. Niemand had de juiste afloop. De hele poule zit ernaast — collectief de plank misgeslagen, en ik geniet van elke seconde.`;
     }
-    return `Eindstand ${rh}-${ra}. Niemand had 'm exact, maar ${picks.length - tendErr.length} van de ${picks.length} had de juiste afloop. ${tendErr.length ? `<strong>${tendErr[0].player}</strong> en ${tendErr.length - 1} ander${tendErr.length - 1 === 1 ? '' : 'en'} zaten er compleet naast.` : ''}`;
+    return `Eindstand ${rh}-${ra}. Niemand had 'm exact, maar ${picks.length - tendErr.length} van de ${picks.length} had tenminste de juiste afloop. ${tendErr.length ? `<strong>${tendErr[0].player}</strong> en ${tendErr.length - 1} ander${tendErr.length - 1 === 1 ? '' : 'en'} zaten er finaal naast — terug naar de tekentafel.` : ''}`;
   }
 
   // Live (nog geen uitslag)

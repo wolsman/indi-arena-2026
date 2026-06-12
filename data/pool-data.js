@@ -256,16 +256,16 @@ window.POOL_MATCHES_UPCOMING = [
     henkPick: "Vier uur 's nachts, alleen voor de diehards. Tsjechië teert nog altijd op 1996. Son beslist dit duel een uur voordat jullie wekker afgaat. 2-1." },
   { id: 43995, date: "2026-06-12T21:00:00+02:00", home: "Canada", away: "Bosnië",
     consensus: { home: 68, draw: 17, away: 15 }, outlier: "Brokkenpiloot: 1-3", stadium: "BMO Field", city: "Toronto",
-    henkPick: "Canada in eigen huis, Bosnië dat denkt dat het er al is. Dat is het niet. 2-1 voor de gastheren." },
+    henkPick: "Canada in eigen huis, Bosnië dat denkt dat het er al is. Niet dus. 2-1 voor de gastheren — en Bosnië mag op het vliegtuig nog eens nadenken over wie ze dáchten te zijn." },
   { id: 43996, date: "2026-06-13T03:00:00+02:00", home: "USA", away: "Paraguay",
     consensus: { home: 72, draw: 18, away: 10 }, outlier: "Heer: 0-1", stadium: "SoFi Stadium", city: "Los Angeles",
-    henkPick: "Pulisic in Los Angeles, heel Hollywood op de tribune. Paraguay parkeert de bus — maar die bus krijgt twee deuken. 2-0." },
+    henkPick: "Pulisic in Los Angeles, heel Hollywood op de tribune. Paraguay parkeert de bus — maar die bus krijgt twee deuken en een lekke band. 2-0, en geen excuses achteraf." },
   { id: 43997, date: "2026-06-13T21:00:00+02:00", home: "Qatar", away: "Zwitserland",
     consensus: { home: 14, draw: 22, away: 64 }, outlier: "Givano: 2-2", stadium: "Mercedes-Benz Stadium", city: "Atlanta",
-    henkPick: "Qatar zoekt nog altijd naar de vorm van... tja, van wanneer eigenlijk? Zwitserland wint dit koel en zakelijk. 0-2." },
+    henkPick: "Qatar zoekt nog altijd naar z'n vorm van... tja, ís die er ooit geweest? Zwitserland wint dit koel, zakelijk en zonder één keer te hoeven zweten. 0-2." },
   { id: 43998, date: "2026-06-14T00:00:00+02:00", home: "Brazilië", away: "Marokko",
     consensus: { home: 55, draw: 28, away: 17 }, outlier: "AlinevanVuuren: 1-2", stadium: "Hard Rock Stadium", city: "Miami",
-    henkPick: "Dé kraker van de openingsweek. Marokko bewees in 2022 dat het geen toeval was, Brazilië heeft iets recht te zetten. Ik zeg 1-1 — en Aline mag heel even glimlachen." }
+    henkPick: "Dé kraker van de openingsweek. Marokko bewees in 2022 dat het geen toeval was, Brazilië speelt voor z'n trots. Ik zeg 1-1 — en Aline mag heel even hardop lachen naar de rest van de poule." }
 ];
 
 // Pool-DNA — indicatie op basis van de poule-percentages.
@@ -312,73 +312,76 @@ window.POOL_BADGES = [
    ============================================================ */
 window.HENK = {
   name: "Henk",
-  bio: "Onze vaste analist. Kantinegevoel, scherp randje. Eerder Voetbal Inside dan Studio Voetbal.",
+  bio: "Onze vaste analist. Kantinegevoel, scherp mes. Deelt uit, neemt niks terug. Eerder Voetbal Inside dan Studio Voetbal.",
   avatar: "H",
 
   // Dagmonoloog vóór en op de openingsdag — deterministisch per datum gekozen.
   monologen_vooraf: [
-    (s) => `${s.nul} deelnemers staan nog op nul. Nul wedstrijden, nul visie, nul excuses. ${s.nulNames.slice(0,3).join(', ')} — ik noem geen namen. O nee, dat deed ik net wél. De teller loopt.`,
-    (s) => `${s.complete} deelnemers hebben álles ingevuld: 104 wedstrijden, een wereldkampioen en een topscorer. De rest hangt ergens tussen goede bedoelingen en uitstelgedrag. Kies een kant, zou ik zeggen.`,
+    (s) => `${s.nul} deelnemers staan nog op nul. Nul wedstrijden, nul visie, nul ruggengraat. ${s.nulNames.slice(0,3).join(', ')} — ik zou geen namen noemen, maar dit verdient namen. De teller loopt, de smoesjes zijn op.`,
+    (s) => `${s.complete} mensen hebben álles ingevuld: 104 duels, een kampioen, een topscorer. De rest hangt tussen goede bedoelingen en pure luiheid. Eén van die twee wint nooit een poule.`,
     (s) => s.notPaid > 0
-      ? `${s.notPaid} ${s.notPaid === 1 ? 'deelnemer heeft' : 'mensen hebben'} de inleg nog niet betaald. Ik zeg het zoals het is: zonder inleg geen eregalerij. De Tikkie is geduldig — de deadline niet.`
-      : `Alle ${s.total} deelnemers hebben betaald. Allemaal. Dat had ik niet verwacht van deze groep, en ik zeg het maar gewoon. De pot is gevuld, de excuses zijn op.`,
+      ? `${s.notPaid} ${s.notPaid === 1 ? 'deelnemer heeft' : 'deelnemers hebben'} de inleg nóg niet betaald. Geen inleg, geen eregalerij — wel meepraten, niet meebetalen, dat type kennen we. De Tikkie is geduldig. Ik niet.`
+      : `Alle ${s.total} hebben betaald. Allemaal. Van déze groep had ik dat niet verwacht, en dat zeg ik recht in de camera. De pot is vol, de uitvluchten zijn op.`,
     (s) => s.phase === 'today'
-      ? `Vanavond om 21:00 rolt de bal in het Azteca. Wie zijn voorspellingen nu nog niet binnen heeft, gokt straks tussen de reclameblokken door. Niet doen. Nu invullen.`
-      : `Nog ${s.daysToKickoff === 1 ? 'één dag' : s.daysToKickoff + ' dagen'} tot de aftrap. Wie nu invult, heeft nog tijd om na te denken. Wie wacht tot het laatste moment, voorspelt straks Tunesië–Japan op gevoel om vier uur 's nachts. Succes daarmee.`
+      ? `Vanavond 21:00, de bal rolt in het Azteca. Wie zijn formulier nu nog niet binnen heeft, zit straks tussen de reclames door wat aan te klikken. Amateurs. Invullen, nú.`
+      : `Nog ${s.daysToKickoff === 1 ? 'één dag' : s.daysToKickoff + ' dagen'} tot de aftrap. Wie nu invult, denkt na. Wie wacht, ramt straks om vier uur 's nachts Tunesië–Japan in op goed geluk — en is daarna boos op mij.`
   ],
 
   // Dagmonoloog tijdens het toernooi.
   monologen_toernooi: [
-    (s) => `Speeldag ${s.speeldag}. ${s.todayCount > 0 ? `Vandaag ${s.todayCount === 1 ? 'één wedstrijd' : s.todayCount + ' wedstrijden'} op het programma.` : 'Vandaag geen wedstrijden — een rustdag, zogenaamd.'} De ranglijst slaapt nooit, onthoud dat.`,
-    (s) => `We zijn onderweg. ${s.nul > 0 ? `En nog stééds staan ${s.nul} deelnemers op nul ingevulde wedstrijden. Het toernooi is begonnen, mensen. De boot vaart.` : 'Iedereen doet mee — zo hoort het.'}`,
-    (s) => `Kijk goed naar de stand van vandaag. Posities zeggen weinig op dag één en alles op dag tien. Wie nu onderin staat: rustig blijven. Wie bovenaan staat: vooral niet te vroeg juichen.`
+    (s) => `Speeldag ${s.speeldag}. ${s.todayCount > 0 ? `Vandaag ${s.todayCount === 1 ? 'één wedstrijd' : s.todayCount + ' wedstrijden'} op het programma.` : 'Vandaag niks — rustdag, voor wie dat verdient.'} De ranglijst slaapt nooit, en ik ook niet.`,
+    (s) => `We zijn onderweg. ${s.nul > 0 ? `En tóch staan ${s.nul} mensen nog op nul. Het toernooi is begonnen, de boot is weg, en jullie staan nog op de kade te zwaaien.` : 'Iedereen aangehaakt. Eindelijk. Nu telt het.'}`,
+    (s) => `Kijk goed naar de stand. Op dag één zegt 'ie niks, op dag tien alles. Wie nu onderin bivakkeert: rustig blijven. Wie bovenaan staat te juichen: ik heb een lange lijst van mensen die te vroeg juichten.`
   ],
 
   // Losse uitspraken voor de Henk-bubbel — vóór het toernooi.
   hot_takes: [
-    (s) => `${s.nul} man op nul. ${s.nulNames.slice(0,3).join(', ')} — puur uit liefde dat ik jullie noem. De aftrap wacht op niemand.`,
+    (s) => `${s.nul} man op nul. ${s.nulNames.slice(0,3).join(', ')} — puur uit genegenheid noem ik jullie. De aftrap wacht op niemand, en op jullie al helemaal niet.`,
     (s) => s.notPaid > 0
-      ? `${s.notPaid} deelnemers hebben nog niet betaald. De pot is het podium. Zonder inleg sta je straks te juichen langs de zijlijn.`
-      : `De pot is compleet — iedereen heeft betaald. Vanaf nu kan niemand zich meer verschuilen achter "ik deed toch niet écht mee".`,
-    () => `De meeste stemmen voor de wereldtitel gaan naar Spanje. Veilig. Voorspelbaar. Een tikje braaf ook — durf eens iets, mensen.`,
-    () => `Mbappé is topscorer-favoriet in deze poule, net als bij de halve wereldbevolking. Maar drie stemmen voor Vinícius — de man die naast Mbappé speelt bij Real Madrid — dat is gewoon slordig huiswerk.`,
-    () => `<strong>Mauricio1980</strong> kiest Frankrijk als wereldkampioen. Mauricio. Heb je de bracket gezien? Sterkte wens ik je. Kansen geef ik je niet.`,
-    () => `Iemand in deze poule heeft Brazilië–Marokko op 1-2 staan. Voor Marokko. Aline, jij dus. Komt het uit, dan haal ik een week lang koffie voor je. Komt het niet uit — dan was het in elk geval dapper.`,
-    () => `De gemiddelde voorspelling in deze poule is 2-1. Braaf, veilig, Hollands. Op het vorige WK eindigde nog geen één op de acht wedstrijden in 2-1. Jullie zijn met z'n allen één grote verzekeringspolis.`,
-    () => `Nederland krijgt amper stemmen voor de wereldtitel. In een poule die nota bene Indicium heet, vol Oranje-shirts op vrijdag. Vaderlandsliefde verkoopt blijkbaar slecht dit jaar.`,
-    () => `<strong>Robertosxs</strong> en <strong>ikgajuichen</strong> — allebei alles ingevuld, allebei zonder voornaam of gezicht. Anonieme killers of dezelfde persoon met twee accounts? Ik hou het in de gaten.`
+      ? `${s.notPaid} deelnemers nog niet betaald. De pot ís het podium. Zonder inleg sta je straks te klappen langs de lijn terwijl een ander jouw prijzengeld telt.`
+      : `Pot compleet, iedereen betaald. Vanaf nu verschuilt niemand zich meer achter "ik deed toch niet écht mee". Je dóét mee. Bewijs het maar.`,
+    () => `De meeste titelstemmen: Spanje. Veilig. Voorspelbaar. Zó braaf dat ik er een beetje verdrietig van word. Durf eens iets, mensen.`,
+    () => `Mbappé topscorer, zegt de halve poule — net als de halve wereld. En dan dríé stemmen voor Vinícius, die naast Mbappé staat bij Real. Dat is geen analyse, dat is gokken met je ogen dicht.`,
+    () => `<strong>Mauricio1980</strong> zet Frankrijk op kampioen. Mauricio. Eén blik op de bracket en je weet: dat is hopen, geen voorspellen. Sterkte wens ik je — kansen kan ik je niet geven.`,
+    () => `Iemand heeft Brazilië–Marokko op 1-2 staan. Vóór Marokko. Aline, dat ben jij. Komt 'ie uit, dan haal ik een week koffie voor je. Komt 'ie niet uit, dan hebben we het er nooit meer over — voor jouw bestwil.`,
+    () => `De gemiddelde gok hier is 2-1. Braaf, veilig, oer-Hollands. Vorig WK eindigde geen één op de acht duels in 2-1. Jullie zijn met z'n allen één grote verzekeringspolis met een Oranje-sjaaltje om.`,
+    () => `Nederland krijgt amper titelstemmen. In een poule die Indicium heet, vol mensen in Oranje op vrijdag. Vaderlandsliefde is hier blijkbaar alleen voor de foto.`,
+    () => `<strong>Robertosxs</strong> en <strong>ikgajuichen</strong> — allebei alles ingevuld, allebei zonder gezicht of voornaam. Anonieme scherpschutters, of één iemand met twee accounts? Ik noem niks. Ik hou alleen álles in de gaten.`
   ],
 
   // Extra uitspraken zodra het toernooi loopt (positie-wissels en duiding).
   ranking_change: [
-    () => `De eerste uitslagen zijn binnen en kijk: de papieren werkelijkheid en de echte werkelijkheid zijn twee verschillende sporten.`,
-    () => `Wie bovenaan staat na één speeldag heeft geluk gehad. Wie er na tien speeldagen nog staat, kan voetbal kijken. Onthoud wie ik ben als het zover is.`,
-    (s) => `${s.nul > 0 ? `Er staan nog steeds mensen op nul ingevulde wedstrijden terwijl het toernooi loopt. Dat is geen pech meer, dat is een keuze.` : `Iedereen is aangehaakt. Nu wordt het menens.`}`
+    () => `De eerste uitslagen zijn binnen, en zie: de papieren werkelijkheid en het echte voetbal zijn twee totaal verschillende sporten. Pijnlijk voor sommigen. Heerlijk voor mij.`,
+    () => `Wie na één speeldag bovenaan staat, heeft geluk gehad. Wie er na tien nog staat, kan voetbal kijken. Onthoud wie dat als eerste zei, als het zover is.`,
+    (s) => `${s.nul > 0 ? `Er staan nóg mensen op nul terwijl het toernooi al draait. Dat is geen pech meer, dat is een levenskeuze.` : `Iedereen aangehaakt. Geen excuses meer, geen mededogen meer. Nu wordt het menens.`}`
   ],
 
   // Henks oordeel per speler — voor de profielkaart.
   player_takes: {
-    "Wolsman": "De beheerder. Alles ingevuld — maar ja, dat hóórt ook als je de pool runt. Of hij ook kan winnen, is een tweede. Het klassement kent geen vriendjes.",
-    "Robertosxs": "Geen voornaam, geen achternaam, wél alle 104 wedstrijden ingevuld. De stille killer van deze poule. Of de schoonmaker met voorkennis. We komen erachter.",
-    "ikgajuichen": "Komt binnenwandelen, vult in één ruk alle 104 wedstrijden in, kiest winnaar én topscorer, en rekent meteen af. De perfecte nieuwkomer. Vrijwel verdacht perfect. Niemand weet wie het is — en dat maakt het alleen maar beter.",
-    "Mauricio1980": "Frankrijk als wereldkampioen. Mauricio toch. Heb je de bracket gezien? Ik geef je sterkte, want kansen geef ik je niet.",
-    "AlinevanVuuren": "Marokko dat in de openingsweek van Brazilië wint — niemand anders durft dat aan. Komt het uit, dan is Aline twee weken lang onaantastbaar bij de koffieautomaat.",
-    "Katinkadeb": "Eerst 72 wedstrijden zonder winnaar en topscorer, inmiddels alles netjes binnen. Kijk, dát bedoel ik nou. Iemand die luistert. Nu de knock-outfase nog, Katinka.",
-    "BornBjorg": "Van nul naar vierentwintig ingevulde wedstrijden in een paar dagen, plus winnaar en topscorer. Bjorg is wakker. Doorpakken nu — de groepsfase wacht niet.",
-    "Marlayne": "Stond vorige week nog op nul, zit nu op zesentwintig wedstrijden mét wereldkampioen. Marlayne haalt in als een bezetene. Zo zie ik het graag.",
-    "Norman.P": "Wereldkampioen gekozen, topscorer gekozen, nul wedstrijden ingevuld. Norman bouwt het huis vanaf het dak. Origineel is het wel.",
-    "Brokkenpiloot": "Zeventien wedstrijden. De naam dekt de lading. Maar wie nu doorpakt, vliegt zo de top tien binnen — turbulentie hoort erbij.",
-    "Wisselbeker": "Twee wedstrijden ingevuld. Het dubbele van vorige week, dat dan weer wel. In dit tempo is de poule af rond het WK van 2030.",
-    "Fseton": "Drie wedstrijden, maar wél een wereldkampioen en een topscorer. De omgekeerde volgorde — maar er zit beweging in, en dat telt.",
-    "Trauner_in_Oranje": "Wereldkampioen en topscorer keurig gekozen, nul wedstrijden ingevuld. Dat is kaartjes kopen voor de finale en vervolgens thuisblijven. Afmaken, Trauner.",
-    "Rugnummer67": "Zelfde verhaal als Trauner: wel een kampioen, geen wedstrijden. Een rugnummer zonder wedstrijdminuten — zonde van het shirt.",
-    "El-Toro-Loco": "Elf wedstrijden, geen winnaar, geen topscorer. El Toro, de arena gaat donderdag open — met of zonder stier.",
-    "Mobicontrol": "Mijn stiekeme favoriet. Drieënvijftig wedstrijden en keuzes met lef erin. Wie afmaakt waar hij aan begonnen is, loopt zo de top vijf binnen.",
-    "StanleyBoessen": "Tweeënzeventig wedstrijden keurig ingevuld, maar geen winnaar en geen topscorer. Stanley, dat is een huis zonder dak. Tien seconden werk.",
-    "Erol_Ulu": "Eerst ontbrak de topscorer nog, inmiddels staat alles er netjes in. Kijk, zó kan het dus ook. Nu de knock-outfase nog, Erol — niet verslappen.",
-    "JoycevanRiet": "Groepsfase ingevuld, winnaar en topscorer gekozen, inleg betaald. Joyce is stilletjes een van de best voorbereide deelnemers van deze poule. Onthoud die naam.",
-    "GeorgeV.": "Eén wedstrijd ingevuld, verder niets. De inleg is inmiddels binnen, dus de intentie is er. Nu de rest nog, George — meedoen is een werkwoord.",
-    "Pepijndh": "Nul wedstrijden ingevuld. De inleg is binnen, dus de wil is er. Nu de daden nog, Pepijn. De klok tikt richting donderdagavond.",
-    "default": "Over deze speler heb ik nog geen oordeel klaarliggen. Dat komt vanzelf — iedereen gaat hier een keer door de molen."
+    "Wolsman": "De beheerder. Alles ingevuld — maar dat hóórt als je de pool runt; applaus krijg je daar niet voor. Of je ook kúnt winnen is een tweede. Het klassement kent geen vriendjes, en jou al helemaal niet.",
+    "Robertosxs": "Geen voornaam, geen gezicht, wél alle 104 duels ingevuld. De stille sluipschutter van deze poule — of de stagiair met voorkennis. Tot je een keer mórst, geloof ik er niks van.",
+    "ikgajuichen": "Wandelt binnen, ramt in één ruk 104 wedstrijden in, kiest kampioen én topscorer, en staat meteen bovenaan. Verdacht perfect. Niemand weet wie het is. Ik zeg: óf een genie, óf iemand die de uitslagen al kent.",
+    "Mauricio1980": "Frankrijk als wereldkampioen. Mauricio toch. De bracket lacht je nu al hardop uit. Dat is geen voorspelling, dat is een wens met een strikje eromheen. Sterkte — die ga je nodig hebben.",
+    "AlinevanVuuren": "Durft als enige Marokko van Brazilië te laten winnen in de openingsweek. Komt 'ie uit: twee weken onaantastbaar bij de koffieautomaat. Komt 'ie niet uit: dan kijken we elkaar even niet aan.",
+    "Katinkadeb": "Begon met 72 duels zónder kampioen en topscorer, heeft nu alles netjes binnen. Kijk, dát is luisteren. Een compliment van mij — geniet ervan, ze zijn schaars hier.",
+    "BornBjorg": "Van nul naar vierentwintig duels in een paar dagen, plus kampioen en topscorer. Bjorg is wakker geschrokken. Doorpakken nu, want de groepsfase wacht niet op jouw goede voornemens.",
+    "Marlayne": "Stond vorige week op nul, zit nu op zesentwintig mét wereldkampioen. Haalt in als een bezetene. Zo wil ik het zien — de rest mag een puntje zuigen.",
+    "Norman.P": "Kampioen gekozen, topscorer gekozen, wedstrijden ingevuld: bijna geen. Norman bouwt het huis vanaf het dak en is trots op het uitzicht. Knap hoor. Nutteloos, maar knap.",
+    "Brokkenpiloot": "De naam dekt de lading volledig. Maar wie zo durft te gokken, vliegt óf de top tien in óf regelrecht de bosjes. Turbulentie hoort erbij — riemen vast.",
+    "Wisselbeker": "Twee wedstrijden ingevuld. Het dubbele van vorige week, dat dan weer. In dit tempo is je formulier af rond het WK van 2034 — tegen die tijd ben ík met pensioen.",
+    "Fseton": "Drie wedstrijden, maar wél een kampioen en topscorer. De omgekeerde volgorde — alsof je het toetje bestelt voordat je binnen bent. Er zit beweging in, dus ik hou m'n mond. Voor nu.",
+    "Trauner_in_Oranje": "Kampioen en topscorer keurig gekozen, wedstrijden: nul. Dat is een kaartje voor de finale kopen en vervolgens thuisblijven op de bank. Afmaken, Trauner — het kost je tien minuten en een greintje karakter.",
+    "Rugnummer67": "Zelfde liedje als Trauner: wél een kampioen, géén wedstrijden. Een rugnummer zonder minuten op het veld. Zonde van het shirt, zonde van de inleg.",
+    "El-Toro-Loco": "Elf wedstrijden, geen kampioen, geen topscorer. El Toro, de arena is open en de stier staat nog in de kleedkamer te twijfelen. Naar binnen of naar huis.",
+    "Mobicontrol": "Mijn stiekeme favoriet. Drieënvijftig duels en keuzes met lef. Maak je af waar je aan begon, dan loop je zo de top vijf in. Áls. Dat woordje hangt boven je hoofd.",
+    "StanleyBoessen": "Tweeënzeventig wedstrijden netjes ingevuld, en dan… de wereldkampioen vergeten. Een heel huis bouwen en het dak overslaan. Tien seconden werk, Stanley. Tien.",
+    "Erol_Ulu": "Eerst ontbrak de topscorer, nu staat alles er. Kijk, zó dus. Compliment — maar verslap niet in de knock-outfase, want dan trek ik het meteen weer in.",
+    "JoycevanRiet": "Groepsfase ingevuld, kampioen en topscorer gekozen, inleg betaald. Joyce is stilletjes een van de best voorbereide deelnemers — terwijl de rest nog naar z'n formulier zoekt. Onthoud die naam.",
+    "GeorgeV.": "Eén wedstrijd ingevuld, verder stilte. De inleg is binnen, dus de intentie bestaat ergens. Nu de daden nog, George — meedoen is een werkwoord, geen gevoel.",
+    "Pepijndh": "Nul wedstrijden. De inleg is binnen, dus je wíl wel. Alleen je dóét niks. Dat is het verhaal van veel goede voornemens, Pepijn. De klok tikt door.",
+    "Martijnmeestervoorspeller": "Noemt zichzelf meestervoorspeller en staat — eerlijk is eerlijk — bovenin. Voorlopig klopt de naam dus. Eén slechte speeldag en het wordt het pijnlijkste pseudoniem van de hele poule.",
+    "Crazy Dutchman": "Bovenin met 400 punten en een naam die om problemen vraagt. Crazy genoeg om te leiden — benieuwd of 'ie crazy genoeg blijft als de druk straks komt opzetten.",
+    "Christopheramboz": "Negen duels ingevuld en tóch bij de koplopers. Of dat lef is of puur geluk weten we over twee weken. Tot die tijd geniet 'ie van een plek die hij amper verdiend heeft.",
+    "default": "Over deze speler heb ik nog geen oordeel klaarliggen. Maak je geen zorgen — iedereen gaat hier vroeg of laat een keer door de molen."
   }
 };
