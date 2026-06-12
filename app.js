@@ -418,18 +418,69 @@ function sortedPlayers() {
   const pts = pointsMode();
   return [...POOL_PLAYERS].filter(p => p.name).sort((a, b) => {
     if (pts) {
-      return (b.points - a.points) || (completeness(b) - completeness(a)) || a.name.localeCompare(b.name, 'nl');
+      return (b.points - a.points) || a.name.localeCompare(b.name, 'nl');
     }
     return (completeness(b) - completeness(a)) || a.name.localeCompare(b.name, 'nl');
   });
 }
 
-function renderHeroLeaderboard() {
-  const sorted = sortedPlayers().slice(0, 6);
+// Klassement met GEDEELDE posities: gelijke punten = dezelfde plek.
+// Berekent ook beweging (vs prevPos), de stijger van de dag en het verschil
+// met de koploper. prevPos wordt door de scraper als gedeelde positie gezet,
+// zodat gelijke-punters geen nep-bewegingen tonen.
+function rankedPlayers() {
   const pts = pointsMode();
-  $('#heroLeaderboard').innerHTML = sorted.map((p, i) => `
+  const list = sortedPlayers();
+  let lastVal = null, lastRank = 0;
+  const ranked = list.map((p, i) => {
+    const val = pts ? (p.points || 0) : completeness(p);
+    let rank;
+    if (val === lastVal) { rank = lastRank; }
+    else { rank = i + 1; lastVal = val; lastRank = rank; }
+    return { p, rank, idx: i, val };
+  });
+  const rankCount = {};
+  ranked.forEach(r => { rankCount[r.rank] = (rankCount[r.rank] || 0) + 1; });
+
+  let mover = null;
+  if (pts) {
+    ranked.forEach(r => {
+      if (typeof r.p.prevPos === 'number') {
+        r.delta = r.p.prevPos - r.rank;
+        if (r.delta > 0 && (!mover || r.delta > mover.delta)) mover = r;
+      }
+    });
+  }
+  const leaderVal = ranked.length ? ranked[0].val : 0;
+  ranked.forEach(r => {
+    r.shared = rankCount[r.rank] > 1;
+    r.gap = pts ? (leaderVal - (r.p.points || 0)) : 0;
+    r.isMover = !!(mover && r === mover && mover.delta > 0);
+  });
+  return ranked;
+}
+
+// Mini puntentrend-sparkline uit POOL_HISTORY (alleen tonen bij ≥2 metingen).
+function sparkline(name) {
+  const h = (window.POOL_HISTORY && POOL_HISTORY[name]) || [];
+  if (h.length < 2) return '';
+  const min = Math.min(...h), max = Math.max(...h), span = (max - min) || 1;
+  const W = 54, H = 16;
+  const pts = h.map((v, i) => {
+    const x = (i / (h.length - 1)) * W;
+    const y = H - ((v - min) / span) * H;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const up = h[h.length - 1] >= h[0];
+  return `<svg class="spark ${up ? 'up' : 'down'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;
+}
+
+function renderHeroLeaderboard() {
+  const ranked = rankedPlayers().slice(0, 6);
+  const pts = pointsMode();
+  $('#heroLeaderboard').innerHTML = ranked.map(({ p, rank }) => `
     <div class="hero-row" onclick="openPlayerModal('${p.name.replace(/'/g, "\\'")}')">
-      <span class="pos">${i + 1}</span>
+      <span class="pos">${rank}</span>
       <span class="nm">${p.name}${isMe(p.name) ? ' <span class="text-oranje text-[10px] font-black ml-1">JIJ</span>' : ''}</span>
       <span class="pts text-white/40">${pts ? p.points + ' pt' : p.matches + '/104'}</span>
     </div>
@@ -449,49 +500,79 @@ function renderHeroLeaderboard() {
   }
 }
 
+// Koploper-band boven de ranglijst (toont de leider[s] + of het gedeeld is).
+function renderLeaderBand() {
+  const el = $('#leaderBand');
+  if (!el) return;
+  const ranked = rankedPlayers();
+  if (!pointsMode() || !ranked.length || ranked[0].val <= 0) { el.innerHTML = ''; return; }
+  const leaders = ranked.filter(r => r.rank === 1).map(r => r.p.name);
+  const leaderPts = ranked[0].p.points;
+  const names = leaders.length > 3
+    ? leaders.slice(0, 3).join(' · ') + ` +${leaders.length - 3}`
+    : leaders.join(' · ');
+  const shareTxt = leaders.length > 1 ? `<span class="lb-band-share">${leaders.length} gedeeld</span>` : '';
+  el.innerHTML = `
+    <div class="lb-band">
+      <span class="lb-band-crown">👑</span>
+      <span class="lb-band-label">Aan kop</span>
+      <span class="lb-band-names">${names}</span>
+      <span class="lb-band-pts">${leaderPts} pt</span>
+      ${shareTxt}
+    </div>`;
+}
+
 function renderLeaderboard(filter = 'all') {
   const pts = pointsMode();
-  let list = sortedPlayers();
-  if (filter !== 'all') list = list.filter(p => bucket(p) === filter);
+  let ranked = rankedPlayers();
 
-  $('#leaderboard').innerHTML = list.map((p, i) => {
-    const pct = Math.round((completeness(p) / 116) * 100);
-    const posCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+  if (filter === 'top10')       ranked = ranked.filter(r => r.rank <= 10);
+  else if (filter === 'movers') ranked = ranked.filter(r => r.delta > 0);
+  else if (filter === 'me') {
+    const meIdx = ranked.findIndex(r => isMe(r.p.name));
+    if (meIdx >= 0) ranked = ranked.slice(Math.max(0, meIdx - 3), Math.min(ranked.length, meIdx + 4));
+    else ranked = [];
+  }
+
+  renderLeaderBand();
+
+  if (!ranked.length) {
+    const hint = filter === 'me' ? ' — kies eerst je naam bij “Mijn cockpit”.' : '.';
+    $('#leaderboard').innerHTML = `<div class="lb-empty">Niemand in deze weergave${hint}</div>`;
+    return;
+  }
+
+  $('#leaderboard').innerHTML = ranked.map(({ p, rank, delta, gap, shared, isMover }) => {
     const mine = isMe(p.name);
-    let delta = '';
-    if (pts && typeof p.prevPos === 'number') {
-      const diff = p.prevPos - (i + 1);
-      if (diff > 0)      delta = `<span class="lb-delta delta-up">▲ ${diff}</span>`;
-      else if (diff < 0) delta = `<span class="lb-delta delta-down">▼ ${-diff}</span>`;
-      else               delta = `<span class="lb-delta delta-flat">=</span>`;
+    const medal = rank === 1 ? 'rank1' : rank === 2 ? 'rank2' : rank === 3 ? 'rank3' : '';
+    let deltaHtml = '';
+    if (pts && typeof delta === 'number') {
+      if (delta > 0)      deltaHtml = `<span class="lb-delta delta-up">▲ ${delta}</span>`;
+      else if (delta < 0) deltaHtml = `<span class="lb-delta delta-down">▼ ${-delta}</span>`;
+      else                deltaHtml = `<span class="lb-delta delta-flat">=</span>`;
     }
+    const gapHtml = pts
+      ? (rank === 1 ? '<span class="lb-gap leader">koploper</span>' : `<span class="lb-gap">−${gap}</span>`)
+      : '';
+    const moverHtml = isMover ? '<span class="mover-badge">🔥 stijger v/d dag</span>' : '';
+    const tieHtml = shared ? '<span class="lb-tie">=</span>' : '';
+    const spark = pts ? sparkline(p.name) : '';
     return `
-      <div class="lb-row ${mine ? 'you' : ''}" onclick="openPlayerModal('${p.name.replace(/'/g, "\\'")}')">
-        <div class="col-span-1">
-          <span class="lb-pos ${posCls}">#${i + 1}</span>
-        </div>
-        <div class="col-span-5">
-          <div class="lb-name">
-            <div class="avatar">${getInitial(p.name)}</div>
-            <div>${p.name}${mine ? ' <span class="text-oranje text-[10px] font-black ml-1">JIJ</span>' : ''}</div>
+      <div class="lb-row ${mine ? 'you' : ''} ${medal}" onclick="openPlayerModal('${p.name.replace(/'/g, "\\'")}')">
+        <div class="lb-pos-cell"><span class="lb-pos ${medal}">${rank}</span>${tieHtml}</div>
+        <div class="lb-name-cell">
+          <div class="avatar">${getInitial(p.name)}</div>
+          <div class="lb-name-wrap">
+            <div class="lb-name-line">${p.name}${mine ? ' <span class="text-oranje text-[10px] font-black ml-1">JIJ</span>' : ''}${moverHtml}</div>
+            ${spark}
           </div>
         </div>
-        <div class="col-span-2 text-center col-hide">
-          <div class="font-bold font-mono">${p.matches}<span class="text-white/40">/104</span></div>
-        </div>
-        <div class="col-span-1 text-center col-hide">
-          <span class="lb-pill ${p.winner ? 'pill-yes' : 'pill-no'}">${p.winner ? '✓' : '×'}</span>
-        </div>
-        <div class="col-span-1 text-center col-hide">
-          <span class="lb-pill ${p.topscorer ? 'pill-yes' : 'pill-no'}">${p.topscorer ? '✓' : '×'}</span>
-        </div>
-        <div class="col-span-2 lb-pts">
+        <div class="lb-pts-cell">
           ${pts
-            ? `<span class="text-white">${p.points}</span> <span class="text-white/30">pt</span>${delta}`
+            ? `<div class="lb-pts-main"><span class="pts-val">${p.points}</span><span class="pts-unit">pt</span>${deltaHtml}</div>${gapHtml}`
             : statusChip(p)}
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
@@ -561,36 +642,61 @@ $('#playerModal').addEventListener('click', (e) => {
 // WEDSTRIJD-RADAR
 // ============================================================
 function renderMatchRadar() {
-  $('#matchRadar').innerHTML = POOL_MATCHES_UPCOMING.map(m => {
+  const now = Date.now();
+  // Hand-geschreven analyse (consensus + Henk-take) als overlay op kalender-id.
+  const editorial = {};
+  (window.POOL_MATCHES_UPCOMING || []).forEach(m => { editorial[String(m.id)] = m; });
+
+  // Volgende ongespeelde duels uit de kalender — gespeelde/lopende vallen weg,
+  // en de radar rolt vanzelf het hele toernooi door (loopt nooit leeg op oude data).
+  const upcoming = POOL_CALENDAR
+    .filter(m => !resultFor(m) && new Date(m.date).getTime() > now)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 6);
+
+  if (!upcoming.length) {
+    $('#matchRadar').innerHTML = `<div class="radar-empty">Even geen geplande wedstrijden in beeld — de radar vult zich weer zodra het volgende programma vaststaat.</div>`;
+    return;
+  }
+
+  $('#matchRadar').innerHTML = upcoming.map(m => {
     const d = new Date(m.date);
     const when = d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' +
                  d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-    const total = m.consensus.home + m.consensus.draw + m.consensus.away;
+    const ed = editorial[String(m.id)];
+    const place = ed ? `${ed.stadium} · ${ed.city}` : (m.phase || '');
+
+    let analysis;
+    if (ed && ed.consensus) {
+      const c = ed.consensus, total = (c.home + c.draw + c.away) || 1;
+      analysis = `
+        <div class="heat">
+          <div class="bar h" style="height: ${(c.home / total) * 100}%"></div>
+          <div class="bar d" style="height: ${(c.draw / total) * 100}%"></div>
+          <div class="bar a" style="height: ${(c.away / total) * 100}%"></div>
+        </div>
+        <div class="heat-legend">
+          <span class="text-veld">${c.home}% thuiswinst</span>
+          <span>${c.draw}% gelijk</span>
+          <span class="text-oranje">${c.away}% uitwinst</span>
+        </div>
+        ${ed.outlier ? `<div class="mt-2 text-xs text-white/45"><span class="text-goud font-semibold">Tegendraads:</span> ${ed.outlier}</div>` : ''}
+        <div class="henk-mini">${ed.henkPick}</div>`;
+    } else {
+      analysis = `<div class="radar-soon">${m.phase || 'Komende wedstrijd'} — de analyse volgt zodra de poule heeft ingevuld.</div>`;
+    }
+
     return `
       <div class="match-card">
         <div class="when">${when}</div>
-        <div class="city">${m.stadium} · ${m.city}</div>
+        <div class="city">${place}</div>
         <div class="teams">
           <div class="team">${m.home}</div>
           <div class="vs">VS</div>
           <div class="team right">${m.away}</div>
         </div>
-        <div class="heat">
-          <div class="bar h" style="height: ${(m.consensus.home / total) * 100}%"></div>
-          <div class="bar d" style="height: ${(m.consensus.draw / total) * 100}%"></div>
-          <div class="bar a" style="height: ${(m.consensus.away / total) * 100}%"></div>
-        </div>
-        <div class="heat-legend">
-          <span class="text-veld">${m.consensus.home}% thuiswinst</span>
-          <span>${m.consensus.draw}% gelijk</span>
-          <span class="text-oranje">${m.consensus.away}% uitwinst</span>
-        </div>
-        <div class="mt-2 text-xs text-white/45">
-          <span class="text-goud font-semibold">Tegendraads:</span> ${m.outlier}
-        </div>
-        <div class="henk-mini">${m.henkPick}</div>
-      </div>
-    `;
+        ${analysis}
+      </div>`;
   }).join('');
 }
 

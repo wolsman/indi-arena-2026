@@ -188,23 +188,21 @@
       <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Wie klimt, wie zakt</h2>
       <p class="text-white/60 mt-2 max-w-2xl">Na elke wedstrijd opnieuw. Klik op een naam voor het profiel — en Henks oordeel.</p>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 flex-wrap">
       <button class="chip-btn active" data-filter="all">Iedereen</button>
-      <button class="chip-btn" data-filter="complete">Klaar</button>
-      <button class="chip-btn" data-filter="groep">Groepsfase af</button>
-      <button class="chip-btn" data-filter="bezig">Bezig</button>
-      <button class="chip-btn" data-filter="nul">Op 0</button>
+      <button class="chip-btn" data-filter="top10">Top 10</button>
+      <button class="chip-btn" data-filter="movers">Stijgers</button>
+      <button class="chip-btn" data-filter="me">Rondom mij</button>
     </div>
   </div>
 
+  <div id="leaderBand"></div>
+
   <div class="rounded-2xl bg-ink2/60 border border-line overflow-hidden">
-    <div class="lb-head grid grid-cols-12 px-4 py-3 text-[11px] uppercase tracking-widest text-white/40 font-semibold border-b border-line">
-      <div class="col-span-1">Pos</div>
-      <div class="col-span-5">Speler</div>
-      <div class="col-span-2 text-center col-hide">Ingevuld</div>
-      <div class="col-span-1 text-center col-hide">W</div>
-      <div class="col-span-1 text-center col-hide">T</div>
-      <div class="col-span-2 text-right pr-2">Punten</div>
+    <div class="lb-head">
+      <div class="lb-h-pos">Pos</div>
+      <div class="lb-h-name">Speler</div>
+      <div class="lb-h-pts">Punten</div>
     </div>
     <div id="leaderboard"></div>
   </div>

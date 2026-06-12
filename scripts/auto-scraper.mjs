@@ -43,9 +43,17 @@ function buildJs(players, existing, results, standings, predictions) {
   let m;
   while ((m = re.exec(existing)) !== null) oldPoints.set(m[1], parseInt(m[2], 10));
 
+  // prevPos = GEDEELDE positie (gelijke punten → zelfde plek), zodat
+  // gelijke-punters in de ranglijst geen nep-bewegingen tonen.
   if (oldPoints.size && [...oldPoints.values()].some(v => v > 0)) {
     const oldSorted = [...oldPoints.entries()].sort((a, b) => b[1] - a[1]);
-    const oldPos = new Map(oldSorted.map(([n], i) => [n, i + 1]));
+    let lastVal = null, lastRank = 0;
+    const oldPos = new Map();
+    oldSorted.forEach(([n, v], i) => {
+      let r;
+      if (v === lastVal) r = lastRank; else { r = i + 1; lastVal = v; lastRank = r; }
+      oldPos.set(n, r);
+    });
     players.forEach(p => { if (oldPos.has(p.name)) p.prevPos = oldPos.get(p.name); });
   }
 
@@ -56,11 +64,29 @@ function buildJs(players, existing, results, standings, predictions) {
     (typeof p.prevPos === 'number' ? `, prevPos: ${p.prevPos}` : '') + ` }`
   ).join(',\n');
 
+  // Puntenhistorie (voor de sparkline) — alleen uitbreiden als de punten écht
+  // gewijzigd zijn t.o.v. de vorige stand, anders zou elke run dezelfde
+  // flatline committen.
+  let history = {};
+  const hm = existing.match(/window\.POOL_HISTORY\s*=\s*(\{[\s\S]*?\});/);
+  if (hm) { try { history = JSON.parse(hm[1]); } catch { history = {}; } }
+  const pointsChanged = players.some(p => (oldPoints.get(p.name) || 0) !== (p.points || 0))
+    || (oldPoints.size === 0 && anyPoints);
+  if (anyPoints && pointsChanged) {
+    players.forEach(p => {
+      const arr = history[p.name] || [];
+      arr.push(p.points || 0);
+      while (arr.length > 12) arr.shift();
+      history[p.name] = arr;
+    });
+  }
+
   let next = existing;
   next = next.replace(/syncedAt:\s*"[^"]*"/, `syncedAt: "${new Date().toISOString()}"`);
   next = next.replace(/totalPlayers:\s*\d+/, `totalPlayers: ${players.length}`);
   next = next.replace(/pointsAvailable:\s*(true|false)/, `pointsAvailable: ${anyPoints}`);
   next = next.replace(/window\.POOL_PLAYERS\s*=\s*\[[\s\S]*?\n\];/, `window.POOL_PLAYERS = [\n${playersJs}\n];`);
+  next = next.replace(/window\.POOL_HISTORY\s*=\s*\{[\s\S]*?\};/, `window.POOL_HISTORY = ${JSON.stringify(history)};`);
   if (results) {
     next = next.replace(/window\.POOL_RESULTS\s*=\s*\{[\s\S]*?\};/, `window.POOL_RESULTS = ${JSON.stringify(results)};`);
   }
