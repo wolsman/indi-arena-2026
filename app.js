@@ -399,12 +399,49 @@ function renderToday() {
 // STATUS-TEGELS
 // ============================================================
 function fillStatusTiles() {
+  if (!$('#cntComplete')) return; // tegels verwijderd in command-center-layout
   const c = { complete: 0, groep: 0, bezig: 0, nul: 0 };
   POOL_PLAYERS.filter(p => p.name).forEach(p => c[bucket(p)]++);
   $('#cntComplete').textContent = c.complete;
   $('#cntGroep').textContent    = c.groep;
   $('#cntBezig').textContent    = c.bezig;
   $('#cntNul').textContent      = c.nul;
+}
+
+// ============================================================
+// TABS — homepage is één scherm; secties wisselen i.p.v. scrollen
+// ============================================================
+const TAB_OF = {
+  vandaag: 'vandaag', 'arena-sectie': 'arena', radar: 'arena',
+  ranglijst: 'stand', schema: 'schema', groepen: 'groepen', dna: 'dna', hallofame: 'dna'
+};
+const TAB_NAMES = ['vandaag', 'stand', 'arena', 'schema', 'groepen', 'dna'];
+
+function showTab(name, { scroll = true, push = true } = {}) {
+  if (!TAB_NAMES.includes(name)) name = 'vandaag';
+  document.querySelectorAll('[data-tab-group]').forEach(el => { el.hidden = el.dataset.tabGroup !== name; });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if (push) { try { history.replaceState(null, '', '#' + name); } catch {} }
+  if (scroll) window.scrollTo(0, 0);
+}
+
+function initTabs() {
+  // Koppel bestaande secties (op id) aan een tab-groep.
+  Object.entries(TAB_OF).forEach(([id, tab]) => {
+    const el = document.getElementById(id);
+    if (el) el.dataset.tabGroup = tab;
+  });
+  const cock = $('#myCockpit');
+  if (cock && cock.closest('section')) cock.closest('section').dataset.tabGroup = 'vandaag';
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
+    const go = () => showTab(b.dataset.tab);
+    if (document.startViewTransition) document.startViewTransition(go); else go();
+  }));
+  window.addEventListener('hashchange', () => showTab((location.hash || '').replace('#', ''), { push: false }));
+
+  const initial = (location.hash || '').replace('#', '');
+  showTab(initial || 'vandaag', { scroll: false, push: false });
 }
 
 // ============================================================
@@ -1189,6 +1226,14 @@ window.addEventListener('DOMContentLoaded', () => {
   renderDNA();
   renderBadges();
   renderFooter();
+
+  // Lege Hall of Fame (nog geen badges vergeven) niet tonen — geen lege huls.
+  if (!POOL_BADGES.some(b => b.holder)) {
+    const hof = document.getElementById('hallofame');
+    if (hof) hof.remove();
+  }
+
+  initTabs();
   setTimeout(() => confettiBurst(40), 600);
 
   // Live-indicator, klok en arena elke minuut verversen.
@@ -1206,3 +1251,4 @@ window.addEventListener('DOMContentLoaded', () => {
 window.openPlayerModal = openPlayerModal;
 window.closePlayerModal = closePlayerModal;
 window.openMeModal = openMeModal;
+window.showTab = showTab;

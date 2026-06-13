@@ -874,6 +874,45 @@ body.henk-open .henk-toggle { display: none; }
 .radar-soon { margin-top: .6rem; font-size: .8rem; font-style: italic; color: rgba(255,255,255,.4); }
 
 /* ============================================================
+   TABBAR — command-center navigatie (één scherm i.p.v. scroll)
+   ============================================================ */
+.tabbar {
+  display: flex;
+  gap: .15rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabbar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: 0 0 auto;
+  padding: .7rem .95rem;
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.5);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: #fff; }
+.tab-btn.active {
+  color: var(--oranje2);
+  border-bottom-color: var(--oranje);
+}
+/* Zachte fade-in bij tabwissel (fallback als View Transitions ontbreekt). */
+[data-tab-group] { animation: tabIn .22s ease both; }
+@keyframes tabIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tab-group] { animation: none; }
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {

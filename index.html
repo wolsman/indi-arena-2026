@@ -62,13 +62,6 @@
         <div class="text-[11px] text-white/50 -mt-0.5">Live cockpit · Indicium WK Poule</div>
       </div>
     </div>
-    <nav class="hidden md:flex items-center gap-1 text-sm">
-      <a href="#vandaag" class="nav-link">Vandaag</a>
-      <a href="#ranglijst" class="nav-link">Ranglijst</a>
-      <a href="#schema" class="nav-link">Speelschema</a>
-      <a href="#groepen" class="nav-link">Groepen</a>
-      <a href="#dna" class="nav-link">Pool-DNA</a>
-    </nav>
     <div class="flex items-center gap-2">
       <div id="countdownPill" class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink2 border border-line text-xs font-mono">
         <span class="w-2 h-2 rounded-full bg-rood animate-pulse"></span>
@@ -79,6 +72,18 @@
         <span id="meBtnLabel">— wie ben jij? —</span>
       </button>
       <button onclick="if(confirm('Uitloggen?')){localStorage.clear();location.replace('./login.html');}" class="text-xs px-3 py-1.5 rounded-full bg-ink2 border border-line text-white/50 hover:text-white hover:border-oranje transition" title="Uitloggen">↩</button>
+    </div>
+  </div>
+  <div class="border-t border-line/60">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6">
+      <div class="tabbar" role="tablist">
+        <button class="tab-btn active" data-tab="vandaag" role="tab">Vandaag</button>
+        <button class="tab-btn" data-tab="stand" role="tab">Stand</button>
+        <button class="tab-btn" data-tab="arena" role="tab">Arena</button>
+        <button class="tab-btn" data-tab="schema" role="tab">Schema</button>
+        <button class="tab-btn" data-tab="groepen" role="tab">Groepen</button>
+        <button class="tab-btn" data-tab="dna" role="tab">Pool-DNA</button>
+      </div>
     </div>
   </div>
 </header>
@@ -104,17 +109,17 @@
       </div>
 
       <div class="grid grid-cols-3 gap-3 mt-6">
-        <button onclick="document.getElementById('ranglijst').scrollIntoView({behavior:'smooth'})" class="quick-action">
+        <button onclick="showTab('stand')" class="quick-action">
           <div class="qa-num" id="qaPlayers">—</div>
-          <div class="qa-label">spelers</div>
+          <div class="qa-label">spelers · naar stand</div>
         </button>
-        <button onclick="document.getElementById('radar').scrollIntoView({behavior:'smooth'})" class="quick-action">
+        <button onclick="showTab('schema')" class="quick-action">
           <div class="qa-num">104</div>
-          <div class="qa-label">wedstrijden</div>
+          <div class="qa-label">wedstrijden · schema</div>
         </button>
-        <button onclick="document.getElementById('dna').scrollIntoView({behavior:'smooth'})" class="quick-action">
+        <button onclick="showTab('dna')" class="quick-action">
           <div class="qa-num">7</div>
-          <div class="qa-label">favorieten</div>
+          <div class="qa-label">favorieten · DNA</div>
         </button>
       </div>
     </div>
@@ -140,29 +145,6 @@
     </div>
   </div>
 
-  <!-- Status tiles -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-    <div class="status-tile" style="--c:#0eb84a">
-      <div class="status-num" id="cntComplete">—</div>
-      <div class="status-label">Helemaal klaar</div>
-      <div class="status-sub">alles ingevuld, klaar voor de aftrap</div>
-    </div>
-    <div class="status-tile" style="--c:#ffd700">
-      <div class="status-num" id="cntGroep">—</div>
-      <div class="status-label">Groepsfase compleet</div>
-      <div class="status-sub">72 van de 104 ingevuld</div>
-    </div>
-    <div class="status-tile" style="--c:#ff8a2a">
-      <div class="status-num" id="cntBezig">—</div>
-      <div class="status-label">Onderweg</div>
-      <div class="status-sub">begonnen, maar nog niet compleet</div>
-    </div>
-    <div class="status-tile" style="--c:#ff3b5c">
-      <div class="status-num" id="cntNul">—</div>
-      <div class="status-label">Nog op nul</div>
-      <div class="status-sub">geen enkele wedstrijd ingevuld</div>
-    </div>
-  </div>
 </section>
 
 <!-- ========================= LIVE ARENA ========================= -->
