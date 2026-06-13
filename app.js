@@ -583,25 +583,71 @@ function renderHeroLeaderboard() {
 }
 
 // Koploper-band boven de ranglijst (toont de leider[s] + of het gedeeld is).
-function renderLeaderBand() {
-  const el = $('#leaderBand');
+// Podium top-3 — tie-aware (een trede kan gedeeld zijn) + leiderwissel-detectie.
+function renderPodium() {
+  const el = $('#podium');
   if (!el) return;
   const ranked = rankedPlayers();
   if (!pointsMode() || !ranked.length || ranked[0].val <= 0) { el.innerHTML = ''; return; }
-  const leaders = ranked.filter(r => r.rank === 1).map(r => r.p.name);
-  const leaderPts = ranked[0].p.points;
-  const names = leaders.length > 3
-    ? leaders.slice(0, 3).join(' · ') + ` +${leaders.length - 3}`
-    : leaders.join(' · ');
-  const shareTxt = leaders.length > 1 ? `<span class="lb-band-share">${leaders.length} gedeeld</span>` : '';
-  el.innerHTML = `
-    <div class="lb-band">
-      <span class="lb-band-crown">👑</span>
-      <span class="lb-band-label">Aan kop</span>
-      <span class="lb-band-names">${names}</span>
-      <span class="lb-band-pts">${leaderPts} pt</span>
-      ${shareTxt}
-    </div>`;
+
+  const distinctRanks = [...new Set(ranked.map(r => r.rank))].slice(0, 3);
+  const steps = distinctRanks.map((rank, i) => ({
+    rank, medal: i + 1, players: ranked.filter(r => r.rank === rank)
+  }));
+
+  const stepHtml = (s) => {
+    if (!s) return '';
+    const pl = s.players, pts = pl[0].p.points, isGroup = pl.length > 1;
+    const medalIcon = s.medal === 1 ? '🥇' : s.medal === 2 ? '🥈' : '🥉';
+    const face = isGroup
+      ? `<div class="pod-avatar group">${pl.length}</div>`
+      : `<div class="pod-avatar">${getInitial(pl[0].p.name)}</div>`;
+    const nameHtml = isGroup
+      ? `<div class="pod-name">${pl.slice(0, 2).map(x => x.p.name).join(', ')}${pl.length > 2 ? ` +${pl.length - 2}` : ''}</div><div class="pod-shared">${pl.length} gedeeld</div>`
+      : `<div class="pod-name">${pl[0].p.name}${isMe(pl[0].p.name) ? ' <span class="pod-jij">JIJ</span>' : ''}</div>`;
+    const click = !isGroup ? `onclick="openPlayerModal('${pl[0].p.name.replace(/'/g, "\\'")}')"` : '';
+    return `
+      <div class="pod-step medal-${s.medal}" ${click}>
+        <div class="pod-rank">${medalIcon}</div>
+        ${face}${nameHtml}
+        <div class="pod-pts">${pts}<span>pt</span></div>
+        <div class="pod-base">#${s.rank}</div>
+      </div>`;
+  };
+
+  // Klassieke podiumvolgorde: 2 — 1 — 3 (winnaar in het midden, hoogste trede).
+  const order = [steps[1], steps[0], steps[2]].filter(Boolean);
+  el.innerHTML = `<div class="podium">${order.map(stepHtml).join('')}</div>`;
+  checkLeaderChange(ranked);
+}
+
+// Detecteer of de koploper(s) zijn gewijzigd sinds het laatste bezoek.
+function checkLeaderChange(ranked) {
+  const leaders = ranked.filter(r => r.rank === 1).map(r => r.p.name).sort();
+  if (!leaders.length) return;
+  const key = leaders.join('|');
+  let prev = null;
+  try { prev = localStorage.getItem('indi-arena-leader'); } catch {}
+  try { localStorage.setItem('indi-arena-leader', key); } catch {}
+  if (prev && prev !== key) fireLeaderChange(leaders, prev.split('|'));
+}
+
+function fireLeaderChange(now, before) {
+  const newName = now.find(n => !before.includes(n)) || now[0];
+  const lostName = before.find(n => !now.includes(n));
+  const line = `Nieuwe koploper: ${newName}. ` + (lostName
+    ? `${lostName} stond er net nog — en kijkt nu naar de rug van een ander. Zo snel kan het.`
+    : `De top is van eigenaar gewisseld. Onthoud dit moment, het komt terug.`);
+  const toast = $('#goalToast');
+  if (toast) {
+    const flash = $('#goalFlash'); if (flash) flash.textContent = '👑 NIEUWE KOPLOPER';
+    $('#goalScore').textContent = now.length > 1 ? now.slice(0, 3).join(' · ') : newName;
+    $('#goalHenk').textContent = line;
+    toast.classList.remove('hidden'); void toast.offsetWidth; toast.classList.add('show');
+    clearTimeout(window.__goalTimer);
+    window.__goalTimer = setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.classList.add('hidden'), 400); }, 8000);
+  }
+  confettiBurst(110);
 }
 
 function renderLeaderboard(filter = 'all') {
@@ -616,15 +662,21 @@ function renderLeaderboard(filter = 'all') {
     else ranked = [];
   }
 
-  renderLeaderBand();
+  renderPodium();
 
+  const wrap = $('#leaderboard');
   if (!ranked.length) {
     const hint = filter === 'me' ? ' — kies eerst je naam bij “Mijn cockpit”.' : '.';
-    $('#leaderboard').innerHTML = `<div class="lb-empty">Niemand in deze weergave${hint}</div>`;
+    wrap.innerHTML = `<div class="lb-empty">Niemand in deze weergave${hint}</div>`;
     return;
   }
 
-  $('#leaderboard').innerHTML = ranked.map(({ p, rank, delta, gap, shared, isMover }) => {
+  // FLIP: onthoud de huidige rij-posities zodat ze straks soepel naar hun
+  // nieuwe plek schuiven (bij filterwissel of een toekomstige rang-update).
+  const firstTop = new Map();
+  wrap.querySelectorAll('.lb-row').forEach(r => firstTop.set(r.dataset.player, r.getBoundingClientRect().top));
+
+  wrap.innerHTML = ranked.map(({ p, rank, delta, gap, shared, isMover }) => {
     const mine = isMe(p.name);
     const medal = rank === 1 ? 'rank1' : rank === 2 ? 'rank2' : rank === 3 ? 'rank3' : '';
     let deltaHtml = '';
@@ -640,7 +692,7 @@ function renderLeaderboard(filter = 'all') {
     const tieHtml = shared ? '<span class="lb-tie">=</span>' : '';
     const spark = pts ? sparkline(p.name) : '';
     return `
-      <div class="lb-row ${mine ? 'you' : ''} ${medal}" onclick="openPlayerModal('${p.name.replace(/'/g, "\\'")}')">
+      <div class="lb-row ${mine ? 'you' : ''} ${medal}" data-player="${p.name.replace(/"/g, '&quot;')}" onclick="openPlayerModal('${p.name.replace(/'/g, "\\'")}')">
         <div class="lb-pos-cell"><span class="lb-pos ${medal}">${rank}</span>${tieHtml}</div>
         <div class="lb-name-cell">
           <div class="avatar">${getInitial(p.name)}</div>
@@ -656,6 +708,19 @@ function renderLeaderboard(filter = 'all') {
         </div>
       </div>`;
   }).join('');
+
+  // FLIP-animatie: van oude naar nieuwe positie.
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    wrap.querySelectorAll('.lb-row').forEach(r => {
+      const prevTop = firstTop.get(r.dataset.player);
+      if (prevTop == null) return;
+      const dy = prevTop - r.getBoundingClientRect().top;
+      if (Math.abs(dy) < 2) return;
+      r.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }],
+        { duration: 420, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    });
+  }
 }
 
 $$('.chip-btn').forEach(btn => {

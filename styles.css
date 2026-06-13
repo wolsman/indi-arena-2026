@@ -250,6 +250,49 @@ html { scroll-behavior: smooth; }
 .lb-band-pts { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--goud); }
 .lb-band-share { font-size: .6rem; color: rgba(255,255,255,.55); background: rgba(255,255,255,.06); padding: .15rem .45rem; border-radius: .4rem; }
 
+/* ============================================================
+   PODIUM — top 3 (tie-aware) met stadionlicht-glow op de winnaar
+   ============================================================ */
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: .6rem; margin-bottom: 1.1rem; }
+.pod-step {
+  flex: 1 1 0; max-width: 14rem; min-width: 0; text-align: center;
+  padding: .85rem .6rem; border-radius: 1rem 1rem .4rem .4rem;
+  background: var(--ink2); border: 1px solid var(--line); position: relative;
+  cursor: default; transition: transform .15s;
+}
+.pod-step[onclick] { cursor: pointer; }
+.pod-step[onclick]:hover { transform: translateY(-2px); }
+.pod-rank { font-size: 1.3rem; line-height: 1; }
+.pod-avatar {
+  width: 46px; height: 46px; border-radius: 50%; margin: .35rem auto;
+  display: grid; place-items: center; font-weight: 900; color: var(--ink);
+  background: linear-gradient(135deg, var(--oranje), var(--veld));
+}
+.pod-avatar.group { background: rgba(255,255,255,.1); color: #fff; }
+.pod-name { font-weight: 700; font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-jij { color: var(--oranje); font-size: .6rem; font-weight: 900; }
+.pod-shared { font-size: .6rem; color: rgba(255,255,255,.45); }
+.pod-pts { font-family: 'JetBrains Mono', monospace; font-weight: 800; margin-top: .25rem; }
+.pod-pts span { font-size: .6rem; color: rgba(255,255,255,.4); margin-left: 2px; }
+.pod-base { font-size: .65rem; color: rgba(255,255,255,.4); margin-top: .3rem; font-weight: 700; }
+.pod-step.medal-1 {
+  padding-top: 1.4rem; padding-bottom: 1.4rem;
+  border-color: rgba(255,215,0,.5);
+  background: linear-gradient(180deg, rgba(255,215,0,.13), var(--ink2));
+  box-shadow: 0 0 38px -8px rgba(255,215,0,.5);
+}
+.pod-step.medal-1 .pod-avatar { width: 58px; height: 58px; background: linear-gradient(135deg, var(--goud), var(--oranje)); }
+.pod-step.medal-1 .pod-name { font-size: .95rem; }
+.pod-step.medal-2 { border-color: rgba(214,214,214,.4); }
+.pod-step.medal-3 { border-color: rgba(224,138,78,.45); }
+@media (max-width: 640px) {
+  .podium { gap: .3rem; }
+  .pod-step { padding: .6rem .4rem; }
+  .pod-name { font-size: .72rem; }
+  .pod-avatar { width: 38px; height: 38px; }
+  .pod-step.medal-1 .pod-avatar { width: 46px; height: 46px; }
+}
+
 /* Programma-chips van vandaag (hero) */
 .today-chip {
   display: inline-flex;
