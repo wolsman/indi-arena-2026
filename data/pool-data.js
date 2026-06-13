@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 55,
   capacityMax: 75,
-  syncedAt: "2026-06-13T17:02:36.485Z",
+  syncedAt: "2026-06-13T17:31:25.195Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -61,7 +61,7 @@ window.POOL_PLAYERS = [
   { name: "Heer", matches: 72, winner: true, topscorer: true, paid: true, points: 440, prevPos: 8 },
   { name: "Pepijndh", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
   { name: "Cornelis2026", matches: 29, winner: true, topscorer: true, paid: true, points: 275, prevPos: 29 },
-  { name: "Wkkipje", matches: 10, winner: true, topscorer: true, paid: true, points: 395, prevPos: 10 },
+  { name: "Wkkipje", matches: 19, winner: true, topscorer: true, paid: true, points: 395, prevPos: 10 },
   { name: "MaureenGLA", matches: 72, winner: true, topscorer: true, paid: true, points: 190, prevPos: 43 },
   { name: "GeorgeV.", matches: 72, winner: true, topscorer: true, paid: true, points: 230, prevPos: 36 },
   { name: "ikgajuichen", matches: 104, winner: true, topscorer: true, paid: true, points: 440, prevPos: 8 },
@@ -71,7 +71,7 @@ window.POOL_PLAYERS = [
   { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: true, points: 515, prevPos: 2 },
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 515, prevPos: 2 },
   { name: "RoanTuit(messi)", matches: 7, winner: true, topscorer: true, paid: true, points: 315, prevPos: 21 },
-  { name: "Christopheramboz", matches: 9, winner: true, topscorer: true, paid: true, points: 515, prevPos: 2 },
+  { name: "Christopheramboz", matches: 17, winner: true, topscorer: true, paid: true, points: 515, prevPos: 2 },
   { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: false, points: 0, prevPos: 51 },
   { name: "WillemCo", matches: 8, winner: false, topscorer: false, paid: false, points: 275, prevPos: 29 }
 ];
