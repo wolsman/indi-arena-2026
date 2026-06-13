@@ -913,6 +913,48 @@ body.henk-open .henk-toggle { display: none; }
 }
 
 /* ============================================================
+   SCOREBUG — sticky broadcast-balk (altijd zichtbaar, elke tab)
+   ============================================================ */
+.scorebug {
+  display: flex; align-items: center; gap: .55rem;
+  max-width: 80rem; margin: 0 auto;
+  padding: .5rem 1rem;
+  font-size: .8rem; line-height: 1;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap; overflow: hidden;
+}
+.scorebug.is-live { background: linear-gradient(90deg, rgba(255,59,92,.12), transparent 55%); }
+.scorebug .flag { width: 18px; height: auto; border-radius: 2px; vertical-align: middle; }
+.sb-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: var(--rood); }
+.scorebug.is-live .sb-dot { animation: sbPulse 1.4s infinite; }
+.sb-dot.countdown { background: var(--oranje); }
+.sb-dot.off { background: rgba(255,255,255,.3); }
+@keyframes sbPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,59,92,.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(255,59,92,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,59,92,0); }
+}
+.sb-tag { flex: 0 0 auto; font-weight: 800; font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rood); }
+.scorebug.is-countdown .sb-tag { color: var(--oranje2); }
+.sb-tag.muted { color: rgba(255,255,255,.4); }
+.sb-match { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: .4rem; overflow: hidden; color: #fff; font-weight: 600; }
+.sb-match b { font-weight: 700; }
+.sb-score { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--goud); padding: 0 .2rem; }
+.sb-when { color: rgba(255,255,255,.5); font-weight: 500; margin-left: .3rem; }
+.sb-count { flex: 0 0 auto; font-size: .6rem; color: rgba(255,255,255,.6); background: rgba(255,255,255,.08); padding: .12rem .4rem; border-radius: .3rem; }
+.sb-time { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff; }
+.sb-cta { flex: 0 0 auto; font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--oranje2); }
+.scorebug:hover .sb-cta { text-decoration: underline; }
+@media (max-width: 640px) {
+  .scorebug { font-size: .74rem; padding: .45rem .7rem; gap: .4rem; }
+  .sb-cta, .sb-when { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scorebug.is-live .sb-dot { animation: none; }
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {

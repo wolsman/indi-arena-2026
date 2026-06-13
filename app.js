@@ -133,6 +133,7 @@ async function fetchLive() {
     const goals = ingestLiveMatches(j.matches);
     renderLiveNow();
     renderArena();
+    buildScorebug();
     goals.forEach(g => fireGoal(g.key, g.ls));
   } catch (e) { /* stil falen — site blijft werken */ }
 }
@@ -1210,6 +1211,95 @@ document.addEventListener('keydown', (e) => {
 // ============================================================
 // INIT
 // ============================================================
+// ============================================================
+// SCOREBUG — sticky broadcast-balk, altijd zichtbaar op elke tab.
+// Live → pulserende stand + minuut (roteert bij meerdere duels);
+// niets live → countdown naar de volgende aftrap. Klik → Arena.
+// ============================================================
+let _sbIdx = 0, _sbLiveN = -1, _sbTick = 0;
+
+function nextScheduledMatch() {
+  const now = Date.now();
+  return POOL_CALENDAR
+    .filter(m => !resultFor(m) && new Date(m.date).getTime() > now)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))[0] || null;
+}
+
+function fmtCountdown(ms) {
+  if (ms < 0) ms = 0;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function liveClock(ls) {
+  if (!ls) return 'bezig';
+  if (ls.status === 'HT') return 'rust';
+  const lm = liveMinute(ls);
+  return lm != null ? `${lm}'` : 'bezig';
+}
+
+function buildScorebug() {
+  const el = $('#scorebug');
+  if (!el) return;
+  const live = liveMatches();
+
+  if (live.length) {
+    if (_sbIdx >= live.length) _sbIdx = 0;
+    const m = live[_sbIdx];
+    const ls = liveScoreFor(m);
+    const score = ls ? `${ls.hs}–${ls.as}` : '–';
+    const rot = live.length > 1 ? `<span class="sb-count">${_sbIdx + 1}/${live.length}</span>` : '';
+    el.className = 'scorebug is-live';
+    el.innerHTML =
+      `<span class="sb-dot"></span><span class="sb-tag">Live</span>` +
+      `<span class="sb-match">${flagFor(m.home)} <b>${m.home}</b> <span class="sb-score">${score}</span> <b>${m.away}</b> ${flagFor(m.away)}</span>` +
+      rot +
+      `<span class="sb-time" data-sb-min>${liveClock(ls)}</span>` +
+      `<span class="sb-cta">→ Arena</span>`;
+  } else {
+    const nm = nextScheduledMatch();
+    el.className = 'scorebug is-countdown';
+    if (!nm) {
+      el.innerHTML = `<span class="sb-dot off"></span><span class="sb-tag muted">Geen wedstrijden gepland</span>`;
+    } else {
+      const d = new Date(nm.date);
+      const when = d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' +
+                   d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+      el.innerHTML =
+        `<span class="sb-dot countdown"></span><span class="sb-tag">Volgende</span>` +
+        `<span class="sb-match">${flagFor(nm.home)} <b>${nm.home}</b> — <b>${nm.away}</b> ${flagFor(nm.away)} <span class="sb-when">${when}</span></span>` +
+        `<span class="sb-time" data-sb-cd>${fmtCountdown(d.getTime() - Date.now())}</span>`;
+    }
+  }
+}
+
+function scorebugLoop() {
+  if (document.hidden || !$('#scorebug')) return;
+  const liveN = liveMatches().length;
+  if (liveN !== _sbLiveN) {                 // modus/aantal gewijzigd → herbouw
+    _sbLiveN = liveN; _sbIdx = 0; _sbTick = 0;
+    buildScorebug();
+    return;
+  }
+  _sbTick++;
+  if (liveN > 1 && _sbTick % 6 === 0) {     // roteer ~elke 6s bij meerdere live duels
+    _sbIdx = (_sbIdx + 1) % liveN;
+    buildScorebug();
+    return;
+  }
+  // anders alleen dynamische tekst verversen (geen rebuild → pulse blijft vloeiend)
+  const cd = document.querySelector('[data-sb-cd]');
+  if (cd) {
+    const nm = nextScheduledMatch();
+    if (nm) cd.textContent = fmtCountdown(new Date(nm.date).getTime() - Date.now());
+    else buildScorebug();
+  }
+  const minEl = document.querySelector('[data-sb-min]');
+  if (minEl && liveN) minEl.textContent = liveClock(liveScoreFor(liveMatches()[_sbIdx % liveN]));
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   setMyName(getMyName());
   updateCountdown();
@@ -1242,6 +1332,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // Live tussenstand ophalen zodra/zolang er een wedstrijd loopt.
   if (liveMatches().length) fetchLive();
   setInterval(() => { if (liveMatches().length) fetchLive(); }, 60_000);
+
+  // Scorebug: altijd-zichtbare broadcast-balk (live stand of countdown).
+  buildScorebug();
+  setInterval(scorebugLoop, 1000);
 
   if (!getMyName()) {
     setTimeout(() => openMeModal(), 800);
