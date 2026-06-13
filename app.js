@@ -112,17 +112,26 @@ function ingestLiveMatches(apiMatches) {
       }
     }
   });
-  // Goal-detectie: nieuwe stand met meer doelpunten dan de vorige.
-  const goals = [];
+  // Event-detectie op de stand-diff: goal / gelijkmaker / ommekeer / rust.
+  const events = [];
   if (window.__liveInit) {
     Object.keys(next).forEach(key => {
       const n = next[key], p = prev[key];
-      if (p && ((n.hs + n.as) > (p.hs + p.as))) goals.push({ key, ls: n });
+      if (!p) return;
+      if ((n.hs + n.as) > (p.hs + p.as)) {
+        const pLead = Math.sign(p.hs - p.as), nLead = Math.sign(n.hs - n.as);
+        let type = 'goal';
+        if (nLead === 0 && pLead !== 0) type = 'equalizer';
+        else if (nLead !== 0 && pLead !== 0 && nLead !== pLead) type = 'turnaround';
+        events.push({ type, key, ls: n });
+      } else if (p.status !== 'HT' && n.status === 'HT') {
+        events.push({ type: 'ht', key, ls: n });
+      }
     });
   }
   window.__liveScores = next;
   window.__liveInit = true;
-  return goals;
+  return events;
 }
 
 async function fetchLive() {
@@ -130,11 +139,11 @@ async function fetchLive() {
     const r = await fetch('/api/live', { cache: 'no-store' });
     if (!r.ok) return;
     const j = await r.json();
-    const goals = ingestLiveMatches(j.matches);
+    const events = ingestLiveMatches(j.matches);
     renderLiveNow();
     renderArena();
     buildScorebug();
-    goals.forEach(g => fireGoal(g.key, g.ls));
+    events.forEach(fireEvent);
   } catch (e) { /* stil falen — site blijft werken */ }
 }
 
@@ -147,42 +156,77 @@ function calIndexForKey(key) {
   return -1;
 }
 
-// GOAL! — flits, confetti en een Henk-melding bij een nieuw doelpunt.
-function fireGoal(key, ls) {
-  const idx = calIndexForKey(key);
+// Henk-regel per live-event — data-gegrond, roast én ophemelen.
+function henkEventLine(type, m, picks, ls) {
+  const list = picks || [];
+  const lh = ls.hs, la = ls.as, total = list.length || 1;
+  const exact = list.filter(p => p.h === lh && p.a === la).map(p => p.player);
+  const lo = lh > la ? 'h' : (lh < la ? 'a' : 'd');
+  const leader = lh > la ? m.home : (lh < la ? m.away : null);
+  const tend = list.filter(p => { const po = p.h>p.a?'h':(p.h<p.a?'a':'d'); return po === lo; }).length;
+  const names = arr => arr.slice(0, 3).join(', ') + (arr.length > 3 ? ` +${arr.length - 3}` : '');
+
+  if (type === 'equalizer') {
+    return `${lh}-${la}, gelijk! De ${Math.max(0, total - tend)} man die op een winst gokten kijken nu bedrukt. Voetbal is wreed — en ik geniet ervan.`;
+  }
+  if (type === 'turnaround') {
+    return `Ommekeer — ${leader} draait het om naar ${lh}-${la}. De halve poule zit z'n formulier opnieuw te lezen. Te laat, jongens.`;
+  }
+  if (type === 'ht') {
+    return exact.length
+      ? `Rust: ${lh}-${la}. ${names(exact)} ${exact.length === 1 ? 'heeft' : 'hebben'} dit exact staan — 45 minuten nagelbijten te gaan.`
+      : `Rust, ${lh}-${la}. Niemand had 'm precies zo. De tweede helft beslist wie er juicht en wie een smoes verzint.`;
+  }
+  // gewoon doelpunt
+  if (exact.length) {
+    return `${lh}-${la}! ${names(exact)} juicht mee — precies hun voorspelling. De rest mag toekijken.`;
+  }
+  if (leader) {
+    return `${lh}-${la}. ${tend} van de ${total} gokten op ${leader} — die staan er nu goed bij. De andere ${Math.max(0, total - tend)} beginnen te zweten.`;
+  }
+  return `${lh}-${la}. Dit zag bijna niemand aankomen — de hele poule herrekent live.`;
+}
+
+const EVENT_FLASH = { goal: '⚽ GOAL', equalizer: '🎯 GELIJK', turnaround: '🔄 OMMEKEER', ht: '⏸ RUST' };
+
+// De Henk-toast die over het scherm ploft bij een live-event.
+function showHenkToast(type, m, ls, line) {
+  const toast = $('#goalToast');
+  if (!toast) return;
+  const flash = $('#goalFlash');
+  if (flash) flash.textContent = EVENT_FLASH[type] || '⚽ GOAL';
+  $('#goalScore').innerHTML = `${flagFor(m.home)} ${m.home} <b>${ls.hs} - ${ls.as}</b> ${m.away} ${flagFor(m.away)}`;
+  $('#goalHenk').textContent = line;
+  toast.classList.remove('hidden');
+  void toast.offsetWidth; // restart animatie
+  toast.classList.add('show');
+  clearTimeout(window.__goalTimer);
+  window.__goalTimer = setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.classList.add('hidden'), 400);
+  }, 7000);
+  if (type !== 'ht') confettiBurst(type === 'turnaround' ? 90 : 70);
+}
+
+// Laat de bijbehorende Arena-kaart kort oplichten bij een event.
+function flashArenaCard(idx) {
+  const card = document.querySelector(`.arena-card[data-idx="${idx}"]`);
+  if (!card) return;
+  card.classList.remove('just-event');
+  void card.offsetWidth;
+  card.classList.add('just-event');
+  setTimeout(() => card.classList.remove('just-event'), 1600);
+}
+
+// Live-event → Henk ploft over het scherm + de Arena-kaart flitst.
+function fireEvent(e) {
+  const idx = calIndexForKey(e.key);
   const m = idx >= 0 ? POOL_CALENDAR[idx] : null;
   if (!m) return;
   const picks = idx >= 0 ? predictionsFor(idx) : null;
-
-  // Henk-regel op basis van de nieuwe stand + voorspellingen.
-  let henk = `Doelpunt! ${m.home} ${ls.hs}-${ls.as} ${m.away}.`;
-  if (picks && picks.length) {
-    const exact = picks.filter(p => p.h === ls.hs && p.a === ls.as).map(p => p.player);
-    if (exact.length) {
-      henk = `Bij ${ls.hs}-${ls.as} juicht ${exact.slice(0,3).join(', ')}${exact.length>3?` +${exact.length-3}`:''} mee — precies hun voorspelling.`;
-    } else {
-      const lo = ls.hs > ls.as ? 'h' : (ls.hs < ls.as ? 'a' : 'd');
-      const tend = picks.filter(p => { const po = p.h>p.a?'h':(p.h<p.a?'a':'d'); return po === lo; }).length;
-      const leader = ls.hs > ls.as ? m.home : (ls.hs < ls.as ? m.away : null);
-      henk = leader
-        ? `${ls.hs}-${ls.as}. ${tend} van de ${picks.length} gokten op ${leader} — die staan er nu goed bij.`
-        : `${ls.hs}-${ls.as}, gelijk. Bijna niemand zag dit aankomen.`;
-    }
-  }
-
-  const toast = $('#goalToast');
-  if (toast) {
-    $('#goalScore').innerHTML = `${flagFor(m.home)} ${m.home} <b>${ls.hs} - ${ls.as}</b> ${m.away} ${flagFor(m.away)}`;
-    $('#goalHenk').textContent = henk;
-    toast.classList.remove('hidden');
-    void toast.offsetWidth; // restart animatie
-    toast.classList.add('show');
-    clearTimeout(window.__goalTimer);
-    window.__goalTimer = setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.classList.add('hidden'), 400); }, 7000);
-  }
-  // Flits op de live-balk + confetti.
-  document.querySelectorAll('.livebar').forEach(el => { el.classList.remove('goal-hit'); void el.offsetWidth; el.classList.add('goal-hit'); });
-  confettiBurst(70);
+  const line = henkEventLine(e.type, m, picks, e.ls);
+  showHenkToast(e.type, m, e.ls, line);
+  flashArenaCard(idx);
 }
 
 function shuffle(arr) {
@@ -917,7 +961,7 @@ function arenaMatches() {
     const start = new Date(m.date).getTime();
     const live = !result && now >= start && (now - start) <= LIVE_WINDOW_MIN * 60000;
     return { idx, m, picks, result, live, start };
-  }).filter(Boolean).sort((a, b) => b.start - a.start).slice(0, 6);
+  }).filter(Boolean).sort((a, b) => (b.live - a.live) || (b.start - a.start)).slice(0, 6);
 }
 
 function renderArena() {
@@ -928,19 +972,20 @@ function renderArena() {
     wrap.innerHTML = `<div class="arena-empty">De Arena opent zodra de eerste wedstrijd begint — dan onthult de poule alle voorspellingen en gaat Henk los.</div>`;
     return;
   }
-  wrap.innerHTML = matches.map(({ m, picks, result, live }) => {
+  wrap.innerHTML = matches.map(({ idx, m, picks, result, live }) => {
     const s = pickStats(picks);
     const total = s.total || 1;
     const when = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     const ls = live ? liveScoreFor(m) : null;
+    const liveKey = ls ? `${ls.hs}-${ls.as}` : null;
     const status = result
       ? `<span class="arena-final">${result.replace('-', ' - ')}</span>`
       : (live
           ? `<span class="arena-live"><span class="live-dot"></span> LIVE${ls ? ` <b class="arena-livescore">${ls.hs}-${ls.as}</b>` : ''}</span>`
           : `<span class="arena-soon">${when}</span>`);
     const top3 = s.exact.slice(0, 3).map(([sc, n]) =>
-      `<span class="ascore">${sc.replace('-', '-')}<b>${n}×</b></span>`).join('');
-    // Wat-als: bij de huidige live stand, wie staat er goed?
+      `<span class="ascore${sc === liveKey ? ' hot' : ''}">${sc}<b>${n}×</b></span>`).join('');
+    // Wat-als + inzet: bij de huidige live stand, wie juicht en wie baalt?
     let watals = '';
     if (live && ls) {
       const exactNow = picks.filter(p => p.h === ls.hs && p.a === ls.as);
@@ -948,10 +993,11 @@ function renderArena() {
       const totoNow = picks.filter(p => { const po = p.h>p.a?'h':(p.h<p.a?'a':'d'); return po === lo; });
       const miss = picks.length - totoNow.length;
       const meName = getMyName().toLowerCase();
-      const meExact = exactNow.some(p => p.player.toLowerCase() === meName);
-      const meToto = totoNow.some(p => p.player.toLowerCase() === meName);
-      const meTag = getMyName()
-        ? `<span class="watals-me ${meExact ? 'good' : meToto ? 'ok' : 'bad'}">${meExact ? 'jij: exact goed ✓' : meToto ? 'jij: juiste toto' : 'jij: zit ernaast'}</span>`
+      const mePick = meName ? picks.find(p => p.player.toLowerCase() === meName) : null;
+      const meExact = !!(mePick && exactNow.some(p => p.player.toLowerCase() === meName));
+      const meToto = !!(mePick && totoNow.some(p => p.player.toLowerCase() === meName));
+      const meTag = mePick
+        ? `<span class="watals-me ${meExact ? 'good' : meToto ? 'ok' : 'bad'}">jij gokte ${mePick.h}-${mePick.a} · ${meExact ? 'exact goed ✓' : meToto ? 'juiste toto' : 'zit ernaast'}</span>`
         : '';
       watals = `
         <div class="watals">
@@ -960,12 +1006,12 @@ function renderArena() {
             <span class="wa good">${exactNow.length}× exact</span>
             <span class="wa ok">${totoNow.length}× juiste toto</span>
             <span class="wa bad">${miss}× mis</span>
-            ${meTag}
           </div>
+          <div class="watals-stakes"><span class="st-juich">🎉 ${totoNow.length} juichen</span><span class="st-baal">😬 ${miss} balen</span>${meTag}</div>
         </div>`;
     }
     return `
-      <div class="arena-card ${live ? 'is-live' : ''} ${result ? 'is-final' : ''}">
+      <div class="arena-card ${live ? 'is-live arena-hero' : ''} ${result ? 'is-final' : ''}" data-idx="${idx}">
         <div class="arena-head">
           <div class="arena-teams">${flagFor(m.home)} ${m.home} <span class="arena-vs">—</span> ${m.away} ${flagFor(m.away)}</div>
           ${status}

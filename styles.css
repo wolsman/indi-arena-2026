@@ -745,6 +745,35 @@ body.henk-open .henk-toggle { display: none; }
   padding: .2rem .5rem; color: rgba(255,255,255,.75);
 }
 .ascore b { color: var(--goud); margin-left: .3rem; }
+/* Oplichtende chip wanneer de live stand deze exacte uitslag raakt. */
+.ascore.hot { background: rgba(255,215,0,.16); color: var(--goud); box-shadow: 0 0 0 1px var(--goud); animation: hotPulse 1.6s infinite; }
+.ascore.hot b { color: var(--goud); }
+@keyframes hotPulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--goud), 0 0 0 0 rgba(255,215,0,.35); }
+  50%      { box-shadow: 0 0 0 1px var(--goud), 0 0 0 5px rgba(255,215,0,0); }
+}
+
+/* Live-takeover: het live duel domineert (volle breedte + nadruk). */
+.arena-hero { grid-column: 1 / -1; }
+.arena-hero .arena-teams { font-size: 1.3rem; }
+.arena-hero .arena-livescore { font-size: 1.25rem; }
+.arena-card.is-live { box-shadow: 0 0 0 1px rgba(255,59,92,.25), 0 18px 48px -16px rgba(255,59,92,.32); }
+
+/* Inzet-laag: juichen / balen + jouw eigen inzet. */
+.watals-stakes { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: .5rem; font-size: .78rem; font-weight: 700; }
+.st-juich { color: var(--veld); }
+.st-baal  { color: var(--rood); }
+.watals-stakes .watals-me { margin-left: auto; }
+
+/* Event-flits op de Arena-kaart (goal/gelijk/ommekeer). */
+.arena-card.just-event { animation: cardFlash 1.6s ease; }
+@keyframes cardFlash {
+  0%   { box-shadow: 0 0 0 2px var(--goud), 0 0 36px rgba(255,215,0,.45); }
+  100% { box-shadow: 0 18px 48px -16px rgba(255,59,92,.32); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ascore.hot, .arena-card.just-event { animation: none; }
+}
 .arena-henk {
   position: relative; margin-top: .6rem; padding: .7rem .8rem .7rem 2.8rem;
   border-radius: .7rem; background: rgba(255,107,0,.07); border: 1px solid rgba(255,107,0,.2);
