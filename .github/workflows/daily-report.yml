@@ -1,0 +1,36 @@
+name: Henk dagrapport
+
+# Wanneer: handmatig (met test-optie) + getriggerd door een dagelijkse
+# cron-job.org-aanroep (workflow_dispatch). GitHub's eigen schedule is te
+# grillig — daarom dezelfde externe-trigger-aanpak als de scraper.
+on:
+  workflow_dispatch:
+    inputs:
+      test_to:
+        description: 'Alleen naar dit adres sturen (leeg = alle goedgekeurde leden)'
+        required: false
+        default: ''
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo uitchecken
+        uses: actions/checkout@v4
+
+      - name: Node.js installeren
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Mail-lib installeren
+        run: npm install nodemailer
+
+      - name: Dagrapport versturen
+        run: node scripts/daily-report.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PW: ${{ secrets.GMAIL_APP_PW }}
+          REPORT_TEST: ${{ github.event.inputs.test_to }}
