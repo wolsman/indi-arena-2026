@@ -140,7 +140,9 @@ function heldSukkelLine(s) {
   let sukkel = '';
   if (s.miss.length) {
     const b = s.miss[0];
-    sukkel = ` &nbsp;·&nbsp; 🤡 <b>${b.player}</b> zat er met ${b.h}-${b.a} het verst naast`;
+    const err = Math.abs(b.h - s.gh) + Math.abs(b.a - s.ga); // doelpunten ernaast
+    // alleen een echte sukkel benoemen: verkeerde winnaar én flink ernaast (geen bijna-goed)
+    if (err >= 3) sukkel = ` &nbsp;·&nbsp; 🤡 <b>${b.player}</b> gokte ${b.h}-${b.a} en zat er straal naast`;
   }
   return `<b>${s.m.home} – ${s.m.away}</b> → ${score}<br><span style="color:#9aa6bd">${held}${sukkel}.</span>`;
 }
