@@ -791,6 +791,24 @@ $('#playerModal').addEventListener('click', (e) => {
 // ============================================================
 // WEDSTRIJD-RADAR
 // ============================================================
+// Henks vooruitblik vóór de aftrap (er zijn dan nog geen poule-picks bekend —
+// die laat wkpooltjes pas zien zodra de wedstrijd begint). Deterministisch per
+// wedstrijd, zodat de regel niet wisselt bij elke render.
+function henkPreMatch(m) {
+  const isNL = (t) => norm(t) === 'nederland';
+  if (isNL(m.home) || isNL(m.away)) {
+    const opp = isNL(m.home) ? m.away : m.home;
+    return `Oranje tegen ${opp}. Vanavond kleurt de halve poule één kant op — durft iemand tégen Nederland te gokken? Dat onthou ik.`;
+  }
+  const lines = [
+    `${m.home}–${m.away}. Henk houdt 'm scherp in de gaten — zodra de bal rolt liggen alle voorspellingen op tafel.`,
+    `${m.home} of ${m.away}? De poule heeft z'n gok al ingevuld; bij de aftrap zie je wie lef had en wie op zeker speelde.`,
+    `Op papier een formaliteit, op het veld nooit. ${m.home}–${m.away} kan zomaar de verrassing van de dag worden.`,
+    `${m.home} tegen ${m.away}. Ik heb m'n mening, de poule heeft de hare — we rekenen af zodra het fluitsignaal klinkt.`
+  ];
+  return lines[Math.abs(parseInt(m.id, 10) || 0) % lines.length];
+}
+
 function renderMatchRadar() {
   const now = Date.now();
   // Hand-geschreven analyse (consensus + Henk-take) als overlay op kalender-id.
@@ -833,7 +851,8 @@ function renderMatchRadar() {
         ${ed.outlier ? `<div class="mt-2 text-xs text-white/45"><span class="text-goud font-semibold">Tegendraads:</span> ${ed.outlier}</div>` : ''}
         <div class="henk-mini">${ed.henkPick}</div>`;
     } else {
-      analysis = `<div class="radar-soon">${m.phase || 'Komende wedstrijd'} — de analyse volgt zodra de poule heeft ingevuld.</div>`;
+      analysis = `<div class="henk-mini">${henkPreMatch(m)}</div>` +
+        `<div class="radar-soon">De voorspellingen van de poule verschijnen in de Arena zodra de wedstrijd begint.</div>`;
     }
 
     return `
@@ -841,9 +860,9 @@ function renderMatchRadar() {
         <div class="when">${when}</div>
         <div class="city">${place}</div>
         <div class="teams">
-          <div class="team">${m.home}</div>
+          <div class="team">${flagFor(m.home)} ${m.home}</div>
           <div class="vs">VS</div>
-          <div class="team right">${m.away}</div>
+          <div class="team right">${m.away} ${flagFor(m.away)}</div>
         </div>
         ${analysis}
       </div>`;
