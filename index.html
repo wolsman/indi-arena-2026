@@ -66,6 +66,7 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
+      <div id="onlineCluster" class="online-cluster hidden" title="Wie kijkt er mee"></div>
       <div id="countdownPill" class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink2 border border-line text-xs font-mono">
         <span class="w-2 h-2 rounded-full bg-rood animate-pulse"></span>
         <span id="countdownTxt">—</span>
@@ -144,6 +145,7 @@
           </div>
         </div>
       </div>
+      <div id="onlinePanel" class="online-panel"></div>
     </div>
   </div>
 
@@ -310,6 +312,9 @@
       <button id="meConfirm" class="w-full py-3 rounded-xl bg-oranje text-ink font-bold hover:bg-oranje2 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
         Open mijn cockpit →
       </button>
+      <label class="flex items-center justify-center gap-2 text-xs text-white/55 pt-1 cursor-pointer">
+        <input type="checkbox" id="anonToggle" class="accent-oranje"> Verschijn anoniem voor anderen
+      </label>
       <div class="text-xs text-white/40 text-center pt-2">
         Staat je naam er niet bij? Stuur Dennis even een berichtje.
       </div>
@@ -341,7 +346,9 @@
 <!-- Confetti canvas -->
 <canvas id="confetti" class="fixed inset-0 pointer-events-none z-30"></canvas>
 
+<script src="supabase-config.js"></script>
 <script src="data/pool-data.js"></script>
 <script src="app.js"></script>
+<script src="presence.js"></script>
 </body>
 </html>

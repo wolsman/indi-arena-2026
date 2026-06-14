@@ -1494,12 +1494,36 @@ window.addEventListener('DOMContentLoaded', () => {
   setInterval(scorebugLoop, 1000);
   initAmbient();
 
+  // Anoniem-schakelaar (presence): stand inladen + live bijwerken.
+  const anonToggle = $('#anonToggle');
+  if (anonToggle) {
+    try { anonToggle.checked = localStorage.getItem('indi-arena-anon') === '1'; } catch (e) {}
+    anonToggle.addEventListener('change', () => {
+      if (typeof window.indiSetAnon === 'function') window.indiSetAnon(anonToggle.checked);
+      else { try { localStorage.setItem('indi-arena-anon', anonToggle.checked ? '1' : '0'); } catch (e) {} }
+    });
+  }
+
   if (!getMyName()) {
     setTimeout(() => openMeModal(), 800);
   }
 });
 
+// Generieke Henk-toast (hergebruikt door events, leiderwissel én presence).
+function henkSay(label, title, line, intensity) {
+  const toast = $('#goalToast');
+  if (!toast) return;
+  const flash = $('#goalFlash'); if (flash) flash.textContent = label;
+  $('#goalScore').textContent = title || '';
+  $('#goalHenk').textContent = line;
+  toast.classList.remove('hidden'); void toast.offsetWidth; toast.classList.add('show');
+  clearTimeout(window.__goalTimer);
+  window.__goalTimer = setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.classList.add('hidden'), 400); }, 7000);
+  if (intensity) confettiBurst(intensity);
+}
+
 window.openPlayerModal = openPlayerModal;
 window.closePlayerModal = closePlayerModal;
 window.openMeModal = openMeModal;
 window.showTab = showTab;
+window.henkSay = henkSay;
