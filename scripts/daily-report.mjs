@@ -96,6 +96,61 @@ function henkMatchPast(m) {
   return lines[Math.abs(parseInt(m.id, 10) || 0) % lines.length];
 }
 
+// ── 3b. Held & sukkel van de nacht (voorspellingen vs. uitslag — keihard gegrond) ──
+// POOL_PREDICTIONS is gesleuteld op kalenderindex; POOL_RESULTS op genormaliseerde teamnaam.
+const POOL_PREDICTIONS = window.POOL_PREDICTIONS || {};
+const sgn = (x) => (x > 0 ? 1 : x < 0 ? -1 : 0);
+const RECENT_MS = 30 * 3600 * 1000; // ~laatste 30 uur = gisteravond + vannacht
+
+function scoreMatch(i, m) {
+  const r = resultOf(m);
+  if (!r) return null;
+  const [gh, ga] = r.split('-').map(Number);
+  if (Number.isNaN(gh) || Number.isNaN(ga)) return null;
+  const out = sgn(gh - ga);
+  const preds = POOL_PREDICTIONS[i] || POOL_PREDICTIONS[String(i)] || [];
+  const exact = [], miss = [];
+  for (const p of preds) {
+    if (p.h === gh && p.a === ga) exact.push(p);
+    else if (sgn(p.h - p.a) !== out) miss.push(p); // verkeerde winnaar/uitkomst = echte blunder
+  }
+  // grootste blunder = pick die qua doelpunten het verst van de realiteit zat
+  miss.sort((a, b) => (Math.abs(b.h - gh) + Math.abs(b.a - ga)) - (Math.abs(a.h - gh) + Math.abs(a.a - ga)));
+  return { m, r, gh, ga, exact, miss, total: preds.length };
+}
+
+const recentFinished = POOL_CALENDAR
+  .map((m, i) => ({ m, i }))
+  .filter(({ m }) => resultOf(m) && new Date(m.date).getTime() <= nowMs && (nowMs - new Date(m.date).getTime()) <= RECENT_MS)
+  .sort((a, b) => new Date(a.m.date) - new Date(b.m.date))
+  .map(({ m, i }) => scoreMatch(i, m))
+  .filter(Boolean);
+
+function heldSukkelLine(s) {
+  const score = `<b style="color:#fff">${s.r.replace('-', '–')}</b>`;
+  const names = (arr, n = 3) => arr.slice(0, n).map((p) => p.player).join(', ') + (arr.length > n ? ` +${arr.length - n}` : '');
+  if (s.total === 0) {
+    return `<b>${s.m.home} – ${s.m.away}</b> → ${score}<br><span style="color:#9aa6bd">de Arena rekent de punten nog af — straks zie je wie 'm had.</span>`;
+  }
+  let held;
+  if (s.exact.length === 1) held = `🏅 als énige exact: <b>${s.exact[0].player}</b> — chapeau`;
+  else if (s.exact.length >= 2 && s.exact.length <= 4) held = `🏅 exact gegokt door <b>${names(s.exact)}</b>`;
+  else if (s.exact.length > 4) held = `🏅 ${s.exact.length} mensen hadden 'm exact — knappe kudde`;
+  else held = `🏅 niemand had de juiste uitslag, dit zag de hele poule fout`;
+  let sukkel = '';
+  if (s.miss.length) {
+    const b = s.miss[0];
+    sukkel = ` &nbsp;·&nbsp; 🤡 <b>${b.player}</b> zat er met ${b.h}-${b.a} het verst naast`;
+  }
+  return `<b>${s.m.home} – ${s.m.away}</b> → ${score}<br><span style="color:#9aa6bd">${held}${sukkel}.</span>`;
+}
+
+// "held van de nacht" voor de onderwerpregel: een uitslag die maar één iemand exact had
+const nightHero = recentFinished
+  .filter((s) => s.exact.length === 1)
+  .map((s) => ({ player: s.exact[0].player, m: s.m, r: s.r }))
+  .slice(-1)[0] || null;
+
 // ── 4. Roast van de dag (roteert per dag — niet steeds hetzelfde slachtoffer) ──
 const cocky = ranked.find((r) => /meestervoorspeller/i.test(r.p.name)) || (leaders.length ? ranked[0] : null);
 const onNulR = onNul.length ? ranked.find((r) => r.p.name === onNul[0]) : null;
@@ -105,30 +160,31 @@ if (onNulR) candidates.push({ r: onNulR, type: 'nul' });
 if (cocky) candidates.push({ r: cocky, type: 'cocky' });
 if (bottom[0]) candidates.push({ r: bottom[0], type: 'bottom' });
 const roast = candidates.length ? candidates[now.getDate() % candidates.length] : null;
-const roastTarget = roast ? roast.r : null;
 let roastLine = '';
 if (roast) {
   const nm = roast.r.p.name;
-  const take = (HENK.player_takes && HENK.player_takes[nm]) || '';
+  // player_takes alléén voor de meestervoorspeller — andere takes leunen op het
+  // onbetrouwbare `matches`-veld ("9 duels ingevuld") en zouden Henk laten liegen.
+  const safeTake = /meestervoorspeller/i.test(nm) && HENK.player_takes ? HENK.player_takes[nm] : '';
   if (roast.type === 'faller') {
-    roastLine = `${nm} duikelde ${-roast.r.delta} ${(-roast.r.delta) === 1 ? 'plek' : 'plekken'} omlaag. Gisteren held, vandaag materiaal voor mijn samenvatting. Voetbal is wreed — en ik geniet van elke seconde.`;
+    roastLine = `${nm} kukelde ${-roast.r.delta} ${(-roast.r.delta) === 1 ? 'plek' : 'plekken'} omlaag. Gisteren nog een naam, vandaag een voetnoot in mijn samenvatting. Voetbal is meedogenloos — en ik, toevallig, ook.`;
   } else if (roast.type === 'nul') {
-    roastLine = `${nm} staat nóg op nul. Nul. De boot is allang weg, mensen, en ${nm} staat op de kade te zwaaien naar een schip dat niet terugkomt.`;
+    roastLine = `${nm} staat nóg op nul. Niet één pick, niet één punt. De rest speelt een toernooi; ${nm} speelt verstoppertje met het invulformulier. De boot is weg, mensen — zwaaien heeft geen zin meer.`;
   } else if (roast.type === 'cocky') {
-    roastLine = take || `${nm} staat lekker hoog en weet het zelf ook — reken maar. Geniet ervan: hoe hoger de toren, hoe harder de smak. Ik wacht geduldig.`;
+    roastLine = safeTake || `${nm} torent boven de poule uit met ${roast.r.p.points} punten en weet het zelf maar al te goed. Onthoud dit moment, ${nm}: ik heb een lange lijst van mensen die te vroeg juichten — en jouw naam staat er met potlood al bij.`;
   } else {
-    roastLine = take || `Onderaan de mensen mét punten bivakkeert ${nm} (${roast.r.p.points} pt). Iemand moet de rode lantaarn dragen, en ${nm} doet het met verve. Omhoogvallen kan altijd nog.`;
+    roastLine = `Helemaal onderin bij de mensen mét punten: ${nm} (${roast.r.p.points} pt). Iemand moet de rode lantaarn dragen, en ${nm} klemt 'm vast alsof het een beker is. Omhoogvallen kan altijd nog — al wordt het krap.`;
   }
 }
 
 // ── 5. Tekst opbouwen ──
 const dateLabel = now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: NL_TZ });
-const hookName = (fallers[0] && fallers[0].p.name) || (onNul.length ? onNul[0] : null);
-const subject = hookName
-  ? `Indicium WK Poule · Henk neemt ${hookName} onder vuur — ${dateLabel}`
-  : (leaders.length
-      ? `Indicium WK Poule · ${leaders[0]} aan kop, Henk is niet onder de indruk — ${dateLabel}`
-      : `Indicium WK Poule · Henk's dagrapport — ${dateLabel}`);
+const subjectHooks = [];
+if (nightHero) subjectHooks.push(`${nightHero.player} had ${nightHero.m.home}–${nightHero.m.away} (${nightHero.r}) als énige exact`);
+if (leaders.length && leaderPts > 0) subjectHooks.push(`${leaders[0]} aan kop met ${leaderPts} — Henk is niet onder de indruk`);
+if (onNul.length) subjectHooks.push(`${onNul.length} ${onNul.length === 1 ? 'deelnemer staat' : 'deelnemers staan'} nóg op nul — Henk noemt namen`);
+if (!subjectHooks.length) subjectHooks.push(`Henk's dagrapport`);
+const subject = `Indicium WK Poule · ${subjectHooks[now.getDate() % subjectHooks.length]} — ${dateLabel}`;
 
 const O = '#ff6b00';
 const H = (t) => `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:${O};font-weight:800;margin:20px 0 8px">${t}</div>`;
@@ -143,14 +199,49 @@ const topHtml = top.map((r, i) => {
 const climbHtml = climbers.length ? climbers.map((r) => `${r.p.name} <span style="color:#0eb84a">▲${r.delta}</span>`).join(' &nbsp;·&nbsp; ') : '';
 const fallHtml = fallers.length ? fallers.map((r) => `${r.p.name} <span style="color:#ff3b5c">▼${-r.delta}</span>`).join(' &nbsp;·&nbsp; ') : '';
 const wrapMatch = (s) => `<p style="line-height:1.55;margin:0 0 10px;color:#e8edf6">${s}</p>`;
-const pastHtml = todayPast.slice(0, 4).map((m) => wrapMatch(henkMatchPast(m))).join('');
+const heldHtml = recentFinished.map((s) => wrapMatch(heldSukkelLine(s))).join('');
+// fallback: afgelopen duels van vandaag zónder voorspellingen (zeldzaam) — toch even tonen
+const pastFallbackHtml = (!recentFinished.length)
+  ? todayPast.filter((m) => resultOf(m)).slice(0, 4).map((m) => wrapMatch(henkMatchPast(m))).join('')
+  : '';
 const nextHtml = todayNext.slice(0, 4).map((m) => wrapMatch(henkMatch(m))).join('');
+
+// gat naar nr. 2 + de grootste gedeelde-punten-kluwen (voor de standduiding)
+const second = ranked.find((r) => r.rank === 2);
+const gapTo2 = second ? leaderPts - (second.p.points || 0) : 0;
+const tieGroups = {};
+ranked.forEach((r) => { const v = r.p.points || 0; (tieGroups[v] = tieGroups[v] || []).push(r.p.name); });
+const biggestTie = Object.entries(tieGroups)
+  .filter(([v, n]) => Number(v) > 0 && n.length >= 2)
+  .sort((a, b) => b[1].length - a[1].length || Number(b[0]) - Number(a[0]))[0];
+const packLine = biggestTie
+  ? `${biggestTie[1].slice(0, 3).join(', ')}${biggestTie[1].length > 3 ? ` (+${biggestTie[1].length - 3})` : ''} hangen op ${biggestTie[0]} punten aan elkaar vast — één goede speeldag en die hele kluwen schuift door elkaar.`
+  : '';
 
 const standIntro = (leaders.length && leaderPts > 0)
   ? (leaders.length > 1
       ? `${leaders.slice(0, 3).join(', ')}${leaders.length > 3 ? ` +${leaders.length - 3}` : ''} delen de kop met ${leaderPts} punten. Bovenin is het dringen — en dringen veroorzaakt ongelukken.`
-      : `${leaders[0]} staat bovenaan met ${leaderPts} punten. Geniet ervan: een voorsprong is geleend, nooit bezit.`)
-  : `De punten moeten nog echt gaan lopen. Maar onthoud: wie nu lacht, lacht straks misschien als laatste.`;
+      : `<b>${leaders[0]}</b> staat bovenaan met ${leaderPts} punten${gapTo2 > 0 ? `, ${gapTo2} los van nummer twee` : ''}. Geniet ervan, ${leaders[0]} — een voorsprong is geleend, nooit bezit, en ik ken de bank die 'm terugvraagt.`)
+  : `De punten moeten nog echt gaan lopen. Maar onthoud: wie nu het hardst lacht, lacht straks vaak als laatste.`;
+
+// wisselende, fellere opener
+const openers = [
+  'Goeiemorgen, voetbalvolk. Henk hier. Koffie gepakt? Mooi — want ik ga vanochtend niemand sparen.',
+  'Daar ben ik weer. Henk, met het rapport dat niemand dúrft te schrijven en iedereen stiekem leest.',
+  'Opstaan, kampioenen-in-eigen-hoofd. Henk heeft de cijfers, en de cijfers liegen niet — jullie wel.',
+  'Henk hier. Ik heb vannacht jullie voorspellingen gelezen. Eentje was scherp. De rest was een hulpkreet.'
+];
+const opener = openers[now.getDate() % openers.length];
+
+// wervingsblok + korte handleiding (gegrond op de echte magic-link-flow)
+const stepP = (t) => `<p style="line-height:1.55;margin:0 0 8px;color:#e8edf6">${t}</p>`;
+const signupHtml = H('📣 Nog geen account voor de Arena?')
+  + P('Speel je mee in de poule, maar mis je het dashboard nog? Dáár zie je je eigen positie, ieders voorspellingen, de live tussenstanden — en mij, Henk, die alles van commentaar voorziet. Aanmelden kost je 30 seconden:')
+  + `<div style="border:1px solid #1a2238;border-radius:10px;padding:12px 14px;margin:0 0 12px">`
+  + stepP(`<b style="color:${O}">1.</b> Ga naar <b>indi-arena-2026v3.vercel.app</b> en vul je e-mailadres in → <i>Stuur inloglink</i>.`)
+  + stepP(`<b style="color:${O}">2.</b> Klik op de link in je mail (geen wachtwoord nodig) en kies je <b>poule-naam</b> — dezelfde als op wkpooltjes.`)
+  + stepP(`<b style="color:${O}">3.</b> Heel even geduld terwijl ik je binnenlaat. Daarna sta je in de Arena. Welkom.`)
+  + `</div>`;
 
 const html = `
   <div style="background:#0a0e1a;color:#fff;font-family:Inter,Arial,sans-serif;padding:24px;max-width:600px;margin:0 auto;border-radius:14px">
@@ -161,20 +252,21 @@ const html = `
         <div style="font-size:12px;color:#9aa6bd">Indicium WK Poule &middot; ${dateLabel}</div>
       </div>
     </div>
-    ${P('Goeiemorgen, voetbalvolk. Henk hier met het dagrapport van de <b>Indicium WK Poule</b>. Pak je koffie — ik ga niemand sparen.')}
+    ${P(opener)}
     ${H('De stand')}
     ${P(standIntro)}
+    ${packLine ? P(packLine) : ''}
     ${topHtml}
     ${(climbHtml || fallHtml) ? H('Klimmers &amp; duikelaars') + (climbHtml ? P('▲ ' + climbHtml + ' — sluipverkeer in het klassement, ik hou het bij.') : '') + (fallHtml ? P('▼ ' + fallHtml + ' — vrije val. Riemen vast.') : '') : ''}
-    ${onNul.length ? H('De schaamlijst') + P(`Nog op <b>nul</b>: ${onNul.slice(0, 5).join(', ')}${onNul.length > 5 ? ` +${onNul.length - 5}` : ''}. Het toernooi draait, zij niet. Pijnlijk.`) : ''}
-    ${today.length
-      ? (pastHtml ? H(nextHtml ? 'Eerder vandaag gespeeld' : 'Vandaag gespeeld') + pastHtml : '')
-        + (nextHtml ? H(pastHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + nextHtml : '')
-      : H('Vandaag') + P('Geen wedstrijden vandaag — een rustdag, zogenaamd. De ranglijst slaapt nooit, en ik ook niet.')}
+    ${heldHtml ? H('🏅 Held &amp; 🤡 sukkel van de nacht') + heldHtml : (pastFallbackHtml ? H('Eerder gespeeld') + pastFallbackHtml : '')}
+    ${onNul.length ? H('De schaamlijst') + P(`Nog altijd op <b>nul</b>: ${onNul.slice(0, 6).join(', ')}${onNul.length > 6 ? ` +${onNul.length - 6}` : ''}. Geen pick, geen punt, geen excuus. Het toernooi dendert door; zij staan erbij, kijken ernaar — en betalen straks vrolijk mee aan andermans prijs.`) : ''}
+    ${nextHtml ? H(heldHtml || pastFallbackHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + nextHtml : ''}
+    ${(!today.length && !heldHtml && !pastFallbackHtml) ? H('Vandaag') + P('Geen wedstrijden vandaag — een rustdag, zogenaamd. De ranglijst slaapt nooit, en ik ook niet.') : ''}
     ${roastLine ? H('🔥 Roast van de dag') + `<div style="border-left:3px solid ${O};padding:10px 14px;background:rgba(255,107,0,.10);border-radius:8px"><p style="margin:0;line-height:1.6;color:#fff">${roastLine}</p></div>` : ''}
     ${P('Tot vanavond in de Arena — daar reken ik live af. — <b>Henk</b>')}
-    <a href="${SITE}" style="display:inline-block;margin-top:8px;background:#ff6b00;color:#0a0e1a;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:10px">Open de Arena &rarr;</a>
-    <div style="margin-top:20px;font-size:11px;color:#5b6678">Indi-Arena 2026 &middot; Indicium WK Poule &middot; je krijgt deze mail omdat je bent toegelaten tot de poule.</div>
+    <a href="${SITE}" style="display:inline-block;margin:8px 0 4px;background:#ff6b00;color:#0a0e1a;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:10px">Open de Arena &rarr;</a>
+    ${signupHtml}
+    <div style="margin-top:20px;font-size:11px;color:#5b6678">Indi-Arena 2026 &middot; Indicium WK Poule &middot; je krijgt deze mail omdat je bent toegelaten tot de poule. Ken je een poule-genoot die het dashboard nog mist? Stuur 'm gerust door.</div>
   </div>`;
 
 // ── 5b. preview-modus (schrijf naar schijf, verstuur NIETS) ──
