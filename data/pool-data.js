@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 56,
   capacityMax: 75,
-  syncedAt: "2026-06-14T09:31:34.633Z",
+  syncedAt: "2026-06-14T10:01:30.257Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -29,7 +29,7 @@ window.POOL_PLAYERS = [
   { name: "StudentjeIndicium", matches: 72, winner: true, topscorer: true, paid: true, points: 535, prevPos: 20 },
   { name: "Mauricio1980", matches: 72, winner: true, topscorer: true, paid: true, points: 450, prevPos: 28 },
   { name: "AlinevanVuuren", matches: 72, winner: true, topscorer: true, paid: true, points: 290, prevPos: 46 },
-  { name: "Wisselbeker", matches: 10, winner: true, topscorer: true, paid: true, points: 695, prevPos: 7 },
+  { name: "Wisselbeker", matches: 26, winner: true, topscorer: true, paid: true, points: 695, prevPos: 7 },
   { name: "Roantuit", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
   { name: "Robertosxs", matches: 104, winner: true, topscorer: true, paid: true, points: 555, prevPos: 15 },
   { name: "Reboss", matches: 72, winner: true, topscorer: true, paid: true, points: 430, prevPos: 32 },
@@ -74,7 +74,7 @@ window.POOL_PLAYERS = [
   { name: "Christopheramboz", matches: 17, winner: true, topscorer: true, paid: true, points: 730, prevPos: 2 },
   { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: false, points: 0, prevPos: 51 },
   { name: "WillemCo", matches: 13, winner: false, topscorer: false, paid: false, points: 370, prevPos: 39 },
-  { name: "Nelson1983", matches: 11, winner: false, topscorer: false, paid: false, points: 0 }
+  { name: "Nelson1983", matches: 11, winner: false, topscorer: false, paid: false, points: 0, prevPos: 51 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
