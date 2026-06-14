@@ -293,7 +293,10 @@ if (TEST_TO) {
   try {
     const res = await fetch(url, { headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } });
     const data = await res.json();
-    recipients = (Array.isArray(data) ? data : []).map((m) => m.email).filter(Boolean);
+    const raw = (Array.isArray(data) ? data : []).map((m) => (m.email || '').trim()).filter(Boolean);
+    const seen = new Set();
+    recipients = raw.filter((e) => { const k = e.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+    if (raw.length !== recipients.length) console.log(`(${raw.length - recipients.length} dubbele adres(sen) ontdubbeld)`);
     if (!Array.isArray(data)) console.log('Supabase-respons:', JSON.stringify(data).slice(0, 200));
   } catch (e) { console.log('Leden ophalen mislukt:', e.message); }
 }
