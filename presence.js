@@ -8,11 +8,20 @@
   const cfg = window.INDI_SUPABASE || {};
   if (!cfg.url || !cfg.key || /JOUW-/.test(cfg.url + cfg.key)) return; // niet geconfigureerd → uit
 
-  let createClient;
-  try {
-    ({ createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
-  } catch (e) {
-    return; // CDN niet bereikbaar → stil uit
+  // In magic-link-modus: pas verbinden zodra de gebruiker is ingelogd + toegelaten.
+  if (window.INDI_AUTH_ON && window.__authReady) {
+    try { if (!(await window.__authReady)) return; } catch (e) { return; }
+  }
+
+  // Hergebruik de Supabase-client van auth.js als die er is; anders zelf laden.
+  let client = window.__sb;
+  if (!client) {
+    try {
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      client = createClient(cfg.url, cfg.key, { realtime: { params: { eventsPerSecond: 2 } } });
+    } catch (e) {
+      return; // CDN niet bereikbaar → stil uit
+    }
   }
 
   const $ = (s) => document.querySelector(s);
@@ -20,8 +29,6 @@
   const myName = getName();
   const anon = (() => { try { return localStorage.getItem('indi-arena-anon') === '1'; } catch (e) { return false; } })();
   const displayName = anon ? 'Anoniem' : (myName || 'een gast');
-
-  const client = createClient(cfg.url, cfg.key, { realtime: { params: { eventsPerSecond: 2 } } });
   const channel = client.channel('indi-arena-presence', {
     config: { presence: { key: (anon ? 'anon-' : '') + (myName || 'gast') + '-' + Math.random().toString(36).slice(2, 7) } }
   });

@@ -29,10 +29,21 @@
   }
 </script>
 <link rel="stylesheet" href="styles.css" />
+<style>html.auth-checking body { visibility: hidden; }</style>
+<script src="supabase-config.js"></script>
 <script>
-  // ── Auth-gate ─────────────────────────────────────────
-  // Check of bezoeker is ingelogd, anders redirect naar login.
+  // ── Toegang ───────────────────────────────────────────
+  // Geldige Supabase-config → magic-link-modus: auth.js doet de sessie-check
+  // en de pagina blijft verborgen tot dat klaar is. Anders → fallback op de
+  // oude wachtwoord-gate.
   (function(){
+    var cfg = window.INDI_SUPABASE || {};
+    var authMode = cfg.url && cfg.key && !/JOUW-/.test(cfg.url + cfg.key);
+    if (authMode) {
+      document.documentElement.classList.add('auth-checking');
+      setTimeout(function(){ document.documentElement.classList.remove('auth-checking'); }, 10000); // veiligheid: nooit eindeloos verbergen
+      return;
+    }
     var ok = localStorage.getItem('indi-arena-auth') === '1';
     var exp = +(localStorage.getItem('indi-arena-auth-exp') || 0);
     if (!ok || exp < Date.now()) {
@@ -75,7 +86,7 @@
       <button id="meBtn" onclick="openMeModal(true)" class="text-xs px-3 py-1.5 rounded-full bg-ink2 border border-line text-white/70 hover:text-white hover:border-oranje transition" title="Wissel speler">
         <span id="meBtnLabel">— wie ben jij? —</span>
       </button>
-      <button onclick="if(confirm('Uitloggen?')){localStorage.clear();location.replace('./login.html');}" class="text-xs px-3 py-1.5 rounded-full bg-ink2 border border-line text-white/50 hover:text-white hover:border-oranje transition" title="Uitloggen">↩</button>
+      <button onclick="if(confirm('Uitloggen?')){ if(window.INDI_AUTH_ON&&window.indiAuth){window.indiAuth.signOut();}else{localStorage.clear();location.replace('./login.html');} }" class="text-xs px-3 py-1.5 rounded-full bg-ink2 border border-line text-white/50 hover:text-white hover:border-oranje transition" title="Uitloggen">↩</button>
     </div>
   </div>
   <div class="border-t border-line/60">
@@ -346,9 +357,9 @@
 <!-- Confetti canvas -->
 <canvas id="confetti" class="fixed inset-0 pointer-events-none z-30"></canvas>
 
-<script src="supabase-config.js"></script>
 <script src="data/pool-data.js"></script>
 <script src="app.js"></script>
+<script src="auth.js"></script>
 <script src="presence.js"></script>
 </body>
 </html>

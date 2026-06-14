@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0e1a" />
-<title>Indi-Arena 2026 · toegang</title>
+<title>Indi-Arena 2026 · inloggen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -27,13 +27,10 @@
 <style>
   body {
     background-color:#0a0e1a;
-    /* Indicium-teamposter met donkere overlay voor leesbaarheid */
     background-image:
       linear-gradient(rgba(10,14,26,.66), rgba(10,14,26,.82)),
       url('assets/indicium-team.jpg');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
+    background-size: cover; background-position: center center; background-repeat: no-repeat;
   }
   .mesh::before {
     content:''; position:fixed; inset:0; pointer-events:none; z-index:-1;
@@ -42,23 +39,13 @@
       radial-gradient(circle at 75% 75%, rgba(14,184,74,.15) 0%, transparent 50%),
       radial-gradient(circle at 50% 50%, rgba(255,215,0,.05) 0%, transparent 60%);
   }
-  @keyframes float {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
   .float { animation: float 4s ease-in-out infinite; }
-  .err { animation: shake .35s; }
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    25% { transform: translateX(-8px); }
-    75% { transform: translateX(8px); }
-  }
 </style>
 </head>
 <body class="text-white font-sans antialiased min-h-screen flex items-center justify-center px-4 mesh">
 
   <div class="w-full max-w-md">
-    <!-- Logo -->
     <div class="text-center mb-8 float">
       <div class="inline-flex items-center gap-3 mb-3">
         <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-oranje to-veld grid place-items-center font-black text-ink text-xl shadow-lg shadow-oranje/30">IA</div>
@@ -67,82 +54,78 @@
       <p class="text-sm text-white/50 mt-1">Live cockpit · Indicium WK Poule</p>
     </div>
 
-    <!-- Card -->
-    <div class="rounded-2xl bg-ink2/80 backdrop-blur border border-line p-7 shadow-2xl">
+    <!-- Inlog-kaart -->
+    <div id="card" class="rounded-2xl bg-ink2/80 backdrop-blur border border-line p-7 shadow-2xl">
       <div class="text-[11px] uppercase tracking-widest text-oranje font-bold mb-2">Besloten toegang</div>
-      <h2 class="text-xl font-bold mb-1">Voer het pool-wachtwoord in</h2>
-      <p class="text-sm text-white/60 mb-6">Het wachtwoord staat in de mail die je hebt ontvangen.</p>
+      <h2 class="text-xl font-bold mb-1">Log in met je e-mail</h2>
+      <p class="text-sm text-white/60 mb-6">Je krijgt een inloglink in je mail — geen wachtwoord nodig. Alleen vooraf toegelaten adressen kunnen mee.</p>
 
       <form id="loginForm" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Wachtwoord</label>
-          <input
-            id="pwd"
-            type="password"
-            autocomplete="current-password"
-            class="w-full px-4 py-3 rounded-xl bg-ink border border-line focus:border-oranje focus:outline-none transition font-mono text-base"
-            placeholder="••••••••••••"
-            required
-          />
+          <label class="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">E-mailadres</label>
+          <input id="email" type="email" autocomplete="email" required
+            class="w-full px-4 py-3 rounded-xl bg-ink border border-line focus:border-oranje focus:outline-none transition text-base"
+            placeholder="jij@voorbeeld.nl" />
         </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-oranje text-ink font-bold hover:bg-oranje2 transition">
-          Open de Arena →
+        <button type="submit" class="w-full py-3 rounded-xl bg-oranje text-ink font-bold hover:bg-oranje2 transition disabled:opacity-50">
+          Stuur inloglink →
         </button>
       </form>
 
-      <div id="err" class="hidden mt-4 px-4 py-3 rounded-xl bg-rood/15 border border-rood/30 text-rood text-sm font-medium">
-        Onjuist wachtwoord. Kijk in de aankondigingsmail of vraag het even aan Dennis.
-      </div>
+      <div id="err" class="hidden mt-4 px-4 py-3 rounded-xl bg-rood/15 border border-rood/30 text-rood text-sm font-medium"></div>
+    </div>
+
+    <!-- Verstuurd-kaart -->
+    <div id="sent" class="hidden rounded-2xl bg-ink2/80 backdrop-blur border border-veld/40 p-7 shadow-2xl text-center">
+      <div class="text-4xl mb-3">📬</div>
+      <h2 class="text-xl font-bold mb-1">Check je mail</h2>
+      <p class="text-sm text-white/70">We hebben een inloglink gestuurd naar<br><span id="sentTo" class="text-white font-semibold"></span>.</p>
+      <p class="text-xs text-white/45 mt-4">Klik de link in de mail om de Arena te openen. Niks gezien? Kijk even in je spam-map.</p>
+      <button onclick="location.reload()" class="mt-5 text-xs text-oranje font-semibold hover:underline">← Ander adres gebruiken</button>
     </div>
 
     <div class="text-center mt-8 text-xs text-white/40">
-      Geen wachtwoord? Stuur een DM aan <span class="text-oranje font-semibold">Dennis</span>.
+      Geen toegang? Vraag <span class="text-oranje font-semibold">Dennis</span> om je op de lijst te zetten.
     </div>
   </div>
 
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
 <script>
-  // Het wachtwoord staat in een light obfuscation (base64).
-  // Voor productie security is dit niet voldoende, maar voor een gesloten
-  // kantoorpool van 46 mensen prima.
-  // ↓ huidig wachtwoord (klein-letter):
-  const PWD_HASH = btoa('indiciumwkpoule2026');
-
   const form = document.getElementById('loginForm');
-  const err  = document.getElementById('err');
-  const pwd  = document.getElementById('pwd');
+  const emailIn = document.getElementById('email');
+  const err = document.getElementById('err');
+  const card = document.getElementById('card');
+  const sent = document.getElementById('sent');
 
-  form.addEventListener('submit', (e) => {
+  // Al ingelogd? meteen door naar de Arena.
+  (async () => {
+    try { if (window.indiAuth && await window.indiAuth.session()) location.replace('./'); } catch (e) {}
+  })();
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const val = pwd.value.trim().toLowerCase();
-    if (btoa(val) === PWD_HASH) {
-      // Set auth flag
-      localStorage.setItem('indi-arena-auth', '1');
-      // Set expiry: 30 days from now
-      const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      localStorage.setItem('indi-arena-auth-exp', String(expires));
-      // Redirect
-      window.location.href = './';
-    } else {
+    err.classList.add('hidden');
+    const email = emailIn.value.trim();
+    if (!email) return;
+    const btn = form.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Versturen…';
+    try {
+      if (!window.indiAuth) throw new Error('config');
+      const { error } = await window.indiAuth.sendMagicLink(email);
+      if (error) throw error;
+      document.getElementById('sentTo').textContent = email;
+      card.classList.add('hidden');
+      sent.classList.remove('hidden');
+    } catch (ex) {
+      err.textContent = (ex && ex.message && /rate|limit|seconds/i.test(ex.message))
+        ? 'Even wachten — er zijn net te veel mails verstuurd. Probeer over een minuutje opnieuw.'
+        : 'Versturen lukte niet. Controleer je e-mailadres en probeer het nog eens.';
       err.classList.remove('hidden');
-      pwd.classList.add('err');
-      setTimeout(() => pwd.classList.remove('err'), 400);
-      pwd.select();
+      btn.disabled = false; btn.textContent = 'Stuur inloglink →';
     }
   });
-
-  // Already authed? redirect immediately
-  if (localStorage.getItem('indi-arena-auth') === '1') {
-    const exp = +(localStorage.getItem('indi-arena-auth-exp') || 0);
-    if (exp > Date.now()) {
-      window.location.href = './';
-    } else {
-      localStorage.removeItem('indi-arena-auth');
-      localStorage.removeItem('indi-arena-auth-exp');
-    }
-  }
-
-  // Autofocus
-  setTimeout(() => pwd.focus(), 100);
+  setTimeout(() => emailIn && emailIn.focus(), 100);
 </script>
 </body>
 </html>

@@ -360,6 +360,8 @@ function openMeModal() {
   btn.onclick = () => {
     if (!sel.value) return;
     setMyName(sel.value);
+    // In magic-link-modus: koppel deze poule-naam aan je account (profiles).
+    if (window.INDI_AUTH_ON && window.indiAuth) { try { window.indiAuth.setProfileName(sel.value); } catch (e) {} }
     $('#meModal').classList.add('hidden');
     renderMyCockpit();
     renderHeroLeaderboard();
@@ -1456,7 +1458,13 @@ function initAmbient() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  // In magic-link-modus eerst de sessie-gate afwachten (auth.js); bij geen
+  // geldige sessie/toegang heeft auth.js al geredirect of geblokkeerd.
+  if (window.INDI_AUTH_ON && window.__authReady) {
+    const ok = await window.__authReady;
+    if (!ok) return;
+  }
   setMyName(getMyName());
   updateCountdown();
   renderLiveNow();
