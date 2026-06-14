@@ -28,8 +28,9 @@ const SB = process.env.SUPABASE_URL;
 const KEY = process.env.SUPABASE_SERVICE_KEY;
 const ADMIN = (process.env.REPORT_ADMIN || process.env.GMAIL_USER || '').trim();
 const DRY = !!(process.env.MEMBERS_DRYRUN || '').trim();
+const PREVIEW = !!(process.env.MEMBERS_PREVIEW || '').trim();
 
-if (!SB || !KEY) { console.log('Supabase-config ontbreekt — niets te doen.'); process.exit(0); }
+if (!SB || !KEY) { if (!PREVIEW) { console.log('Supabase-config ontbreekt — niets te doen.'); process.exit(0); } }
 
 const sbHeaders = { apikey: KEY, Authorization: `Bearer ${KEY}` };
 const sbGet = async (q) => {
@@ -129,5 +130,21 @@ const run = async () => {
     } catch (e) { console.log(`  ✗ pending-seintje: ${e.message}`); }
   }
 };
+
+// preview-modus: render de mails naar schijf, lees Supabase niet, verstuur niets
+if (PREVIEW) {
+  const { writeFileSync } = await import('node:fs');
+  const sample = { poule_naam: 'Wolsman', email: 'jij@voorbeeld.nl' };
+  const pend = [
+    { poule_naam: 'NieuweSpeler', email: 'speler1@voorbeeld.nl' },
+    { poule_naam: 'Pietje Puk', email: 'pietje@voorbeeld.nl' }
+  ];
+  writeFileSync(new URL('../mail-welcome-preview.html', import.meta.url),
+    `<!doctype html><meta charset="utf-8"><title>Welkomstmail</title><div style="background:#05070f;padding:16px">${welcomeHtml(sample)}</div>`);
+  writeFileSync(new URL('../mail-pending-preview.html', import.meta.url),
+    `<!doctype html><meta charset="utf-8"><title>Pending-seintje</title><div style="background:#05070f;padding:16px">${pendingHtml(pend)}</div>`);
+  console.log('Previews geschreven → mail-welcome-preview.html + mail-pending-preview.html (niets verstuurd)');
+  process.exit(0);
+}
 
 run().catch((e) => { console.error('✗', e.message); process.exit(1); });
