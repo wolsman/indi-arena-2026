@@ -33,19 +33,23 @@
     Object.values(state).forEach(arr => arr.forEach(p => { if (p && p.name && p.name !== 'Anoniem') names.push(p.name); }));
     return [...new Set(names)];
   }
-  function onlineCount() {
-    // tel ook anonieme kijkers mee voor het totaal
+  function anonCount() {
+    // alleen écht-anonieme kijkers (anoniem-schakelaar aan / geen naam)
     const state = channel.presenceState();
-    let n = 0; Object.values(state).forEach(arr => { n += arr.length; });
+    let n = 0;
+    Object.values(state).forEach(arr => arr.forEach(p => { if (!p || !p.name || p.name === 'Anoniem') n++; }));
     return n;
   }
+  // Unieke mensen (op naam) + echt-anonieme kijkers — zo tellen dubbele tabs /
+  // dezelfde naam niet dubbel, en verschijnt er geen nep-"anoniem".
+  function displayCount() { return onlineNames().length + anonCount(); }
 
   const initial = (n) => (typeof getInitial === 'function' ? getInitial(n) : (n[0] || '?').toUpperCase());
   const mine = (n) => (typeof isMe === 'function' ? isMe(n) : false);
 
   function render() {
     const names = onlineNames();
-    const count = onlineCount();
+    const count = displayCount();
     const cluster = $('#onlineCluster');
     if (cluster) {
       if (count > 0) {
@@ -60,7 +64,7 @@
     }
     const panel = $('#onlinePanel');
     if (panel) {
-      const anonExtra = count - names.length;
+      const anonExtra = anonCount();
       panel.innerHTML = count > 0
         ? `<div class="op-title"><span class="on-dot"></span> Nu online — ${count}</div>` +
           `<div class="op-names">${names.map(n => `<span class="op-name${mine(n) ? ' me' : ''}">${initial(n)} ${n}</span>`).join('')}` +
@@ -118,7 +122,7 @@
       render();
       if (!ready) {
         onlineNames().forEach(n => seen.add(n));
-        setTimeout(() => { henkMilestone(onlineCount()); henkLateNight(); }, 1200);
+        setTimeout(() => { henkMilestone(displayCount()); henkLateNight(); }, 1200);
         ready = true;
       }
     })
@@ -131,7 +135,7 @@
           henkJoin(p.name);
         }
       });
-      henkMilestone(onlineCount());
+      henkMilestone(displayCount());
     })
     .on('presence', { event: 'leave' }, () => { render(); })
     .subscribe(async (status) => {
