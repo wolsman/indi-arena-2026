@@ -1389,6 +1389,7 @@ function buildScorebug() {
 function scorebugLoop() {
   if (document.hidden || !$('#scorebug')) return;
   const liveN = liveMatches().length;
+  document.body.classList.toggle('is-matchday', liveN > 0); // stadionlicht aan bij live duel
   if (liveN !== _sbLiveN) {                 // modus/aantal gewijzigd → herbouw
     _sbLiveN = liveN; _sbIdx = 0; _sbTick = 0;
     buildScorebug();
@@ -1409,6 +1410,50 @@ function scorebugLoop() {
   }
   const minEl = document.querySelector('[data-sb-min]');
   if (minEl && liveN) minEl.textContent = liveClock(liveScoreFor(liveMatches()[_sbIdx % liveN]));
+}
+
+// ============================================================
+// AMBIANCE — subtiele zwevende embers achter de content.
+// Uit bij reduced-motion / zuinige toestellen; pauzeert bij verborgen tab.
+// ============================================================
+function initAmbient() {
+  const canvas = document.getElementById('ambient');
+  if (!canvas) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const weak = (navigator.hardwareConcurrency || 4) < 4;
+  if (reduce || weak) return;
+  const ctx = canvas.getContext('2d');
+  let w, h, parts, raf = 0;
+  const COLORS = ['255,107,0', '255,215,0', '14,184,74'];
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  function seed() {
+    const n = Math.min(28, Math.floor(window.innerWidth / 48));
+    parts = Array.from({ length: n }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      r: 1 + Math.random() * 2,
+      vy: -(0.15 + Math.random() * 0.4), vx: (Math.random() - 0.5) * 0.2,
+      a: 0.05 + Math.random() * 0.16,
+      c: COLORS[Math.floor(Math.random() * COLORS.length)]
+    }));
+  }
+  function step() {
+    ctx.clearRect(0, 0, w, h);
+    for (const p of parts) {
+      p.y += p.vy; p.x += p.vx;
+      if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.c},${p.a})`;
+      ctx.fill();
+    }
+    raf = requestAnimationFrame(step);
+  }
+  resize(); seed(); step();
+  window.addEventListener('resize', () => { resize(); seed(); });
+  document.addEventListener('visibilitychange', () => {
+    cancelAnimationFrame(raf);
+    if (!document.hidden) raf = requestAnimationFrame(step);
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1447,6 +1492,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Scorebug: altijd-zichtbare broadcast-balk (live stand of countdown).
   buildScorebug();
   setInterval(scorebugLoop, 1000);
+  initAmbient();
 
   if (!getMyName()) {
     setTimeout(() => openMeModal(), 800);

@@ -45,12 +45,14 @@
 </head>
 <body class="bg-ink text-white font-sans antialiased min-h-screen">
 
-<!-- BG mesh gradient -->
-<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+<!-- BG mesh gradient (stadionlicht — animeert, feller op matchday) -->
+<div class="bg-mesh fixed inset-0 -z-10 overflow-hidden pointer-events-none">
   <div class="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-oranje opacity-10 blur-3xl"></div>
   <div class="absolute top-1/3 -right-32 w-[700px] h-[700px] rounded-full bg-veld opacity-10 blur-3xl"></div>
   <div class="absolute -bottom-32 left-1/3 w-[500px] h-[500px] rounded-full bg-goud opacity-5 blur-3xl"></div>
 </div>
+<!-- Subtiele ember-laag (uit bij reduced-motion / zuinige toestellen / verborgen tab) -->
+<canvas id="ambient" class="ambient-canvas"></canvas>
 
 <!-- Top nav -->
 <header class="sticky top-0 z-40 backdrop-blur-md bg-ink/70 border-b border-line">

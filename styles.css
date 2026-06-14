@@ -1027,6 +1027,40 @@ body.henk-open .henk-toggle { display: none; }
 }
 
 /* ============================================================
+   AMBIANCE — stadionlicht (CSS) + ember-laag (canvas)
+   ============================================================ */
+.ambient-canvas { position: fixed; inset: 0; z-index: -9; pointer-events: none; }
+
+/* De mesh-orbs driften en ademen traag — levend, niet druk. */
+.bg-mesh > div { animation: orbDrift 28s ease-in-out infinite alternate; will-change: transform; }
+.bg-mesh > div:nth-child(2) { animation-duration: 36s; animation-delay: -10s; }
+.bg-mesh > div:nth-child(3) { animation-duration: 32s; animation-delay: -18s; }
+@keyframes orbDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(40px, 28px) scale(1.12); }
+  100% { transform: translate(-28px, 18px) scale(1.04); }
+}
+/* Trage lichtsweep over de achtergrond (floodlight-effect). */
+.bg-mesh::before {
+  content: ''; position: absolute; inset: -60%;
+  background: conic-gradient(from 0deg, transparent 0 72%, rgba(255,107,0,.05) 84%, transparent 100%);
+  animation: lightSweep 48s linear infinite; will-change: transform;
+}
+@keyframes lightSweep { to { transform: rotate(360deg); } }
+
+/* Matchday: het stadionlicht gaat feller aan zodra er een duel live is. */
+body.is-matchday .bg-mesh > div { animation-duration: 14s; filter: saturate(1.25); opacity: .2; }
+body.is-matchday .bg-mesh::before {
+  animation-duration: 26s;
+  background: conic-gradient(from 0deg, transparent 0 68%, rgba(255,59,92,.07) 82%, transparent 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-mesh > div, .bg-mesh::before { animation: none; }
+  .ambient-canvas { display: none; }
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {
