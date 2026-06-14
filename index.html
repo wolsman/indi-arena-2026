@@ -98,6 +98,7 @@
         <button class="tab-btn" data-tab="schema" role="tab">Schema</button>
         <button class="tab-btn" data-tab="groepen" role="tab">Groepen</button>
         <button class="tab-btn" data-tab="dna" role="tab">Pool-DNA</button>
+        <button class="tab-btn" data-tab="beheer" role="tab" id="beheerTab" hidden>Beheer</button>
       </div>
     </div>
   </div>
@@ -279,6 +280,16 @@
     </div>
   </div>
   <div id="badges" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- ========================= BEHEER (alleen beheerder) ========================= -->
+<section id="beheer" class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="mb-6">
+    <div class="text-oranje text-xs font-bold uppercase tracking-widest">Beheer</div>
+    <h2 class="text-3xl sm:text-4xl font-black tracking-tight">Wie mag erin?</h2>
+    <p class="text-white/60 mt-2 max-w-2xl">Aanmeldingen keur je hier goed of af. Alleen jij ziet deze tab.</p>
+  </div>
+  <div id="beheerList"></div>
 </section>
 
 <!-- ========================= FOOTER ========================= -->

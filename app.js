@@ -460,9 +460,10 @@ function fillStatusTiles() {
 // ============================================================
 const TAB_OF = {
   vandaag: 'vandaag', 'arena-sectie': 'arena', radar: 'arena',
-  ranglijst: 'stand', schema: 'schema', groepen: 'groepen', dna: 'dna', hallofame: 'dna'
+  ranglijst: 'stand', schema: 'schema', groepen: 'groepen', dna: 'dna', hallofame: 'dna',
+  beheer: 'beheer'
 };
-const TAB_NAMES = ['vandaag', 'stand', 'arena', 'schema', 'groepen', 'dna'];
+const TAB_NAMES = ['vandaag', 'stand', 'arena', 'schema', 'groepen', 'dna', 'beheer'];
 
 function showTab(name, { scroll = true, push = true } = {}) {
   if (!TAB_NAMES.includes(name)) name = 'vandaag';
@@ -1458,6 +1459,43 @@ function initAmbient() {
   });
 }
 
+// ============================================================
+// BEHEER — aanmeldingen goedkeuren/afwijzen (alleen beheerder)
+// ============================================================
+async function renderBeheer() {
+  const wrap = document.getElementById('beheerList');
+  if (!wrap || !window.indiAuth) return;
+  wrap.innerHTML = '<div class="lb-empty">Laden…</div>';
+  let members = [];
+  try { members = await window.indiAuth.listMembers(); } catch (e) { wrap.innerHTML = '<div class="lb-empty">Kon de aanmeldingen niet laden.</div>'; return; }
+  const esc = (s) => (s || '').replace(/</g, '&lt;');
+  const pending = members.filter(m => m.status === 'pending');
+  const approved = members.filter(m => m.status === 'approved');
+  const rejected = members.filter(m => m.status === 'rejected');
+  const row = (m, actions) => `
+    <div class="bh-row">
+      <div class="bh-info"><div class="bh-name">${esc(m.poule_naam) || '—'}</div><div class="bh-mail">${esc(m.email)}</div></div>
+      <div class="bh-actions">${actions}</div>
+    </div>`;
+  const ok = (id, label) => `<button class="bh-btn ok" onclick="beheerSet('${id}','approved')">${label}</button>`;
+  const no = (id, label) => `<button class="bh-btn no" onclick="beheerSet('${id}','rejected')">${label}</button>`;
+  wrap.innerHTML =
+    `<div class="bh-group"><div class="bh-title">Openstaand · ${pending.length}</div>` +
+      (pending.length ? pending.map(m => row(m, ok(m.id, '✓ Goedkeuren') + no(m.id, '✗ Afwijzen'))).join('')
+                      : '<div class="bh-empty">Geen openstaande aanmeldingen.</div>') +
+    `</div>` +
+    `<div class="bh-group"><div class="bh-title">Goedgekeurd · ${approved.length}</div>` +
+      approved.map(m => row(m, m.is_admin ? '<span class="bh-tag">beheerder</span>' : no(m.id, 'Intrekken'))).join('') +
+    `</div>` +
+    (rejected.length ? `<div class="bh-group"><div class="bh-title">Afgewezen · ${rejected.length}</div>` +
+      rejected.map(m => row(m, ok(m.id, 'Alsnog toelaten'))).join('') + `</div>` : '');
+}
+window.beheerSet = async function (id, status) {
+  if (!window.indiAuth) return;
+  try { await window.indiAuth.setStatus(id, status); } catch (e) {}
+  renderBeheer();
+};
+
 window.addEventListener('DOMContentLoaded', async () => {
   // In magic-link-modus eerst de sessie-gate afwachten (auth.js); bij geen
   // geldige sessie/toegang heeft auth.js al geredirect of geblokkeerd.
@@ -1488,6 +1526,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   initTabs();
+
+  // Auth-modus: naam-switcher verbergen (naam is gekoppeld aan je account)
+  // en de Beheer-tab tonen + vullen voor de beheerder.
+  if (window.INDI_AUTH_ON) {
+    const mb = document.getElementById('meBtn');
+    if (mb) mb.style.display = 'none';
+    if (window.INDI_IS_ADMIN) {
+      const bt = document.getElementById('beheerTab');
+      if (bt) bt.hidden = false;
+      renderBeheer();
+    }
+  }
+
   setTimeout(() => confettiBurst(40), 600);
 
   // Live-indicator, klok en arena elke minuut verversen.

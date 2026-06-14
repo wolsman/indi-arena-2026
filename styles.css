@@ -1085,6 +1085,21 @@ body.is-matchday .bg-mesh::before {
 @media (prefers-reduced-motion: reduce) { .on-dot { animation: none; } }
 
 /* ============================================================
+   BEHEER — aanmeldingen goedkeuren
+   ============================================================ */
+.bh-group { margin-bottom: 1.5rem; }
+.bh-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.45); font-weight: 800; margin-bottom: .6rem; }
+.bh-empty { color: rgba(255,255,255,.4); font-size: .85rem; padding: .5rem 0; }
+.bh-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--ink2); margin-bottom: .5rem; }
+.bh-name { font-weight: 700; }
+.bh-mail { font-size: .78rem; color: rgba(255,255,255,.45); }
+.bh-actions { display: flex; gap: .4rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.bh-btn { font-size: .78rem; font-weight: 700; padding: .4rem .7rem; border-radius: .5rem; border: none; cursor: pointer; }
+.bh-btn.ok { background: var(--veld); color: var(--ink); }
+.bh-btn.no { background: rgba(255,59,92,.15); color: var(--rood); }
+.bh-tag { font-size: .68rem; font-weight: 800; text-transform: uppercase; color: var(--goud); background: rgba(255,215,0,.12); padding: .25rem .55rem; border-radius: .4rem; }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {
