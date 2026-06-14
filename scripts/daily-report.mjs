@@ -302,6 +302,20 @@ if (TEST_TO) {
 }
 if (!recipients.length) { console.log('Geen ontvangers — niets verstuurd. (test_to leeg? of nog geen goedgekeurde leden?)'); process.exit(0); }
 
+// ── 6b. dubbel-verstuur-guard: claim de dag van vandaag atomair (alleen bij de echte broadcast) ──
+// Vereist tabel: create table public.report_log (report_date date primary key, sent_at timestamptz default now());
+if (!TEST_TO && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+  try {
+    const claim = await fetch(`${process.env.SUPABASE_URL}/rest/v1/report_log`, {
+      method: 'POST',
+      headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ report_date: todayKey })
+    });
+    if (claim.status === 409) { console.log(`Dagrapport voor ${todayKey} is vandaag al verstuurd — overslaan (dubbel-guard).`); process.exit(0); }
+    if (!claim.ok && claim.status !== 201) console.log(`⚠ report_log-claim faalde (${claim.status}) — ga toch door, zonder dubbel-guard deze run.`);
+  } catch (e) { console.log(`⚠ report_log-claim onbereikbaar (${e.message}) — ga toch door.`); }
+}
+
 // ── 7. versturen via Gmail SMTP ──
 const nodemailer = (await import('nodemailer')).default;
 const tx = nodemailer.createTransport({

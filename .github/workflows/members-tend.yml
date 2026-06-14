@@ -1,0 +1,37 @@
+name: Indi-Arena ledenonderhoud
+
+# Welkomstmails + pending-seintje. Getriggerd door cron-job.org
+# (workflow_dispatch), net als de andere flows — GitHub's eigen schedule
+# is te grillig. Advies-cadans: elk uur.
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: 'Test: alles loggen, niets versturen/schrijven (true/false)'
+        required: false
+        default: ''
+
+jobs:
+  tend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo uitchecken
+        uses: actions/checkout@v4
+
+      - name: Node.js installeren
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Mail-lib installeren
+        run: npm install nodemailer
+
+      - name: Ledenonderhoud draaien
+        run: node scripts/members-tend.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PW: ${{ secrets.GMAIL_APP_PW }}
+          REPORT_ADMIN: ${{ secrets.REPORT_ADMIN }}
+          MEMBERS_DRYRUN: ${{ github.event.inputs.dryrun }}
