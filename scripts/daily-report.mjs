@@ -8,7 +8,6 @@
      GMAIL_USER, GMAIL_APP_PW             (versturen via Gmail SMTP)
      REPORT_TEST (optioneel)             (alleen naar dit adres sturen)
    ============================================================ */
-import nodemailer from 'nodemailer';
 import { readFileSync } from 'fs';
 
 const SITE = 'https://indi-arena-2026v3.vercel.app/';
@@ -43,14 +42,23 @@ const fallers = ranked.filter((r) => r.delta < 0).sort((a, b) => a.delta - b.del
 const onNul = ranked.filter((r) => (r.p.points || 0) === 0 && r.p.matches === 0).map((r) => r.p.name);
 const bottom = ranked.filter((r) => (r.p.points || 0) > 0).slice(-3).reverse();
 
-// ── 3. wedstrijden van vandaag ──
+// ── 3. wedstrijden van vandaag (alles in NL-tijd — niet de UTC-runnertijd!) ──
+const NL_TZ = 'Europe/Amsterdam';
 const now = new Date();
-const fmtT = (d) => new Date(d).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+const nowMs = now.getTime();
+const fmtT = (d) => new Date(d).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: NL_TZ });
+const nlDay = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: NL_TZ }); // "YYYY-MM-DD" in NL-tijd
 const isNL = (m) => /nederland/i.test(m.home) || /nederland/i.test(m.away);
-const today = POOL_CALENDAR.filter((m) => {
-  const d = new Date(m.date);
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-}).sort((a, b) => new Date(a.date) - new Date(b.date));
+const todayKey = nlDay(now);
+const today = POOL_CALENDAR.filter((m) => nlDay(m.date) === todayKey)
+  .sort((a, b) => new Date(a.date) - new Date(b.date));
+const todayPast = today.filter((m) => new Date(m.date).getTime() <= nowMs); // al begonnen/gespeeld
+const todayNext = today.filter((m) => new Date(m.date).getTime() > nowMs);  // moet nog beginnen
+
+// uitslag-lookup (zelfde genormaliseerde sleutel als POOL_RESULTS: lowercase, zonder accenten/leestekens)
+const POOL_RESULTS = window.POOL_RESULTS || {};
+const normTeam = (s) => String(s).toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, ''); // NFD + filter strip ook accenten
+const resultOf = (m) => POOL_RESULTS[`${normTeam(m.home)}|${normTeam(m.away)}`] || null;
 
 function henkMatch(m) {
   const t = fmtT(m.date);
@@ -65,6 +73,27 @@ function henkMatch(m) {
     `<b>${m.home} – ${m.away}</b> (${t}) — een duel dat niemand op de radar heeft. Precies daar wordt het klassement vanavond stilletjes herschud.`
   ];
   return variants[Math.abs(parseInt(m.id, 10) || 0) % variants.length];
+}
+
+// terugblik op een duel dat al begonnen/gespeeld is — verleden tijd, mét uitslag indien bekend
+function henkMatchPast(m) {
+  const r = resultOf(m);
+  if (!r) {
+    return `<b>${m.home} – ${m.away}</b> — is onderweg, uitslag nog niet binnen. Die druppelt zo de Arena in; check straks wie er goed gokte.`;
+  }
+  const score = ` <b style="color:#fff">${r.replace('-', '–')}</b>`;
+  const [gh, ga] = r.split('-').map(Number);
+  const draw = gh === ga;
+  if (isNL(m)) {
+    const nlHome = /nederland/i.test(m.home);
+    const won = (nlHome && gh > ga) || (!nlHome && ga > gh);
+    return `<b>${m.home} – ${m.away}</b> →${score}. ${draw ? 'Oranje morste punten — en de halve poule die blind 2-1 invulde, morste mee.' : won ? 'Oranje leverde; de oranje-gokkers juichen, de dwarsdenkers likken hun wonden.' : 'Oranje ging onderuit. Wie tégen Nederland dúrfde te gokken, lacht nu het hardst.'}`;
+  }
+  const lines = [
+    `<b>${m.home} – ${m.away}</b> →${score}. ${draw ? 'Gelijkspel — de banana skin gleed precies zoals ik rook. Wie te makkelijk gokte, betaalt.' : 'Op papier duidelijk, en het veld luisterde. De voorzichtige gokkers pakken hun punten.'}`,
+    `<b>${m.home} – ${m.away}</b> →${score}. Het klassement is alweer stilletjes herschud; straks in de Arena zie je wie er wakker van lag.`
+  ];
+  return lines[Math.abs(parseInt(m.id, 10) || 0) % lines.length];
 }
 
 // ── 4. Roast van de dag (roteert per dag — niet steeds hetzelfde slachtoffer) ──
@@ -93,7 +122,7 @@ if (roast) {
 }
 
 // ── 5. Tekst opbouwen ──
-const dateLabel = now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+const dateLabel = now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: NL_TZ });
 const hookName = (fallers[0] && fallers[0].p.name) || (onNul.length ? onNul[0] : null);
 const subject = hookName
   ? `Indicium WK Poule · Henk neemt ${hookName} onder vuur — ${dateLabel}`
@@ -113,7 +142,9 @@ const topHtml = top.map((r, i) => {
 
 const climbHtml = climbers.length ? climbers.map((r) => `${r.p.name} <span style="color:#0eb84a">▲${r.delta}</span>`).join(' &nbsp;·&nbsp; ') : '';
 const fallHtml = fallers.length ? fallers.map((r) => `${r.p.name} <span style="color:#ff3b5c">▼${-r.delta}</span>`).join(' &nbsp;·&nbsp; ') : '';
-const matchesHtml = today.slice(0, 4).map((m) => `<p style="line-height:1.55;margin:0 0 10px;color:#e8edf6">${henkMatch(m)}</p>`).join('');
+const wrapMatch = (s) => `<p style="line-height:1.55;margin:0 0 10px;color:#e8edf6">${s}</p>`;
+const pastHtml = todayPast.slice(0, 4).map((m) => wrapMatch(henkMatchPast(m))).join('');
+const nextHtml = todayNext.slice(0, 4).map((m) => wrapMatch(henkMatch(m))).join('');
 
 const standIntro = (leaders.length && leaderPts > 0)
   ? (leaders.length > 1
@@ -136,12 +167,27 @@ const html = `
     ${topHtml}
     ${(climbHtml || fallHtml) ? H('Klimmers &amp; duikelaars') + (climbHtml ? P('▲ ' + climbHtml + ' — sluipverkeer in het klassement, ik hou het bij.') : '') + (fallHtml ? P('▼ ' + fallHtml + ' — vrije val. Riemen vast.') : '') : ''}
     ${onNul.length ? H('De schaamlijst') + P(`Nog op <b>nul</b>: ${onNul.slice(0, 5).join(', ')}${onNul.length > 5 ? ` +${onNul.length - 5}` : ''}. Het toernooi draait, zij niet. Pijnlijk.`) : ''}
-    ${today.length ? H('Henk over vandaag') + matchesHtml : H('Vandaag') + P('Geen wedstrijden vandaag — een rustdag, zogenaamd. De ranglijst slaapt nooit, en ik ook niet.')}
+    ${today.length
+      ? (pastHtml ? H(nextHtml ? 'Eerder vandaag gespeeld' : 'Vandaag gespeeld') + pastHtml : '')
+        + (nextHtml ? H(pastHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + nextHtml : '')
+      : H('Vandaag') + P('Geen wedstrijden vandaag — een rustdag, zogenaamd. De ranglijst slaapt nooit, en ik ook niet.')}
     ${roastLine ? H('🔥 Roast van de dag') + `<div style="border-left:3px solid ${O};padding:10px 14px;background:rgba(255,107,0,.10);border-radius:8px"><p style="margin:0;line-height:1.6;color:#fff">${roastLine}</p></div>` : ''}
     ${P('Tot vanavond in de Arena — daar reken ik live af. — <b>Henk</b>')}
     <a href="${SITE}" style="display:inline-block;margin-top:8px;background:#ff6b00;color:#0a0e1a;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:10px">Open de Arena &rarr;</a>
     <div style="margin-top:20px;font-size:11px;color:#5b6678">Indi-Arena 2026 &middot; Indicium WK Poule &middot; je krijgt deze mail omdat je bent toegelaten tot de poule.</div>
   </div>`;
+
+// ── 5b. preview-modus (schrijf naar schijf, verstuur NIETS) ──
+if ((process.env.REPORT_PREVIEW || '').trim()) {
+  const { writeFileSync } = await import('fs');
+  const out = new URL('../mail-daily-preview.html', import.meta.url);
+  writeFileSync(out, `<!doctype html><meta charset="utf-8"><title>${subject}</title>` +
+    `<div style="font-family:Arial;background:#05070f;padding:16px;color:#9aa6bd">` +
+    `<div style="margin-bottom:12px;font-size:13px">Onderwerp: <b style="color:#fff">${subject}</b></div></div>` + html);
+  console.log(`Preview geschreven → mail-daily-preview.html`);
+  console.log(`Onderwerp: ${subject}`);
+  process.exit(0);
+}
 
 // ── 6. ontvangers ──
 const TEST_TO = (process.env.REPORT_TEST || '').trim();
@@ -160,6 +206,7 @@ if (TEST_TO) {
 if (!recipients.length) { console.log('Geen ontvangers — niets verstuurd. (test_to leeg? of nog geen goedgekeurde leden?)'); process.exit(0); }
 
 // ── 7. versturen via Gmail SMTP ──
+const nodemailer = (await import('nodemailer')).default;
 const tx = nodemailer.createTransport({
   host: 'smtp.gmail.com', port: 465, secure: true,
   auth: { user: process.env.GMAIL_USER, pass: (process.env.GMAIL_APP_PW || '').replace(/\s+/g, '') }
