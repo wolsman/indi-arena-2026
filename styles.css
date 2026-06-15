@@ -1239,3 +1239,31 @@ body.is-matchday .bg-mesh::before {
   .live-react-bar { max-width: calc(100vw - 8px); gap: 2px; padding: 5px; }
   .react-btn { width: 33px; height: 33px; font-size: 17px; }
 }
+
+/* ============================================================
+   Mobiele bottom-tabbar (app-navigatie) — vervangt de top-tabs op mobiel
+   ============================================================ */
+.bottom-nav { display: none; }
+@media (max-width: 560px) {
+  .tabbar { display: none; }              /* top-tabs weg op mobiel */
+  .bottom-nav {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 62;
+    background: rgba(10,14,26,.97); backdrop-filter: blur(12px);
+    border-top: 1px solid #22304d;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-around; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .bnav-btn {
+    flex: 1 1 0; min-width: 44px; border: none; background: transparent; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: #9aa6bd; font-size: 10px; font-weight: 700; padding: 4px 2px;
+    transition: color .15s ease;
+  }
+  .bnav-ic { font-size: 19px; line-height: 1; }
+  .bnav-btn.active { color: var(--oranje); }
+  .bnav-lbl { white-space: nowrap; }
+  /* content niet onder de nav, en dock + Henk boven de nav tillen */
+  body { padding-bottom: 56px; }
+  .live-dock { bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+  .henk-toggle, .henk-bubble { bottom: calc(124px + env(safe-area-inset-bottom, 0px)) !important; }
+}

@@ -520,6 +520,7 @@ function showTab(name, { scroll = true, push = true } = {}) {
   if (!TAB_NAMES.includes(name)) name = 'vandaag';
   document.querySelectorAll('[data-tab-group]').forEach(el => { el.hidden = el.dataset.tabGroup !== name; });
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if (push) { try { history.replaceState(null, '', '#' + name); } catch {} }
   if (scroll) window.scrollTo(0, 0);
 }
@@ -539,8 +540,40 @@ function initTabs() {
   }));
   window.addEventListener('hashchange', () => showTab((location.hash || '').replace('#', ''), { push: false }));
 
+  initBottomNav();
   const initial = (location.hash || '').replace('#', '');
   showTab(initial || 'vandaag', { scroll: false, push: false });
+}
+
+// Mobiele bottom-tabbar — gegenereerd uit de bestaande tabs (blijft in sync).
+const BNAV_ICONS = { vandaag: '📅', stand: '🏆', arena: '⚔️', schema: '📋', groepen: '👥', dna: '🧬', beheer: '⚙️' };
+const BNAV_LABELS = { vandaag: 'Vandaag', stand: 'Stand', arena: 'Arena', schema: 'Schema', groepen: 'Groepen', dna: 'DNA', beheer: 'Beheer' };
+function buildBottomNav() {
+  const old = document.querySelector('.bottom-nav');
+  if (old) old.remove();
+  const tabs = [...document.querySelectorAll('.tabbar .tab-btn')].filter(b => !b.hidden);
+  if (!tabs.length) return;
+  const active = (document.querySelector('.tab-btn.active') || {}).dataset?.tab;
+  const nav = document.createElement('nav');
+  nav.className = 'bottom-nav';
+  nav.innerHTML = tabs.map(b => {
+    const t = b.dataset.tab;
+    return `<button class="bnav-btn${t === active ? ' active' : ''}" data-tab="${t}" aria-label="${BNAV_LABELS[t] || t}">` +
+      `<span class="bnav-ic">${BNAV_ICONS[t] || '•'}</span><span class="bnav-lbl">${BNAV_LABELS[t] || b.textContent.trim()}</span></button>`;
+  }).join('');
+  document.body.appendChild(nav);
+  nav.querySelectorAll('.bnav-btn').forEach(b => b.addEventListener('click', () => {
+    const go = () => showTab(b.dataset.tab);
+    if (document.startViewTransition) document.startViewTransition(go); else go();
+  }));
+}
+function initBottomNav() {
+  buildBottomNav();
+  // herbouw zodra de Beheer-tab (admin) zichtbaar wordt
+  const bt = document.getElementById('beheerTab');
+  if (bt && 'MutationObserver' in window) {
+    new MutationObserver(() => buildBottomNav()).observe(bt, { attributes: true, attributeFilter: ['hidden'] });
+  }
 }
 
 // ============================================================
