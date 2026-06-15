@@ -217,7 +217,11 @@ const heldHtml = recentFinished.map((s) => wrapMatch(heldSukkelLine(s))).join(''
 const pastFallbackHtml = (!recentFinished.length)
   ? todayPast.filter((m) => resultOf(m)).slice(0, 4).map((m) => wrapMatch(henkMatchPast(m))).join('')
   : '';
-const nextHtml = todayNext.slice(0, 4).map((m) => wrapMatch(henkMatch(m))).join('');
+const nextHtml = todayNext.slice(0, 4).map((m) => wrapMatch(henkMatch(m))).join(''); // sjabloon-fallback
+// bij actieve LLM-Henk: alleen kale fixture + tijd (Henk's vooruitblik levert de stem)
+const nextSimpleHtml = todayNext.slice(0, 4)
+  .map((m) => wrapMatch(`<b>${m.home} – ${m.away}</b> <span style="color:#9aa6bd">(${fmtT(m.date)})</span>${isNL(m) ? ' 🟠' : ''}`))
+  .join('');
 
 // gat naar nr. 2 + de grootste gedeelde-punten-kluwen (voor de standduiding)
 const second = ranked.find((r) => r.rank === 2);
@@ -271,7 +275,7 @@ async function henkWrite(briefing) {
     '{"opener","standTake","nachtTake","vandaagTake","roast"}',
     '- opener: 1-2 zinnen begroeting/aftrap.',
     '- standTake: 1-2 zinnen duiding van de stand (koploper, gat, de punten-file).',
-    '- nachtTake: 2-3 zinnen over de gespeelde duels en wie goed/fout gokte (gebruik exacte namen/scores uit de briefing).',
+    '- nachtTake: 1-2 korte, gevatte zinnen als intro op de gespeelde duels — pak één hoogtepunt en/of één blunder eruit (echte namen/scores). NIET alle duels opsommen; die staan er als lijst onder.',
     '- vandaagTake: 1-2 zinnen vooruitblik op de duels van vandaag; lege string als er geen zijn.',
     '- roast: 2-3 zinnen scherpe "roast van de dag", gericht op de roastKandidaat.'
   ].join('\n');
@@ -341,7 +345,7 @@ const html = `
     ${(climbHtml || fallHtml) ? H('Klimmers &amp; duikelaars') + (climbHtml ? P('▲ ' + climbHtml + ' — sluipverkeer in het klassement, ik hou het bij.') : '') + (fallHtml ? P('▼ ' + fallHtml + ' — vrije val. Riemen vast.') : '') : ''}
     ${heldHtml ? H('🏅 Held &amp; 🤡 sukkel van de nacht') + ((henk && henk.nachtTake) ? P(henk.nachtTake) : '') + heldHtml : (pastFallbackHtml ? H('Eerder gespeeld') + pastFallbackHtml : '')}
     ${onNul.length ? H('De schaamlijst') + P(`Nog altijd op <b>nul</b>: ${onNul.slice(0, 6).join(', ')}${onNul.length > 6 ? ` +${onNul.length - 6}` : ''}. Geen pick, geen punt, geen excuus. Het toernooi dendert door; zij staan erbij, kijken ernaar — en betalen straks vrolijk mee aan andermans prijs.`) : ''}
-    ${nextHtml ? H(heldHtml || pastFallbackHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + ((henk && henk.vandaagTake) ? P(henk.vandaagTake) : '') + nextHtml : ''}
+    ${todayNext.length ? H(heldHtml || pastFallbackHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + ((henk && henk.vandaagTake) ? P(henk.vandaagTake) : '') + (henk ? nextSimpleHtml : nextHtml) : ''}
     ${(!today.length && !heldHtml && !pastFallbackHtml) ? H('Vandaag') + P('Geen wedstrijden vandaag — een rustdag, zogenaamd. De ranglijst slaapt nooit, en ik ook niet.') : ''}
     ${roastLine ? H('🔥 Roast van de dag') + `<div style="border-left:3px solid ${O};padding:10px 14px;background:rgba(255,107,0,.10);border-radius:8px"><p style="margin:0;line-height:1.6;color:#fff">${(henk && henk.roast) || roastLine}</p></div>` : ''}
     ${P('Tot vanavond in de Arena — daar reken ik live af. — <b>Henk</b>')}
