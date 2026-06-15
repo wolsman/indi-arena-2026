@@ -4,6 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0e1a" />
+<!-- PWA: installeerbaar + fullscreen app-ervaring -->
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" type="image/png" href="/assets/icon-192.png" />
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Indi-Arena" />
 <title>Indi-Arena 2026 · De live cockpit van de Indicium WK Poule</title>
 <meta name="description" content="Live ranglijst, Henk's commentaar en voorspellings-radar voor de Indicium WK Poule 2026." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -373,5 +381,11 @@
 <script src="auth.js"></script>
 <script src="presence.js"></script>
 <script src="social.js"></script>
+<script>
+  // Service worker registreren (PWA / installeerbaar / offline-fallback)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
+</script>
 </body>
 </html>
