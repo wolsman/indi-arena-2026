@@ -143,6 +143,14 @@ const run = async () => {
         const r = await fetch('/data/getContentXML.php', { method: 'POST', body: params, credentials: 'include' });
         return await r.text();
       };
+      // Ranglijst: gebruik module=ranking/getNormalRanking MET enablePaginator.
+      // Cruciaal: het oude module=pool/rankingPool gaf alleen de top 50 terug en
+      // negeerde paginatie, waardoor spelers vanaf rang 51 (met punten!) op 0 bleven.
+      const postRanking = async (pageNr) => {
+        const params = new URLSearchParams({ A: 'S', module: 'ranking', submodule: 'getNormalRanking', poolID: String(poolID), profileID: String(profileID), currentPage: String(pageNr), enablePaginator: '1' });
+        const r = await fetch('/data/getContentXML.php', { method: 'POST', body: params, credentials: 'include' });
+        return await r.text();
+      };
       const contentOf = (xml) => {
         const doc = new DOMParser().parseFromString(xml, 'text/xml');
         const d = doc.querySelector('Data');
@@ -197,7 +205,7 @@ const run = async () => {
       const seenRank = new Set();
       for (let pg = 1; pg <= MAX_PAGES; pg++) {
         const div = document.createElement('div');
-        div.innerHTML = contentOf(await post('rankingPool', pg));
+        div.innerHTML = contentOf(await postRanking(pg));
         let added = 0;
         div.querySelectorAll('tr').forEach(row => {
           // Rij ziet er zo uit:
