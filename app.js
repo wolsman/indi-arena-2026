@@ -225,8 +225,34 @@ function fireEvent(e) {
   if (!m) return;
   const picks = idx >= 0 ? predictionsFor(idx) : null;
   const line = henkEventLine(e.type, m, picks, e.ls);
-  showHenkToast(e.type, m, e.ls, line);
+  const sig = `${m.home}|${m.away}|${e.ls.hs}-${e.ls.as}|${e.type}`;
+  window.__toastSig = sig;
+  showHenkToast(e.type, m, e.ls, line);          // direct: sjabloon-regel (geen wachttijd)
   flashArenaCard(idx);
+  requestHenkLine(e.type, m, picks, e.ls, sig);  // daarna: upgrade naar verse gpt-4o-Henk
+}
+
+// Vraagt /api/henk om een verse Henk-regel en vervangt de sjabloon-regel in de
+// toast — alleen als die nog hetzelfde event toont. Faalt stil → sjabloon blijft.
+async function requestHenkLine(type, m, picks, ls, sig) {
+  try {
+    const list = picks || [];
+    const lh = ls.hs, la = ls.as;
+    const exact = list.filter(p => p.h === lh && p.a === la).map(p => p.player);
+    const lo = lh > la ? 'h' : (lh < la ? 'a' : 'd');
+    const leader = lh > la ? m.home : (lh < la ? m.away : null);
+    const tend = list.filter(p => { const po = p.h > p.a ? 'h' : (p.h < p.a ? 'a' : 'd'); return po === lo; }).length;
+    const res = await fetch('/api/henk', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, home: m.home, away: m.away, hs: lh, as: la, minute: ls.minute, exact, tend, total: list.length, leader })
+    });
+    if (!res.ok) return;
+    const j = await res.json();
+    if (j && j.line && window.__toastSig === sig) {
+      const el = $('#goalHenk');
+      if (el) el.textContent = j.line;
+    }
+  } catch (e) { /* stil — de sjabloon-regel blijft staan */ }
 }
 
 function shuffle(arr) {
