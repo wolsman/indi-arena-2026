@@ -112,11 +112,13 @@
   function showSignup(email) {
     const players = (window.POOL_PLAYERS || []).filter(p => p.name).map(p => p.name).sort((a, b) => a.localeCompare(b, 'nl'));
     const opts = '<option value="">&mdash; kies je naam &mdash;</option>' + players.map(n => '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>').join('');
+    const autoIn = /@indicium\.nl$/i.test(email || '');
+    const note = autoIn ? 'Je werkt bij Indicium — je komt meteen binnen.' : 'Dennis keurt je aanmelding daarna goed.';
     frame('<div style="font-size:1.6rem;font-weight:900;margin-bottom:.25rem">Welkom in de Arena</div>' +
       '<div style="color:#9aa6bd;margin-bottom:1.25rem">Je bent ingelogd als <b style="color:#fff">' + email + '</b>.<br>Welke speler ben jij in de poule?</div>' +
       '<select id="suName" style="width:100%;padding:.7rem;border-radius:.7rem;background:#0a0e1a;border:1px solid #22304d;color:#fff;font-size:1rem;font-weight:600">' + opts + '</select>' +
       '<button id="suBtn" style="width:100%;margin-top:.8rem;padding:.7rem;border-radius:.7rem;background:#ff6b00;color:#0a0e1a;font-weight:800;border:none;cursor:pointer">Aanmelden &rarr;</button>' +
-      '<div style="color:#5b6678;font-size:.78rem;margin-top:.8rem">Dennis keurt je aanmelding daarna goed.</div>');
+      '<div style="color:#5b6678;font-size:.78rem;margin-top:.8rem">' + note + '</div>');
     const sel = document.getElementById('suName'), btn = document.getElementById('suBtn');
     btn.onclick = async () => { if (!sel.value) return; btn.disabled = true; btn.textContent = 'Versturen…'; try { await api.register(sel.value); } catch (e) {} location.reload(); };
   }
