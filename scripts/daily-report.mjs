@@ -10,7 +10,18 @@
    ============================================================ */
 import { readFileSync } from 'fs';
 
+// .env.local lokaal inladen (bestaat niet in CI — daar komt env uit GitHub-secrets)
+try {
+  const env = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
+  env.split(/\r?\n/).forEach((line) => {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  });
+} catch { /* geen .env.local — prima */ }
+
 const SITE = 'https://indi-arena-2026v3.vercel.app/';
+const OPENAI_KEY = (process.env.OPENAI_API_KEY || '').trim();
+const OPENAI_MODEL = (process.env.OPENAI_MODEL || 'gpt-4o').trim();
 
 // ── 1. pool-data.js inladen (browserbestand → window-stub) ──
 const window = {};
@@ -245,6 +256,74 @@ const signupHtml = H('📣 Nog geen account voor de Arena?')
   + stepP(`<b style="color:${O}">3.</b> Heel even geduld terwijl ik je binnenlaat. Daarna sta je in de Arena. Welkom.`)
   + `</div>`;
 
+// ── 5a. Henk schrijft (OpenAI gpt-4o) — verse stem bovenop de harde cijfers ──
+// De cijfers (stand, held/sukkel) blijven door de code gerenderd; Henk krijgt ze
+// als enige bron van waarheid en schrijft de stem eromheen. Faalt de call → sjablonen.
+async function henkWrite(briefing) {
+  if (!OPENAI_KEY) return null;
+  const system = [
+    'Je bent Henk, vaste analist van de Indicium WK Poule — kantinepraat met een scherp mes, stijl Voetbal Inside: fel, gevat, mag roasten. Schrijf in het Nederlands.',
+    'STRENGE REGELS:',
+    '- Gebruik UITSLUITEND de feiten uit de briefing. Verzin NOOIT namen, scores, punten of statistieken.',
+    '- Roast op picks, invulgedrag en stand — NOOIT op uiterlijk of de persoon zelf.',
+    '- Geen verzonnen puntenprojecties. Kort en pittig, geen emoji-spam. Je mag <b>…</b> voor nadruk gebruiken.',
+    'Antwoord als JSON met exact deze velden (platte tekst, mag <b> bevatten):',
+    '{"opener","standTake","nachtTake","vandaagTake","roast"}',
+    '- opener: 1-2 zinnen begroeting/aftrap.',
+    '- standTake: 1-2 zinnen duiding van de stand (koploper, gat, de punten-file).',
+    '- nachtTake: 2-3 zinnen over de gespeelde duels en wie goed/fout gokte (gebruik exacte namen/scores uit de briefing).',
+    '- vandaagTake: 1-2 zinnen vooruitblik op de duels van vandaag; lege string als er geen zijn.',
+    '- roast: 2-3 zinnen scherpe "roast van de dag", gericht op de roastKandidaat.'
+  ].join('\n');
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${OPENAI_KEY}` },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        temperature: 0.9,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: 'Briefing met alle feiten van vandaag:\n' + JSON.stringify(briefing, null, 2) }
+        ]
+      })
+    });
+    if (!res.ok) { console.log(`  ⚠ OpenAI ${res.status} — Henk valt terug op sjablonen`); return null; }
+    const data = await res.json();
+    const txt = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    return txt ? JSON.parse(txt) : null;
+  } catch (e) {
+    console.log(`  ⚠ OpenAI-call mislukt (${e.message}) — Henk valt terug op sjablonen`);
+    return null;
+  }
+}
+
+const briefing = {
+  datum: dateLabel,
+  koplopers: leaders,
+  koploperPunten: leaderPts,
+  gatNaarNr2: gapTo2,
+  top5: top.map((r) => ({ naam: r.p.name, punten: r.p.points || 0, rang: r.rank })),
+  puntenFile: biggestTie ? { punten: Number(biggestTie[0]), namen: biggestTie[1] } : null,
+  klimmers: climbers.map((r) => ({ naam: r.p.name, plekken: r.delta })),
+  dalers: fallers.map((r) => ({ naam: r.p.name, plekken: -r.delta })),
+  opNul: onNul,
+  gespeeldeDuels: recentFinished.map((s) => ({
+    duel: `${s.m.home}–${s.m.away}`,
+    uitslag: s.r,
+    exactGegokt: s.exact.map((p) => p.player),
+    grootsteMisser: s.miss[0] ? { speler: s.miss[0].player, gok: `${s.miss[0].h}-${s.miss[0].a}` } : null
+  })),
+  vandaagKomtNog: todayNext.map((m) => ({ duel: `${m.home}–${m.away}`, tijd: fmtT(m.date), oranje: isNL(m) })),
+  roastKandidaat: roast ? {
+    type: roast.type, naam: roast.r.p.name, punten: roast.r.p.points || 0,
+    plekkenGezakt: roast.type === 'faller' ? -roast.r.delta : undefined
+  } : null
+};
+const henk = await henkWrite(briefing);
+console.log(henk ? '  ✓ Henk geschreven door OpenAI' : '  · Henk via sjablonen');
+
 const html = `
   <div style="background:#0a0e1a;color:#fff;font-family:Inter,Arial,sans-serif;padding:24px;max-width:600px;margin:0 auto;border-radius:14px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -254,17 +333,17 @@ const html = `
         <div style="font-size:12px;color:#9aa6bd">Indicium WK Poule &middot; ${dateLabel}</div>
       </div>
     </div>
-    ${P(opener)}
+    ${P((henk && henk.opener) || opener)}
     ${H('De stand')}
-    ${P(standIntro)}
-    ${packLine ? P(packLine) : ''}
+    ${P((henk && henk.standTake) || standIntro)}
+    ${(!henk && packLine) ? P(packLine) : ''}
     ${topHtml}
     ${(climbHtml || fallHtml) ? H('Klimmers &amp; duikelaars') + (climbHtml ? P('▲ ' + climbHtml + ' — sluipverkeer in het klassement, ik hou het bij.') : '') + (fallHtml ? P('▼ ' + fallHtml + ' — vrije val. Riemen vast.') : '') : ''}
-    ${heldHtml ? H('🏅 Held &amp; 🤡 sukkel van de nacht') + heldHtml : (pastFallbackHtml ? H('Eerder gespeeld') + pastFallbackHtml : '')}
+    ${heldHtml ? H('🏅 Held &amp; 🤡 sukkel van de nacht') + ((henk && henk.nachtTake) ? P(henk.nachtTake) : '') + heldHtml : (pastFallbackHtml ? H('Eerder gespeeld') + pastFallbackHtml : '')}
     ${onNul.length ? H('De schaamlijst') + P(`Nog altijd op <b>nul</b>: ${onNul.slice(0, 6).join(', ')}${onNul.length > 6 ? ` +${onNul.length - 6}` : ''}. Geen pick, geen punt, geen excuus. Het toernooi dendert door; zij staan erbij, kijken ernaar — en betalen straks vrolijk mee aan andermans prijs.`) : ''}
-    ${nextHtml ? H(heldHtml || pastFallbackHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + nextHtml : ''}
+    ${nextHtml ? H(heldHtml || pastFallbackHtml ? 'Komt nog vandaag' : 'Henk over vandaag') + ((henk && henk.vandaagTake) ? P(henk.vandaagTake) : '') + nextHtml : ''}
     ${(!today.length && !heldHtml && !pastFallbackHtml) ? H('Vandaag') + P('Geen wedstrijden vandaag — een rustdag, zogenaamd. De ranglijst slaapt nooit, en ik ook niet.') : ''}
-    ${roastLine ? H('🔥 Roast van de dag') + `<div style="border-left:3px solid ${O};padding:10px 14px;background:rgba(255,107,0,.10);border-radius:8px"><p style="margin:0;line-height:1.6;color:#fff">${roastLine}</p></div>` : ''}
+    ${roastLine ? H('🔥 Roast van de dag') + `<div style="border-left:3px solid ${O};padding:10px 14px;background:rgba(255,107,0,.10);border-radius:8px"><p style="margin:0;line-height:1.6;color:#fff">${(henk && henk.roast) || roastLine}</p></div>` : ''}
     ${P('Tot vanavond in de Arena — daar reken ik live af. — <b>Henk</b>')}
     <a href="${SITE}" style="display:inline-block;margin:8px 0 4px;background:#ff6b00;color:#0a0e1a;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:10px">Open de Arena &rarr;</a>
     ${signupHtml}
