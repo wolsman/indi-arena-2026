@@ -45,7 +45,7 @@
   dock.className = 'live-dock';
   dock.innerHTML =
     `<div class="live-chat hidden" id="liveChat">
-       <div class="lc-head">Kantine <span class="lc-hint">— live, alleen wie nu kijkt</span></div>
+       <div class="lc-head"><span>Kantine <span class="lc-hint">— live, alleen wie nu kijkt</span></span><button type="button" class="lc-close" id="lcClose" aria-label="Sluit chat">✕</button></div>
        <div class="lc-feed" id="lcFeed"></div>
        <form class="lc-form" id="lcForm"><input id="lcInput" maxlength="140" placeholder="Zeg iets…" autocomplete="off" /><button type="submit" aria-label="Stuur">▶</button></form>
      </div>
@@ -143,9 +143,15 @@
   });
 
   const chatBox = document.getElementById('liveChat');
+  const closeChat = () => chatBox.classList.add('hidden');
+  document.getElementById('lcClose').addEventListener('click', closeChat);
   document.getElementById('chatToggle').addEventListener('click', () => {
     chatBox.classList.toggle('hidden');
     if (!chatBox.classList.contains('hidden')) { clearUnread(); const i = document.getElementById('lcInput'); if (i) i.focus(); }
+  });
+  // tik buiten de dock → chat sluiten (makkelijk wegklikken op mobiel)
+  document.addEventListener('click', (e) => {
+    if (!chatBox.classList.contains('hidden') && !dock.contains(e.target)) closeChat();
   });
   document.getElementById('lcForm').addEventListener('submit', (e) => {
     e.preventDefault();
