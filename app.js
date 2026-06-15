@@ -208,7 +208,7 @@ function showHenkToast(type, m, ls, line) {
 // langer staan). Reset bij elke aanroep, zodat een upgrade de leesklok herstart.
 function toastHoldMs(line) {
   const words = (line || '').trim().split(/\s+/).filter(Boolean).length;
-  return Math.min(22000, Math.max(8000, words * 360));
+  return Math.min(32000, Math.max(12000, words * 480));
 }
 function scheduleToastHide(line) {
   const toast = $('#goalToast');
