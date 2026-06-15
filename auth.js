@@ -26,6 +26,18 @@
       const sb = await clientPromise;
       return sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + '/' } });
     },
+    // Wachtwoord-login zonder mail: log in, of maak het account aan als het nog niet bestaat.
+    // Vereist dat "Confirm email" UIT staat in Supabase (anders geen directe sessie).
+    async passwordAuth(email, password) {
+      const sb = await clientPromise;
+      const signIn = await sb.auth.signInWithPassword({ email, password });
+      if (!signIn.error) return { ok: true };
+      // geen geldige inlog → probeer een nieuw account aan te maken
+      const signUp = await sb.auth.signUp({ email, password });
+      if (!signUp.error && signUp.data && signUp.data.session) return { ok: true, isNew: true };
+      if (!signUp.error && signUp.data && !signUp.data.session) return { ok: false, reason: 'confirm-needed' };
+      return { ok: false, reason: 'bad' };
+    },
     async session() { const sb = await clientPromise; return (await sb.auth.getSession()).data.session; },
     async getMember() {
       const sb = await clientPromise;
