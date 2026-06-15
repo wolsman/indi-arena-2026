@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 54,
   capacityMax: 75,
-  syncedAt: "2026-06-15T14:31:36.742Z",
+  syncedAt: "2026-06-15T15:01:46.389Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -57,7 +57,7 @@ window.POOL_PLAYERS = [
   { name: "JRHJNB", matches: 72, winner: true, topscorer: true, paid: true, points: 700, prevPos: 22 },
   { name: "JoycevanRiet", matches: 72, winner: true, topscorer: true, paid: true, points: 400, prevPos: 51 },
   { name: "Heer", matches: 72, winner: true, topscorer: true, paid: true, points: 775, prevPos: 15 },
-  { name: "Pepijndh", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
+  { name: "Pepijndh", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 53 },
   { name: "Cornelis2026", matches: 29, winner: true, topscorer: true, paid: true, points: 505, prevPos: 46 },
   { name: "Wkkipje", matches: 19, winner: true, topscorer: true, paid: true, points: 740, prevPos: 18 },
   { name: "MaureenGLA", matches: 72, winner: true, topscorer: true, paid: true, points: 695, prevPos: 24 },
@@ -70,9 +70,9 @@ window.POOL_PLAYERS = [
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 920, prevPos: 7 },
   { name: "RoanTuit(messi)", matches: 13, winner: true, topscorer: true, paid: true, points: 700, prevPos: 22 },
   { name: "Christopheramboz", matches: 22, winner: true, topscorer: true, paid: true, points: 1025, prevPos: 3 },
-  { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
+  { name: "Frenk010fr", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 53 },
   { name: "WillemCo", matches: 23, winner: false, topscorer: false, paid: true, points: 740, prevPos: 18 },
-  { name: "Nelson1983", matches: 11, winner: false, topscorer: false, paid: true, points: 135, prevPos: 51 }
+  { name: "Nelson1983", matches: 11, winner: false, topscorer: false, paid: true, points: 135, prevPos: 52 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
