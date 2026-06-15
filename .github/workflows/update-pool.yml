@@ -61,6 +61,12 @@ jobs:
           WKPOOL_PASSWORD: ${{ secrets.WKPOOL_PASSWORD }}
         run: npm run scrape
 
+      - name: Henk-teksten genereren (gpt-4o, 1x/dag, faalt veilig)
+        run: node scripts/henk-generate.mjs
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+
       - name: Wijzigingen committen
         id: commit
         run: |

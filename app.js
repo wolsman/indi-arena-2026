@@ -294,8 +294,17 @@ function henkStats() {
 
 function resolveQuote(q, s) { return typeof q === 'function' ? q(s) : q; }
 
+// Henk-tekst: prefereer de door gpt-4o gegenereerde versie (POOL_HENK),
+// val terug op de HENK-sjablonen als die er (nog) niet is.
+function henkPlayerTake(name) {
+  const t = (window.POOL_HENK || {}).playerTakes;
+  return (t && t[name]) || HENK.player_takes[name] || HENK.player_takes.default;
+}
+
 // Dagmonoloog: deterministisch per datum — iedereen ziet vandaag dezelfde.
 function dailyMonoloog() {
+  const llm = (window.POOL_HENK || {}).monoloog;
+  if (llm) return llm;
   const s = henkStats();
   const set = s.phase === 'tournament' ? HENK.monologen_toernooi : HENK.monologen_vooraf;
   const d = new Date();
@@ -308,9 +317,12 @@ let henkQueue = [];
 function nextHenkQuote() {
   if (!henkQueue.length) {
     const s = henkStats();
-    const groups = s.phase === 'tournament'
-      ? [...HENK.hot_takes, ...HENK.ranking_change]
-      : [...HENK.hot_takes];
+    const llm = (window.POOL_HENK || {}).hotTakes;
+    const groups = (Array.isArray(llm) && llm.length)
+      ? llm.slice()
+      : (s.phase === 'tournament'
+        ? [...HENK.hot_takes, ...HENK.ranking_change]
+        : [...HENK.hot_takes]);
     henkQueue = shuffle(groups.map(q => resolveQuote(q, s)));
   }
   return henkQueue.pop();
@@ -740,7 +752,7 @@ $$('.chip-btn').forEach(btn => {
 function openPlayerModal(name) {
   const p = POOL_PLAYERS.find(x => x.name === name);
   if (!p) return;
-  const henkTake = HENK.player_takes[p.name] || HENK.player_takes.default;
+  const henkTake = henkPlayerTake(p.name);
   const bucketLabel = {
     complete: 'Helemaal klaar — alles ingevuld',
     groep:    'Groepsfase compleet — de knock-outfase moet nog',
@@ -1145,7 +1157,7 @@ function renderMyCockpit() {
   const pos = ranked.findIndex(x => x.name === p.name) + 1;
   const pts = pointsMode();
   const missing = 104 - p.matches;
-  const henkTake = HENK.player_takes[p.name] || HENK.player_takes.default;
+  const henkTake = henkPlayerTake(p.name);
 
   // Waarschuwing: nog wedstrijden in te vullen vóór hun aftrap?
   let warn = '';
