@@ -200,12 +200,24 @@ function showHenkToast(type, m, ls, line) {
   toast.classList.remove('hidden');
   void toast.offsetWidth; // restart animatie
   toast.classList.add('show');
+  scheduleToastHide(line);
+  if (type !== 'ht') confettiBurst(type === 'turnaround' ? 90 : 70);
+}
+
+// Auto-verbergtijd schaalt mee met de leeslengte (langere gpt-4o-regels blijven
+// langer staan). Reset bij elke aanroep, zodat een upgrade de leesklok herstart.
+function toastHoldMs(line) {
+  const words = (line || '').trim().split(/\s+/).filter(Boolean).length;
+  return Math.min(22000, Math.max(8000, words * 360));
+}
+function scheduleToastHide(line) {
+  const toast = $('#goalToast');
+  if (!toast) return;
   clearTimeout(window.__goalTimer);
   window.__goalTimer = setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.classList.add('hidden'), 400);
-  }, 7000);
-  if (type !== 'ht') confettiBurst(type === 'turnaround' ? 90 : 70);
+  }, toastHoldMs(line));
 }
 
 // Laat de bijbehorende Arena-kaart kort oplichten bij een event.
@@ -251,6 +263,7 @@ async function requestHenkLine(type, m, picks, ls, sig) {
     if (j && j.line && window.__toastSig === sig) {
       const el = $('#goalHenk');
       if (el) el.textContent = j.line;
+      scheduleToastHide(j.line); // langere regel → leesklok herstarten
     }
   } catch (e) { /* stil — de sjabloon-regel blijft staan */ }
 }
