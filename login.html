@@ -131,7 +131,11 @@
     try {
       if (!window.indiAuth) throw new Error('config');
       const res = await window.indiAuth.passwordAuth(email, password);
-      if (res.ok) { location.replace('./'); return; }
+      if (res.ok) {
+        // wacht tot de sessie echt is weggeschreven, anders bounce't de app terug naar login
+        for (let i = 0; i < 10; i++) { if (await window.indiAuth.session()) break; await new Promise(r => setTimeout(r, 100)); }
+        location.replace('./'); return;
+      }
       if (res.reason === 'confirm-needed') {
         showErr('Account aangemaakt — er is een bevestigingsmail gestuurd. (Vraag Dennis de e-mailbevestiging uit te zetten, dan gaat dit zonder mail.)');
       } else {
