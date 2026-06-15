@@ -1182,3 +1182,34 @@ body.is-matchday .bg-mesh::before {
 @media (max-width: 480px) {
   .react-btn { width: 36px; height: 36px; font-size: 19px; }
 }
+
+/* Inkomende chatberichten die over het scherm verschijnen als de box dicht is */
+.chat-overlay {
+  position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%);
+  z-index: 61; width: min(92vw, 360px); display: flex; flex-direction: column;
+  gap: 6px; align-items: center; pointer-events: none;
+}
+.chat-bubble {
+  max-width: 100%; padding: 8px 14px; border-radius: 14px;
+  background: rgba(15,21,37,.92); backdrop-filter: blur(8px);
+  border: 1px solid #22304d; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  font-size: 13px; line-height: 1.4; color: #e8edf6;
+  animation: chatBubbleIn .28s ease;
+}
+.chat-bubble b { color: #ff8a2a; margin-right: 4px; }
+.chat-bubble.out { animation: chatBubbleOut .5s ease forwards; }
+@keyframes chatBubbleIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes chatBubbleOut { to { opacity: 0; transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .chat-bubble { animation: none; }
+}
+
+/* Ongelezen-teller op de 💬-knop */
+.chat-toggle { position: relative; }
+.lc-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px;
+  padding: 0 4px; border-radius: 999px; background: #ff3b5c; color: #fff;
+  font-size: 10px; font-weight: 800; line-height: 16px; text-align: center;
+  box-shadow: 0 0 0 2px #0f1525;
+}
+.lc-badge.hidden { display: none; }

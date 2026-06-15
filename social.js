@@ -29,11 +29,17 @@
   const senderName = () => (isAnon() ? 'Anoniem' : (myName() || 'gast'));
 
   const EMOJIS = ['🔥', '⚽', '😱', '😂', '👏', '🙈', '🇳🇱'];
+  const cid = Math.random().toString(36).slice(2); // om je eigen broadcast-echo te herkennen
 
   // ---- UI injecteren ----
   const floatLayer = document.createElement('div');
   floatLayer.className = 'emoji-float-layer';
   document.body.appendChild(floatLayer);
+
+  // overlay waar inkomende chatberichten kort over het scherm verschijnen (box dicht)
+  const chatOverlay = document.createElement('div');
+  chatOverlay.className = 'chat-overlay';
+  document.body.appendChild(chatOverlay);
 
   const dock = document.createElement('div');
   dock.className = 'live-dock';
@@ -45,7 +51,7 @@
      </div>
      <div class="live-react-bar">
        ${EMOJIS.map((e) => `<button class="react-btn" data-emoji="${e}">${e}</button>`).join('')}
-       <button class="react-btn chat-toggle" id="chatToggle" title="Kantine-chat">💬</button>
+       <button class="react-btn chat-toggle" id="chatToggle" title="Kantine-chat">💬<span class="lc-badge hidden" id="lcBadge">0</span></button>
      </div>`;
   document.body.appendChild(dock);
 
@@ -74,6 +80,30 @@
     f.scrollTop = f.scrollHeight;
   }
 
+  // Zwevende chat-bubbel: toont een binnenkomend bericht kort over het scherm
+  // wanneer de chatbox dicht is (live-overlay, à la stream-chat).
+  function floatChatBubble(name, text) {
+    const b = document.createElement('div');
+    b.className = 'chat-bubble';
+    b.innerHTML = `<b>${esc(name)}</b> ${esc(text)}`;
+    chatOverlay.appendChild(b);
+    while (chatOverlay.children.length > 4) chatOverlay.firstChild.remove();
+    setTimeout(() => { b.classList.add('out'); setTimeout(() => b.remove(), 500); }, 5500);
+  }
+
+  // Ongelezen-teller op de 💬-knop
+  let unread = 0;
+  function bumpUnread() {
+    unread++;
+    const badge = document.getElementById('lcBadge');
+    if (badge) { badge.textContent = unread > 9 ? '9+' : String(unread); badge.classList.remove('hidden'); }
+  }
+  function clearUnread() {
+    unread = 0;
+    const badge = document.getElementById('lcBadge');
+    if (badge) badge.classList.add('hidden');
+  }
+
   // ---- Henk MC: reageert op een burst van reacties (met cooldown) ----
   let burst = 0, lastHenk = 0, burstTimer = null;
   function onBurst() {
@@ -90,7 +120,14 @@
 
   channel
     .on('broadcast', { event: 'reaction' }, ({ payload }) => { if (payload && payload.emoji) { floatEmoji(payload.emoji); onBurst(); } })
-    .on('broadcast', { event: 'chat' }, ({ payload }) => { if (payload && payload.text) addChat(payload.name || 'gast', payload.text, false); })
+    .on('broadcast', { event: 'chat' }, ({ payload }) => {
+      if (!payload || !payload.text) return;
+      const mine = payload.cid === cid;
+      addChat(payload.name || 'gast', payload.text, mine);
+      // alleen van anderen, en alleen als de box dicht is → over het scherm + teller
+      const closed = document.getElementById('liveChat').classList.contains('hidden');
+      if (!mine && closed) { floatChatBubble(payload.name || 'gast', payload.text); bumpUnread(); }
+    })
     .subscribe();
 
   // ---- interacties ----
@@ -108,7 +145,7 @@
   const chatBox = document.getElementById('liveChat');
   document.getElementById('chatToggle').addEventListener('click', () => {
     chatBox.classList.toggle('hidden');
-    if (!chatBox.classList.contains('hidden')) { const i = document.getElementById('lcInput'); if (i) i.focus(); }
+    if (!chatBox.classList.contains('hidden')) { clearUnread(); const i = document.getElementById('lcInput'); if (i) i.focus(); }
   });
   document.getElementById('lcForm').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -116,7 +153,7 @@
     const text = (input.value || '').trim();
     if (!text) return;
     // self:true echo't het bericht terug via de broadcast-handler → niet lokaal toevoegen (anders dubbel)
-    channel.send({ type: 'broadcast', event: 'chat', payload: { name: senderName(), text } });
+    channel.send({ type: 'broadcast', event: 'chat', payload: { name: senderName(), text, cid } });
     input.value = '';
   });
 
