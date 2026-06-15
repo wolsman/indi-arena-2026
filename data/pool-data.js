@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 56,
   capacityMax: 75,
-  syncedAt: "2026-06-15T00:01:35.684Z",
+  syncedAt: "2026-06-15T00:31:26.526Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -42,7 +42,7 @@ window.POOL_PLAYERS = [
   { name: "ScheidsTon", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
   { name: "THEGOAT37", matches: 31, winner: true, topscorer: true, paid: true, points: 650, prevPos: 16 },
   { name: "WesleyMerwe", matches: 27, winner: true, topscorer: true, paid: true, points: 460, prevPos: 42 },
-  { name: "Daisy010", matches: 18, winner: true, topscorer: true, paid: true, points: 365, prevPos: 48 },
+  { name: "Daisy010", matches: 26, winner: true, topscorer: true, paid: true, points: 365, prevPos: 48 },
   { name: "Erol_Ulu", matches: 72, winner: true, topscorer: true, paid: true, points: 885, prevPos: 3 },
   { name: "Givano", matches: 72, winner: true, topscorer: true, paid: true, points: 440, prevPos: 44 },
   { name: "VanderLans", matches: 15, winner: true, topscorer: true, paid: true, points: 865, prevPos: 5 },
