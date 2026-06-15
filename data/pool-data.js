@@ -7,9 +7,9 @@
 window.POOL_META = {
   poolId: 423,
   name: "Indicium WK Poule 2026",
-  totalPlayers: 56,
+  totalPlayers: 54,
   capacityMax: 75,
-  syncedAt: "2026-06-15T09:01:31.967Z",
+  syncedAt: "2026-06-15T09:31:37.625Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -30,7 +30,6 @@ window.POOL_PLAYERS = [
   { name: "Mauricio1980", matches: 72, winner: true, topscorer: true, paid: true, points: 565, prevPos: 41 },
   { name: "AlinevanVuuren", matches: 72, winner: true, topscorer: true, paid: true, points: 805, prevPos: 14 },
   { name: "Wisselbeker", matches: 26, winner: true, topscorer: true, paid: true, points: 885, prevPos: 10 },
-  { name: "Roantuit", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
   { name: "Robertosxs", matches: 104, winner: true, topscorer: true, paid: true, points: 745, prevPos: 17 },
   { name: "Reboss", matches: 72, winner: true, topscorer: true, paid: true, points: 620, prevPos: 35 },
   { name: "Mobicontrol", matches: 53, winner: true, topscorer: true, paid: true, points: 760, prevPos: 16 },
@@ -39,7 +38,6 @@ window.POOL_PLAYERS = [
   { name: "BornBjorg", matches: 24, winner: true, topscorer: true, paid: true, points: 980, prevPos: 4 },
   { name: "Fseton", matches: 24, winner: true, topscorer: true, paid: true, points: 695, prevPos: 24 },
   { name: "Raymond de Haas", matches: 14, winner: true, topscorer: true, paid: true, points: 460, prevPos: 49 },
-  { name: "ScheidsTon", matches: 0, winner: false, topscorer: false, paid: true, points: 0, prevPos: 51 },
   { name: "THEGOAT37", matches: 31, winner: true, topscorer: true, paid: true, points: 690, prevPos: 27 },
   { name: "WesleyMerwe", matches: 27, winner: true, topscorer: true, paid: true, points: 575, prevPos: 39 },
   { name: "Daisy010", matches: 26, winner: true, topscorer: true, paid: true, points: 640, prevPos: 33 },
