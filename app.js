@@ -95,6 +95,16 @@ function liveMinute(ls) {
   return ls.minute + Math.min(ticked, 5); // cap +5; volgende poll corrigeert
 }
 
+// Speelminuut voor een wedstrijd: API-minuut als die er is, anders een schatting
+// uit de geplande aftraptijd (now − aftrap), zodat de tijd óók loopt als /api/live
+// (nog) niets levert. Gecapt op het live-venster.
+function liveMinuteFor(m, ls) {
+  const api = liveMinute(ls);
+  if (api != null) return api;
+  const mins = Math.floor((Date.now() - new Date(m.date).getTime()) / 60000);
+  return (mins >= 0 && mins <= LIVE_WINDOW_MIN) ? mins : null;
+}
+
 // Koppelt een API-wedstrijd aan een van onze (NL) wedstrijden.
 function ingestLiveMatches(apiMatches) {
   const prev = window.__liveScores || {};
@@ -1420,22 +1430,26 @@ function renderArena() {
   wrap.innerHTML = matches.map(({ idx, m, picks, result, live }) => {
     const when = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     const ls = live ? liveScoreFor(m) : null;
+    const liveMin = live ? liveMinuteFor(m, ls) : null;
+    const minTag = liveMin != null ? ` · ${liveMin}'` : '';
     const status = result
       ? `<span class="arena-final">${result.replace('-', ' - ')}</span>`
       : (live
-          ? `<span class="arena-live"><span class="live-dot"></span> LIVE${ls ? ` <b class="arena-livescore">${ls.hs}-${ls.as}</b>` : ''}</span>`
+          ? `<span class="arena-live"><span class="live-dot"></span> LIVE${ls ? ` <b class="arena-livescore">${ls.hs}-${ls.as}</b>` : ''}${minTag}</span>`
           : `<span class="arena-soon">${when}</span>`);
 
-    // Net begonnen, picks nog niet gescraped → toon live + placeholder; de kaart
-    // upgradet vanzelf zodra POOL_PREDICTIONS de picks bevat (bij de volgende render).
+    // Net begonnen, picks nog niet gescraped → toon de live stand + speelminuut én
+    // een placeholder; de kaart upgradet vanzelf zodra de picks binnenkomen.
     if (!Array.isArray(picks) || !picks.length) {
+      const bigScore = ls ? `${ls.hs} – ${ls.as}` : '– : –';
       return `
         <div class="arena-card ${live ? 'is-live arena-hero' : ''}" data-idx="${idx}">
           <div class="arena-head">
             <div class="arena-teams">${flagFor(m.home)} ${m.home} <span class="arena-vs">—</span> ${m.away} ${flagFor(m.away)}</div>
             ${status}
           </div>
-          <div class="arena-pending"><span class="ap-spin">⏳</span> Voorspellingen verschijnen zodra wkpooltjes ze vrijgeeft — meestal binnen een paar minuten.</div>
+          ${live ? `<div class="arena-livebig"><span class="alb-score${ls ? '' : ' muted'}">${bigScore}</span><span class="alb-min">${liveMin != null ? `${liveMin}'` : 'bezig'}</span></div>` : ''}
+          <div class="arena-pending"><span class="ap-spin">⏳</span> Voorspellingen verschijnen zodra wkpooltjes ze vrijgeeft — meestal binnen een paar minuten.${ls ? '' : ' De live stand volgt zodra de databron die doorgeeft.'}</div>
         </div>`;
     }
 
@@ -1846,10 +1860,9 @@ function fmtCountdown(ms) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function liveClock(ls) {
-  if (!ls) return 'bezig';
-  if (ls.status === 'HT') return 'rust';
-  const lm = liveMinute(ls);
+function liveClock(m, ls) {
+  if (ls && ls.status === 'HT') return 'rust';
+  const lm = liveMinuteFor(m, ls);
   return lm != null ? `${lm}'` : 'bezig';
 }
 
@@ -1869,7 +1882,7 @@ function buildScorebug() {
       `<span class="sb-dot"></span><span class="sb-tag">Live</span>` +
       `<span class="sb-match">${flagFor(m.home)} <b>${m.home}</b> <span class="sb-score">${score}</span> <b>${m.away}</b> ${flagFor(m.away)}</span>` +
       rot +
-      `<span class="sb-time" data-sb-min>${liveClock(ls)}</span>` +
+      `<span class="sb-time" data-sb-min>${liveClock(m, ls)}</span>` +
       `<span class="sb-cta">→ Arena</span>`;
   } else {
     const nm = nextScheduledMatch();
@@ -1903,7 +1916,7 @@ function renderKickoffHero() {
     el.innerHTML =
       `<div class="kh-top"><span class="kh-dot"></span><span class="kh-label">Live nu${live.length > 1 ? ` · ${live.length} duels` : ''}</span></div>` +
       `<div class="kh-match">${flagFor(m.home)} <b>${m.home}</b> <span class="kh-score">${score}</span> <b>${m.away}</b> ${flagFor(m.away)}</div>` +
-      `<div class="kh-foot"><span class="kh-min" data-kh-min>${liveClock(ls)}</span><span class="kh-cta">→ Volg het in de Arena</span></div>`;
+      `<div class="kh-foot"><span class="kh-min" data-kh-min>${liveClock(m, ls)}</span><span class="kh-cta">→ Volg het in de Arena</span></div>`;
     el.classList.remove('hidden');
     return;
   }
@@ -1950,9 +1963,10 @@ function scorebugLoop() {
   const minEl = document.querySelector('[data-sb-min]');
   const khMin = document.querySelector('[data-kh-min]');
   if (liveN) {
-    const lc = liveClock(liveScoreFor(liveMatches()[_sbIdx % liveN]));
-    if (minEl) minEl.textContent = lc;
-    if (khMin) khMin.textContent = liveClock(liveScoreFor(liveMatches()[0]));
+    const sbM = liveMatches()[_sbIdx % liveN];
+    if (minEl) minEl.textContent = liveClock(sbM, liveScoreFor(sbM));
+    const khM = liveMatches()[0];
+    if (khMin) khMin.textContent = liveClock(khM, liveScoreFor(khM));
   }
 }
 

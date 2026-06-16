@@ -884,6 +884,10 @@ body.henk-open .henk-toggle:not(.in-dock) { display: none; }
 .arena-pending .ap-spin { display: inline-block; animation: apSpin 2.4s linear infinite; }
 @keyframes apSpin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .arena-pending .ap-spin { animation: none; } }
+.arena-livebig { display: flex; align-items: baseline; gap: .8rem; margin-top: .8rem; }
+.alb-score { font-family: 'Saira Condensed','Inter',sans-serif; font-size: 2.2rem; font-weight: 900; color: #fff; line-height: 1; }
+.alb-score.muted { color: rgba(255,255,255,.4); }
+.alb-min { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 800; color: var(--rood); }
 .arena-teams { font-weight: 800; font-size: 1.05rem; }
 .arena-vs { color: rgba(255,255,255,.3); margin: 0 .25rem; }
 .arena-live { display: inline-flex; align-items: center; gap: .35rem; font-size: .72rem; font-weight: 800; letter-spacing: .1em; color: var(--rood); }
