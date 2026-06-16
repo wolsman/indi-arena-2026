@@ -2060,6 +2060,43 @@ async function renderBeheer() {
     `</div>` +
     (rejected.length ? `<div class="bh-group"><div class="bh-title">Afgewezen · ${rejected.length}</div>` +
       rejected.map(m => row(m, ok(m.id, 'Alsnog toelaten'))).join('') + `</div>` : '');
+
+  // ── Gebruik: wie was wanneer in de Arena (uit login_log) ──
+  renderBeheerGebruik(wrap, esc);
+}
+
+async function renderBeheerGebruik(wrap, esc) {
+  if (!window.indiAuth || !window.indiAuth.listVisits) return;
+  let visits = [];
+  try { visits = await window.indiAuth.listVisits(); } catch (e) { return; }
+  const fmt = (t) => new Date(t).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  // Per speler: aantal bezoeken + laatst gezien.
+  const byUser = {};
+  visits.forEach(v => {
+    const naam = v.poule_naam || '—';
+    const u = byUser[naam] || (byUser[naam] = { naam, count: 0, last: 0 });
+    u.count++;
+    const t = new Date(v.at).getTime();
+    if (t > u.last) u.last = t;
+  });
+  const users = Object.values(byUser).sort((a, b) => b.last - a.last);
+
+  const empty = !visits.length;
+  const usersHtml = empty
+    ? '<div class="bh-empty">Nog geen bezoeken gelogd. (Verschijnt zodra leden inloggen — en de login_log-tabel bestaat.)</div>'
+    : users.map(u => `
+        <div class="bh-use-row">
+          <span class="bh-use-name">${esc(u.naam)}</span>
+          <span class="bh-use-meta">${u.count}× · laatst ${fmt(u.last)}</span>
+        </div>`).join('');
+
+  const feedHtml = visits.slice(0, 25).map(v => `
+        <div class="bh-feed-row"><span>${esc(v.poule_naam || '—')}</span><span class="bh-feed-time">${fmt(v.at)}</span></div>`).join('');
+
+  wrap.insertAdjacentHTML('beforeend',
+    `<div class="bh-group"><div class="bh-title">Gebruik · ${users.length} ${users.length === 1 ? 'speler' : 'spelers'} actief</div>${usersHtml}</div>` +
+    (empty ? '' : `<div class="bh-group"><div class="bh-title">Recente activiteit</div>${feedHtml}</div>`));
 }
 window.beheerSet = async function (id, status) {
   if (!window.indiAuth) return;

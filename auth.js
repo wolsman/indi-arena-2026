@@ -58,6 +58,23 @@
       return data || [];
     },
     async setStatus(id, status) { const sb = await clientPromise; return sb.from('members').update({ status }).eq('id', id); },
+    // Bezoek loggen (wie was wanneer in de Arena). Throttle: hooguit 1x per 30 min
+    // per browser, zodat reloads de log niet volspammen. Faalt altijd stil.
+    async recordVisit(memberId, name) {
+      try {
+        const last = +(localStorage.getItem('indi-arena-lastlog') || 0);
+        if (Date.now() - last < 30 * 60 * 1000) return;
+        const sb = await clientPromise;
+        await sb.from('login_log').insert({ member_id: memberId, poule_naam: name });
+        localStorage.setItem('indi-arena-lastlog', String(Date.now()));
+      } catch (e) { /* log mag de site nooit blokkeren */ }
+    },
+    // Beheerder: recente bezoeken ophalen (RLS laat alleen admins selecteren).
+    async listVisits(limit = 300) {
+      const sb = await clientPromise;
+      const { data } = await sb.from('login_log').select('poule_naam, member_id, at').order('at', { ascending: false }).limit(limit);
+      return data || [];
+    },
     async signOut() {
       const sb = await clientPromise;
       try { await sb.auth.signOut(); } catch (e) {}
@@ -80,6 +97,7 @@
         if (m.status === 'approved') {
           if (m.poule_naam) { try { localStorage.setItem('indi-arena-me', m.poule_naam); } catch (e) {} }
           window.INDI_IS_ADMIN = !!m.is_admin;
+          api.recordVisit(session.user.id, m.poule_naam); // bezoek loggen (throttled, fire-and-forget)
           document.documentElement.classList.remove('auth-checking');
           return true;
         }
