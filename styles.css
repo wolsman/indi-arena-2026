@@ -3,11 +3,15 @@
    ============================================================ */
 
 :root {
-  --ink:#0a0e1a; --ink2:#0f1525; --ink3:#1a2238;
-  --line:#22304d;
+  --ink:#070a13; --ink2:#0c1120; --ink3:#161e33;
+  --line:#23314e;
   --oranje:#ff6b00; --oranje2:#ff8a2a;
   --veld:#0eb84a; --goud:#ffd700; --rood:#ff3b5c;
+  --staal:#6f96c9;   /* koel secundair accent: neutrale info, Δ, rivaal-gap */
+  --measure:62ch;    /* comfortabele leesbreedte voor lopende tekst */
 }
+/* Lopende Henk-tekst comfortabel houden (leesbreedte + ademende regelafstand). */
+#henkToday, .henk-quote { max-width: var(--measure); line-height: 1.6; }
 
 * { -webkit-tap-highlight-color: transparent; }
 
@@ -933,6 +937,26 @@ body.henk-open .henk-toggle { display: none; }
   background: rgba(255,215,0,.10); border: 1px solid rgba(255,215,0,.3);
   font-size: .88rem; color: #ffe680;
 }
+/* Δ-chip + rivaal-regel (Fase 1: glanceable 'mijn positie'). */
+.cp-meta { margin-top: .9rem; }
+.cp-change {
+  display: inline-block; font-size: .72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em;
+  padding: .25rem .6rem; border-radius: .5rem;
+}
+.cp-change.up   { color: var(--veld);  background: rgba(14,184,74,.16); }
+.cp-change.down { color: var(--rood);  background: rgba(255,59,92,.16); }
+.cp-change.flat { color: var(--staal); background: rgba(111,150,201,.14); }
+.cp-rival {
+  margin-top: .8rem; padding: .7rem .9rem; border-radius: .7rem; cursor: pointer;
+  background: rgba(111,150,201,.10); border: 1px solid rgba(111,150,201,.28);
+  font-size: .9rem; color: rgba(255,255,255,.85); line-height: 1.45;
+  transition: border-color .15s, background .15s;
+}
+.cp-rival:hover { border-color: rgba(111,150,201,.55); background: rgba(111,150,201,.16); }
+.cp-rival.leader { background: rgba(255,215,0,.08); border-color: rgba(255,215,0,.28); }
+.cp-rival strong { color: #fff; }
+.cp-crown { font-size: 1.1rem; vertical-align: .05em; }
 
 /* ============================================================
    SPEELSCHEMA

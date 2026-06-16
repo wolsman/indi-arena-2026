@@ -1428,29 +1428,94 @@ function renderArena() {
 // ============================================================
 // MIJN COCKPIT — persoonlijk paneel
 // ============================================================
+// Telt een getal soepel omhoog (count-up). Reduced-motion → direct neerzetten.
+function animateCount(el, to, { dur = 900 } = {}) {
+  if (!el) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !Number.isFinite(to)) { el.textContent = Number.isFinite(to) ? to : '—'; return; }
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / dur);
+    el.textContent = Math.round(to * (1 - Math.pow(1 - t, 3))); // easeOutCubic
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// "Sinds je vorige bezoek"-delta via een localStorage-snapshot (géén scraper-
+// afhankelijkheid). Baseline ververst pas na 30 min, zodat snelle reloads de
+// teller niet op nul zetten; binnen de sessie gememoïseerd voor een stabiel cijfer.
+function myVisitDelta(name, points, rank) {
+  if (window.__myDelta && window.__myDelta.name === name) return window.__myDelta.val;
+  let prev = null;
+  try { prev = JSON.parse(localStorage.getItem('indi-arena-mysnap') || 'null'); } catch {}
+  const now = Date.now();
+  const fresh = prev && prev.name === name && (now - (prev.ts || 0)) < 30 * 60 * 1000;
+  if (!fresh) { try { localStorage.setItem('indi-arena-mysnap', JSON.stringify({ name, points, rank, ts: now })); } catch {} }
+  const val = (!prev || prev.name !== name)
+    ? null
+    : { dPts: points - (prev.points || 0), dPos: (prev.rank || rank) - rank };
+  window.__myDelta = { name, val };
+  return val;
+}
+
 function renderMyCockpit() {
   const sec = $('#myCockpit');
   if (!sec) return;
+  sec.classList.remove('hidden');
   const me = getMyName();
   if (!me) {
     sec.innerHTML = `
       <div class="cockpit-empty">
         <div>
           <div class="font-bold text-lg">Wie ben jij?</div>
-          <div class="text-white/60 text-sm mt-1">Kies je naam en je ziet hier je eigen cockpit: stand, punten en wat je nog mist.</div>
+          <div class="text-white/60 text-sm mt-1">Kies je naam en je ziet hier meteen je positie: punten, beweging en je rivaal.</div>
         </div>
         <button onclick="openMeModal()" class="px-4 py-2 rounded-xl bg-oranje text-ink font-bold hover:bg-oranje2 transition whitespace-nowrap">Kies je naam →</button>
       </div>`;
     return;
   }
-  const p = POOL_PLAYERS.find(x => isMe(x.name));
-  if (!p) { sec.innerHTML = ''; return; }
-
-  const ranked = sortedPlayers();
-  const pos = ranked.findIndex(x => x.name === p.name) + 1;
+  const rk = rankedPlayers();
+  const idx = rk.findIndex(r => isMe(r.p.name));
+  if (idx < 0) { sec.innerHTML = ''; sec.classList.add('hidden'); return; } // naam zonder spelermatch → niets tonen
+  const meR = rk[idx];
+  const p = meR.p;
   const pts = pointsMode();
   const missing = 104 - p.matches;
   const henkTake = henkPlayerTake(p.name);
+
+  // Δ sinds je vorige bezoek (+ toernooi-trend als terugval).
+  let changeChip = '';
+  if (pts) {
+    const d = myVisitDelta(p.name, p.points || 0, meR.rank);
+    if (d && (d.dPts || d.dPos)) {
+      const parts = [];
+      if (d.dPts) parts.push(`${d.dPts > 0 ? '+' : ''}${d.dPts} pt`);
+      if (d.dPos > 0) parts.push(`▲ ${d.dPos}`); else if (d.dPos < 0) parts.push(`▼ ${-d.dPos}`);
+      changeChip = `<span class="cp-change ${(d.dPts < 0 || d.dPos < 0) ? 'down' : 'up'}">sinds je vorige bezoek: ${parts.join(' · ')}</span>`;
+    } else {
+      const hist = (window.POOL_HISTORY && POOL_HISTORY[p.name]) || [];
+      const tot = hist.length >= 2 ? hist[hist.length - 1] - hist[0] : 0;
+      changeChip = tot > 0 ? `<span class="cp-change up">+${tot} pt dit toernooi</span>` : `<span class="cp-change flat">stabiel</span>`;
+    }
+  }
+
+  // Rivaal: de dichtstbijzijnde speler die je opjaagt (écht meer punten — ties
+  // overslaan) — of, als koploper, de eerste achtervolger met minder punten.
+  let rival = '';
+  if (pts) {
+    let above = null;
+    for (let i = idx - 1; i >= 0; i--) { if (rk[i].rank < meR.rank) { above = rk[i]; break; } }
+    let below = null;
+    for (let i = idx + 1; i < rk.length; i++) { if (rk[i].rank > meR.rank) { below = rk[i]; break; } }
+    if (above) {
+      const gap = (above.p.points || 0) - (p.points || 0);
+      rival = `<div class="cp-rival" onclick="openPlayerModal('${above.p.name.replace(/'/g, "\\'")}')">🎯 <strong>${escHtml(above.p.name)}</strong> staat <strong>${gap}</strong> pt boven je — inhalen die handel.</div>`;
+    } else if (meR.rank === 1 && below) {
+      const gap = (p.points || 0) - (below.p.points || 0);
+      rival = `<div class="cp-rival leader" onclick="openPlayerModal('${below.p.name.replace(/'/g, "\\'")}')">👑 Jij bent koploper. <strong>${escHtml(below.p.name)}</strong> hijgt <strong>${gap}</strong> pt in je nek.</div>`;
+    }
+  }
 
   // Waarschuwing: nog wedstrijden in te vullen vóór hun aftrap?
   let warn = '';
@@ -1466,19 +1531,23 @@ function renderMyCockpit() {
     <div class="cockpit-head">
       <div class="cockpit-avatar">${getInitial(p.name)}</div>
       <div class="flex-1">
-        <div class="text-[11px] uppercase tracking-widest text-oranje font-bold">Mijn cockpit</div>
-        <div class="text-2xl font-black leading-tight">${p.name}</div>
+        <div class="text-[11px] uppercase tracking-widest text-oranje font-bold">Mijn positie</div>
+        <div class="text-2xl font-black leading-tight">${escHtml(p.name)}${meR.rank === 1 ? ' <span class="cp-crown">👑</span>' : ''}</div>
       </div>
-      <button onclick="openMeModal()" class="text-xs px-3 py-1.5 rounded-full bg-ink border border-line text-white/60 hover:text-white hover:border-oranje transition">wisselen</button>
+      ${window.INDI_AUTH_ON ? '' : `<button onclick="openMeModal()" class="text-xs px-3 py-1.5 rounded-full bg-ink border border-line text-white/60 hover:text-white hover:border-oranje transition">wisselen</button>`}
     </div>
     <div class="cockpit-stats">
-      <div class="cockpit-stat"><div class="v">${pos > 0 ? '#' + pos : '—'}</div><div class="l">positie</div></div>
-      <div class="cockpit-stat"><div class="v">${pts ? p.points : '—'}<span class="text-white/30 text-sm">${pts ? ' pt' : ''}</span></div><div class="l">punten</div></div>
+      <div class="cockpit-stat"><div class="v">${meR.rank > 0 ? '#' + meR.rank : '—'}</div><div class="l">positie</div></div>
+      <div class="cockpit-stat"><div class="v"><span id="cpPts">${pts ? 0 : '—'}</span><span class="text-white/30 text-sm">${pts ? ' pt' : ''}</span></div><div class="l">punten</div></div>
       <div class="cockpit-stat"><div class="v">${p.matches}<span class="text-white/30 text-sm">/104</span></div><div class="l">ingevuld</div></div>
       <div class="cockpit-stat"><div class="v">${p.paid ? '✓' : '✗'}</div><div class="l">betaald</div></div>
     </div>
+    ${changeChip ? `<div class="cp-meta">${changeChip}</div>` : ''}
+    ${rival}
     ${warn}
     <div class="henk-quote mt-4"><strong class="text-oranje">Henk over jou:</strong><br/>${henkTake}</div>`;
+
+  if (pts) animateCount(document.getElementById('cpPts'), p.points || 0, { dur: 900 });
 }
 
 // ============================================================
