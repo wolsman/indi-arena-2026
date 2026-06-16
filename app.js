@@ -976,17 +976,160 @@ function renderDNA() {
 }
 
 // ============================================================
-// BADGES
+// BADGES — holders worden LIVE uit de data berekend (client-side,
+// geen scraper-afhankelijkheid). POOL_BADGES levert alleen de
+// definities (icoon/naam/omschrijving); resolveBadges() bepaalt wie
+// 'm in handen heeft op basis van POOL_PREDICTIONS × POOL_RESULTS +
+// de ranglijst-beweging uit rankedPlayers().
 // ============================================================
+function escHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function resolveBadges() {
+  const defs = window.POOL_BADGES || [];
+  const out = defs.map(d => ({ ...d, holder: d.holder || null, detail: '' }));
+  const set = (name, holder, detail) => {
+    const b = out.find(x => x.name === name);
+    if (b && holder) { b.holder = holder; b.detail = detail || ''; }
+  };
+  const outcome = (h, a) => (h > a ? 'h' : (h < a ? 'a' : 'd'));
+
+  const CAL = window.POOL_CALENDAR || [];
+  const PRED = window.POOL_PREDICTIONS || {};
+
+  // Wedstrijden waarvan we ZOWEL picks ALS een eindstand hebben, op
+  // kalendervolgorde — de basis voor alle pick-badges.
+  const decided = Object.keys(PRED).map(k => +k)
+    .filter(idx => CAL[idx] && resultFor(CAL[idx]))
+    .sort((a, b) => a - b);
+
+  const exactCount = {};      // naam -> aantal exacte uitslagen
+  const firstExactIdx = {};   // naam -> laagste idx met een exacte uitslag
+  const seq = {};             // naam -> [{idx, tOk}] op kalendervolgorde
+  const correct = [];         // alle toto-correcte picks (voor contra/eerste bloed)
+
+  decided.forEach(idx => {
+    const m = CAL[idx];
+    const [rh, ra] = resultFor(m).split('-').map(Number);
+    const rO = outcome(rh, ra);
+    const picks = PRED[idx] || PRED[String(idx)] || [];
+    const oc = { h: 0, d: 0, a: 0 };
+    picks.forEach(p => { oc[outcome(p.h, p.a)]++; });
+    const tot = picks.length || 1;
+    picks.forEach(p => {
+      const n = p.player;
+      const ex = p.h === rh && p.a === ra;
+      const tOk = outcome(p.h, p.a) === rO;
+      (seq[n] = seq[n] || []).push({ idx, tOk });
+      if (ex) {
+        exactCount[n] = (exactCount[n] || 0) + 1;
+        if (firstExactIdx[n] == null) firstExactIdx[n] = idx;
+      }
+      if (tOk) {
+        correct.push({
+          name: n, idx, exact: ex, share: oc[rO] / tot,
+          goals: rh + ra, score: `${rh}-${ra}`,
+          match: `${m.home}–${m.away}`
+        });
+      }
+    });
+  });
+
+  // 🎯 Mister Perfect — de meeste exacte uitslagen (tie: wie 'm het eerst had).
+  const perfectName = Object.keys(exactCount).sort((a, b) =>
+    exactCount[b] - exactCount[a] || firstExactIdx[a] - firstExactIdx[b] || a.localeCompare(b))[0];
+  if (perfectName) {
+    const n = exactCount[perfectName];
+    set('Mister Perfect', perfectName, `${n} exacte uitslag${n > 1 ? 'en' : ''} goed`);
+  }
+
+  // ⚡ Eerste Bloed — correcte voorspelling(en) bij de vroegste gespeelde wedstrijd.
+  if (decided.length) {
+    const firstIdx = decided[0];
+    const cands = correct.filter(c => c.idx === firstIdx)
+      .sort((a, b) => (b.exact - a.exact) || a.name.localeCompare(b.name));
+    if (cands.length) {
+      const c = cands[0];
+      const extra = cands.length > 1 ? ` +${cands.length - 1}` : '';
+      set('Eerste Bloed', c.name + extra,
+        `${c.match} ${c.score} — ${c.exact ? 'exact goed' : 'juiste afloop'}`);
+    }
+  }
+
+  // 🎲 Waaghals — exacte uitslag met zes of meer doelpunten (meeste goals wint).
+  const dares = correct.filter(c => c.exact && c.goals >= 6)
+    .sort((a, b) => b.goals - a.goals || a.idx - b.idx || a.name.localeCompare(b.name));
+  if (dares[0]) {
+    set('Waaghals', dares[0].name, `${dares[0].match} ${dares[0].score} — ${dares[0].goals} goals, exact`);
+  }
+
+  // 🌊 Tegen de stroom — juiste afloop die de minderheid zag (laagste aandeel).
+  const minority = correct.filter(c => c.share < 0.5)
+    .sort((a, b) => a.share - b.share || (b.exact - a.exact) || a.idx - b.idx);
+  if (minority[0]) {
+    const c = minority[0];
+    set('Tegen de stroom', c.name,
+      `${c.match} ${c.score} — slechts ${Math.round(c.share * 100)}% zat goed`);
+  }
+
+  // 🔥 Streak King — langste reeks van vijf+ correcte toto's op rij.
+  let best = null;
+  Object.keys(seq).forEach(n => {
+    let run = 0, mx = 0;
+    seq[n].forEach(s => { run = s.tOk ? run + 1 : 0; if (run > mx) mx = run; });
+    if (!best || mx > best.mx || (mx === best.mx && n.localeCompare(best.name) < 0)) best = { name: n, mx };
+  });
+  if (best && best.mx >= 5) set('Streak King', best.name, `${best.mx} wedstrijden op rij raak`);
+
+  // Ranglijst-beweging (deelt prevPos-logica met de leaderboard).
+  const rk = (typeof rankedPlayers === 'function') ? rankedPlayers() : [];
+  // 🏆 Poleposition — koploper van de poule (alleen als er punten zijn).
+  if (typeof pointsMode === 'function' && pointsMode()) {
+    const leaders = rk.filter(r => r.rank === 1).map(r => r.p.name);
+    if (leaders.length) {
+      const extra = leaders.length > 1 ? ` +${leaders.length - 1}` : '';
+      set('Poleposition', leaders[0] + extra, 'Koploper van de poule');
+    }
+  }
+  // 📈 Klimgeit / 💀 De Vrije Val — grootste stijger/daler (≥5 plekken) sinds de vorige stand.
+  let up = null, down = null;
+  rk.forEach(r => {
+    if (typeof r.delta === 'number') {
+      if (!up || r.delta > up.delta) up = r;
+      if (!down || r.delta < down.delta) down = r;
+    }
+  });
+  if (up && up.delta >= 5) set('Klimgeit', up.p.name, `+${up.delta} plekken sinds de vorige stand`);
+  if (down && down.delta <= -5) set('De Vrije Val', down.p.name, `${down.delta} plekken sinds de vorige stand`);
+
+  // 🧠 De Profeet (wereldkampioen) blijft vergrendeld tot de finale gespeeld is.
+  return out;
+}
+
 function renderBadges() {
-  $('#badges').innerHTML = POOL_BADGES.map(b => `
-    <div class="badge-card ${b.holder ? '' : 'locked'}">
+  const list = resolveBadges();
+  window.__badgesResolved = list;
+  const unlocked = list.filter(b => b.holder).length;
+
+  $('#badges').innerHTML = list.map(b => `
+    <div class="badge-card ${b.holder ? 'unlocked' : 'locked'}">
       <span class="icon">${b.icon}</span>
-      <div class="badge-name">${b.name}</div>
-      <div class="badge-desc">${b.desc}</div>
-      <div class="holder">${b.holder ? '🏆 ' + b.holder : 'Nog niet vergeven'}</div>
+      <div class="badge-name">${escHtml(b.name)}</div>
+      <div class="badge-desc">${escHtml(b.desc)}</div>
+      <div class="holder">${b.holder ? '🏆 ' + escHtml(b.holder) : 'Nog niet vergeven'}</div>
+      ${b.detail ? `<div class="badge-detail">${escHtml(b.detail)}</div>` : ''}
     </div>
   `).join('');
+
+  // Kop + intro meebewegen met het echte aantal eigenaren.
+  const h2 = document.querySelector('#hallofame h2');
+  if (h2) h2.textContent = `${list.length} badges, ${unlocked} ${unlocked === 1 ? 'eigenaar' : 'eigenaren'}`;
+  const p = document.querySelector('#hallofame p');
+  if (p) p.textContent = unlocked
+    ? 'Verdiend op basis van echte picks en de stand. Henk houdt de eregalerij bij.'
+    : 'Allemaal nog te verdienen zodra de bal rolt. Wie pakt de eerste?';
 }
 
 // ============================================================
@@ -1623,7 +1766,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderFooter();
 
   // Lege Hall of Fame (nog geen badges vergeven) niet tonen — geen lege huls.
-  if (!POOL_BADGES.some(b => b.holder)) {
+  // renderBadges() heeft de holders al live berekend in window.__badgesResolved.
+  if (!(window.__badgesResolved || []).some(b => b.holder)) {
     const hof = document.getElementById('hallofame');
     if (hof) hof.remove();
   }

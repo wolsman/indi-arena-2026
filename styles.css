@@ -499,6 +499,21 @@ html { scroll-behavior: smooth; }
 }
 .badge-card.locked { opacity: .55; }
 .badge-card.locked .holder { color: rgba(255,255,255,.4); }
+.badge-card.unlocked {
+  border-color: rgba(255,107,0,.35);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,107,0,.10), transparent 70%),
+    rgba(15,21,37,.6);
+}
+.badge-card.unlocked .icon {
+  filter: drop-shadow(0 0 10px rgba(255,107,0,.45));
+}
+.badge-card .badge-detail {
+  margin-top: .35rem;
+  font-size: .72rem;
+  color: rgba(255,255,255,.55);
+  line-height: 1.35;
+}
 
 /* ============================================================
    STADION MAP
