@@ -1291,6 +1291,11 @@ function boldestPick(picks, stats) {
 }
 
 // Henks scherpe live-take per wedstrijd, op basis van de échte picks (+ uitslag/live stand).
+// Deterministische variant-keuze per wedstrijd: stabiel, maar elk duel anders →
+// geen herhalende Henk-zinnen meer over de Arena-kaarten.
+function strSeed(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+function pickVariant(arr, seedStr) { return arr[strSeed(seedStr) % arr.length]; }
+
 function henkMatchTake(m, picks, result, liveScore) {
   const s = pickStats(picks);
   const bold = boldestPick(picks, s);
@@ -1320,6 +1325,8 @@ function henkMatchTake(m, picks, result, liveScore) {
 
   if (result) {
     const [rh, ra] = result.split('-').map(Number);
+    const R = `${rh}-${ra}`;
+    const seed = norm(m.home) + norm(m.away) + R;
     const exactWinners = picks.filter(p => p.h === rh && p.a === ra).map(p => p.player);
     const tendErr = picks.filter(p => {
       const po = p.h > p.a ? 'h' : (p.h < p.a ? 'a' : 'd');
@@ -1327,13 +1334,36 @@ function henkMatchTake(m, picks, result, liveScore) {
       return po !== ro;
     });
     if (exactWinners.length) {
-      const names = exactWinners.slice(0, 4).join(', ') + (exactWinners.length > 4 ? ` +${exactWinners.length - 4}` : '');
-      return `Eindstand ${rh}-${ra}. Held${exactWinners.length > 1 ? 'en' : ''} van de wedstrijd: <strong>${names}</strong> — exact goed. De rest? Toekijken en klappen voor andermans gokwerk.`;
+      const names = `<strong>${exactWinners.slice(0, 4).join(', ') + (exactWinners.length > 4 ? ` +${exactWinners.length - 4}` : '')}</strong>`;
+      const heroN = exactWinners.length, others = picks.length - heroN;
+      const variants = [
+        `Eindstand ${R}. Held${heroN > 1 ? 'en' : ''} van de wedstrijd: ${names} — exact goed. De rest? Toekijken en klappen voor andermans gokwerk.`,
+        `${R} werd het, en ${names} zag het haarscherp aankomen. De andere ${others} visten achter het net.`,
+        `Punt erachter: ${R}. ${names} had 'm tot op de goal exact — knap of brutaal geluk, het staat er.`,
+        `${R}. Petje af voor ${names}, recht in de roos. De overige ${others} mogen hun glazen bol laten nakijken.`,
+        `Daar is ${R}. ${names} casht de volle buit; de rest applaudisseert noodgedwongen voor andermans gokwerk.`,
+        `${R} op het bord. ${names} wist het, de andere ${others} gokten ernaast — zo meedogenloos is voetbal.`
+      ];
+      return pickVariant(variants, seed);
     }
     if (tendErr.length === picks.length) {
-      return `Eindstand ${rh}-${ra}. Niemand had de juiste afloop. De hele poule zit ernaast — collectief de plank misgeslagen, en ik geniet van elke seconde.`;
+      const variants = [
+        `Eindstand ${R}. Niemand had de juiste afloop — de hele poule collectief de plank misgeslagen, en ik geniet van elke seconde.`,
+        `${R}, en de héle poule zit ernaast. Zelden zo'n eensgezinde misser gezien. Heerlijk.`,
+        `Daar gaat ieders formulier: ${R}. Niemand zelfs maar de juiste winnaar. Terug naar af, allemaal.`,
+        `${R} — een uitslag die niemand zag aankomen. De voltallige poule met de billenkar naar huis.`
+      ];
+      return pickVariant(variants, seed);
     }
-    return `Eindstand ${rh}-${ra}. Niemand had 'm exact, maar ${picks.length - tendErr.length} van de ${picks.length} had tenminste de juiste afloop. ${tendErr.length ? `<strong>${tendErr[0].player}</strong> en ${tendErr.length - 1} ander${tendErr.length - 1 === 1 ? '' : 'en'} zaten er finaal naast — terug naar de tekentafel.` : ''}`;
+    const totoOk = picks.length - tendErr.length;
+    const missTail = tendErr.length ? ` <strong>${tendErr[0].player}</strong> en ${tendErr.length - 1} ander${tendErr.length - 1 === 1 ? '' : 'en'} zaten er finaal naast.` : '';
+    const variants = [
+      `Eindstand ${R}. Niemand had 'm exact, maar ${totoOk} van de ${picks.length} had tenminste de juiste afloop.${missTail}`,
+      `${R}. De exacte uitslag bleef buiten bereik; ${totoOk} van de ${picks.length} redde de toto.${missTail}`,
+      `Het werd ${R}. Geen bullseye, wél ${totoOk} keer de juiste richting.${missTail}`,
+      `${R} op het scorebord. Exact had niemand 'm, maar ${totoOk} van de ${picks.length} rook de afloop.${missTail}`
+    ];
+    return pickVariant(variants, seed);
   }
 
   // Live (nog geen uitslag)
@@ -1457,7 +1487,7 @@ function renderArena() {
         </div>
         <div class="arena-scores">${top3}</div>
         ${watals}
-        <div class="arena-henk">${henkMatchTake(m, picks, result, ls)}</div>
+        <div class="arena-henk">${(result && window.POOL_HENK && POOL_HENK.matchTakes && POOL_HENK.matchTakes[idx]) || henkMatchTake(m, picks, result, ls)}</div>
       </div>`;
   }).join('');
 }

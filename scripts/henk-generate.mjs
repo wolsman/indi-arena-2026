@@ -184,20 +184,47 @@ const target = targetPool.length ? shuffle(targetPool.map((p) => p.name))[0] : n
 const targetFact = target ? factOf(playerByName(target)) : null;
 const targetSys = persona + ' Dit is het DOELWIT VAN DE DAG — Henk pakt vandaag specifiek deze speler aan. Schrijf een vlijmscherpe, originele roast van 2-3 korte zinnen, volledig gegrond op deze feiten. Antwoord als JSON: {"lines": ["<zin>", ... (2-3 zinnen)]}.';
 
+// 4) per-wedstrijd verdict (Arena) — origineel per duel i.p.v. één vast sjabloon
+const matchFacts = decided.map((idx) => {
+  const m = POOL_CALENDAR[idx];
+  const [rh, ra] = resultFor(m).split('-').map(Number);
+  const rO = oc(rh, ra);
+  const picks = POOL_PREDICTIONS[idx] || POOL_PREDICTIONS[String(idx)] || [];
+  const cnt = { h: 0, d: 0, a: 0 }; picks.forEach((p) => { cnt[oc(p.h, p.a)]++; });
+  const exact = picks.filter((p) => p.h === rh && p.a === ra).map((p) => p.player);
+  const totoOk = picks.filter((p) => oc(p.h, p.a) === rO).length;
+  let blunder = null;
+  picks.forEach((p) => {
+    if (oc(p.h, p.a) !== rO) {
+      const miss = Math.abs((p.h - p.a) - (rh - ra));
+      if (rh + ra >= 3 && (!blunder || miss > blunder.miss)) blunder = { speler: p.player, gokte: `${p.h}-${p.a}`, miss };
+    }
+  });
+  return {
+    idx, duel: `${m.home} - ${m.away}`, eindstand: `${rh}-${ra}`,
+    exactGoed: exact.slice(0, 5), aantalExact: exact.length, totaal: picks.length,
+    juisteToto: totoOk, verdeling: { [m.home]: cnt.h, gelijk: cnt.d, [m.away]: cnt.a },
+    grofsteBlunder: blunder
+  };
+});
+const matchSys = persona + ' Hieronder afgelopen wedstrijden met hun feiten. Schrijf per wedstrijd één KORTE, ORIGINELE verdict-regel (1-2 zinnen) in jouw stem. Varieer NADRUKKELIJK: gebruik niet elke keer hetzelfde patroon of dezelfde slotzin, en begin niet elke regel met "Eindstand". Noem waar het venijnig is de helden (exactGoed) of de grofste blunder bij naam. ⚠️ Gebruik UITSLUITEND de gegeven feiten: verzin GEEN poule-rang/positie/"koploper", GEEN gastland/toernooi-status en GEEN punten — die staan niet in de data. Alleen eindstand, namen uit exactGoed/grofsteBlunder en de verdeling. Antwoord als JSON: {"matchTakes": {"<idx>": "<regel>", ...}} met exact deze idx-sleutels.';
+
 if (DRYRUN) {
   console.log('— HENK DRYRUN — geen API-call.');
   console.log(`Spelers met haakjes: ${Object.keys(hooks).length}; gespeelde duels met picks: ${decided.length}`);
   console.log(`Cast (${cast.length}): ${cast.map((c) => c.naam).join(', ')}`);
   console.log(`Doelwit van de dag: ${target}  (recent uitgesloten: ${[...recent].join(', ') || '—'})`);
   console.log('Doelwit-feiten:', JSON.stringify(targetFact, null, 2));
-  console.log('Cast-voorbeeld (3):', JSON.stringify(cast.slice(0, 3), null, 2));
+  console.log(`Per-wedstrijd-verdicts: ${matchFacts.length} duels`);
+  console.log('Wedstrijd-feiten (2):', JSON.stringify(matchFacts.slice(0, 2), null, 2));
   done('DRYRUN klaar.');
 }
 
-const [takesRes, monoRes, targetRes] = await Promise.all([
+const [takesRes, monoRes, targetRes, matchRes] = await Promise.all([
   ask(takesSys, 'Spelers (feiten):\n' + JSON.stringify(playerFacts)),
   ask(monoSys, 'Poule-feiten:\n' + JSON.stringify(poolFacts)),
-  target ? ask(targetSys, 'Doelwit (feiten):\n' + JSON.stringify(targetFact)) : Promise.resolve(null)
+  target ? ask(targetSys, 'Doelwit (feiten):\n' + JSON.stringify(targetFact)) : Promise.resolve(null),
+  matchFacts.length ? ask(matchSys, 'Wedstrijden (feiten):\n' + JSON.stringify(matchFacts)) : Promise.resolve(null)
 ]);
 
 const henk = { generatedAt: today };
@@ -207,11 +234,12 @@ if (monoRes && Array.isArray(monoRes.hotTakes)) henk.hotTakes = monoRes.hotTakes
 if (target && targetRes && Array.isArray(targetRes.lines) && targetRes.lines.length) {
   henk.dailyTarget = { name: target, lines: targetRes.lines.slice(0, 3) };
 }
+if (matchRes && matchRes.matchTakes && typeof matchRes.matchTakes === 'object') henk.matchTakes = matchRes.matchTakes;
 // Alleen het slachtoffer 'verbruiken' als de roast ook echt gelukt is.
 henk.targetHistory = henk.dailyTarget ? [...history, target].slice(-20) : history;
 
-if (!henk.playerTakes && !henk.monoloog && !henk.hotTakes && !henk.dailyTarget) done('  ⚠ Niets gegenereerd — POOL_HENK ongewijzigd.');
+if (!henk.playerTakes && !henk.monoloog && !henk.hotTakes && !henk.dailyTarget && !henk.matchTakes) done('  ⚠ Niets gegenereerd — POOL_HENK ongewijzigd.');
 
 const next = src.replace(/window\.POOL_HENK\s*=\s*\{[\s\S]*?\};/, `window.POOL_HENK = ${JSON.stringify(henk)};`);
 writeFileSync(FILE, next, 'utf8');
-console.log(`  ✓ POOL_HENK bijgewerkt (${today}): ${henk.playerTakes ? Object.keys(henk.playerTakes).length : 0} takes, monoloog:${!!henk.monoloog}, hotTakes:${henk.hotTakes ? henk.hotTakes.length : 0}, doelwit:${henk.dailyTarget ? henk.dailyTarget.name : '—'}`);
+console.log(`  ✓ POOL_HENK bijgewerkt (${today}): ${henk.playerTakes ? Object.keys(henk.playerTakes).length : 0} takes, monoloog:${!!henk.monoloog}, hotTakes:${henk.hotTakes ? henk.hotTakes.length : 0}, doelwit:${henk.dailyTarget ? henk.dailyTarget.name : '—'}, matchTakes:${henk.matchTakes ? Object.keys(henk.matchTakes).length : 0}`);
