@@ -659,14 +659,19 @@ function sparkline(name) {
   const h = (window.POOL_HISTORY && POOL_HISTORY[name]) || [];
   if (h.length < 2) return '';
   const min = Math.min(...h), max = Math.max(...h), span = (max - min) || 1;
-  const W = 54, H = 16;
-  const pts = h.map((v, i) => {
-    const x = (i / (h.length - 1)) * W;
-    const y = H - ((v - min) / span) * H;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
+  const W = 64, H = 22, pad = 2;
+  const xy = h.map((v, i) => [
+    pad + (i / (h.length - 1)) * (W - pad * 2),
+    pad + (H - pad * 2) - ((v - min) / span) * (H - pad * 2)
+  ]);
+  const line = xy.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const area = `${pad},${H - pad} ${line} ${(W - pad).toFixed(1)},${H - pad}`;
+  const last = xy[xy.length - 1];
   const up = h[h.length - 1] >= h[0];
-  return `<svg class="spark ${up ? 'up' : 'down'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;
+  return `<svg class="spark ${up ? 'up' : 'down'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">` +
+    `<polygon class="spark-area" points="${area}"/>` +
+    `<polyline points="${line}"/>` +
+    `<circle class="spark-dot" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.1"/></svg>`;
 }
 
 function renderHeroLeaderboard() {
@@ -1921,6 +1926,22 @@ function initAmbient() {
 }
 
 // ============================================================
+// SCROLL-REVEAL (Fase 5) — kaart-grids faden subtiel in als ze in beeld komen
+// (of zodra hun tab geopend wordt). Uit bij reduced-motion / geen IO-support.
+// ============================================================
+function initReveal() {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) return;
+  const targets = document.querySelectorAll('.arena-card, .group-card, .sched-day, .badge-card');
+  if (!targets.length) return;
+  targets.forEach(el => el.classList.add('reveal'));
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.04 });
+  targets.forEach(el => io.observe(el));
+}
+
+// ============================================================
 // BEHEER — aanmeldingen goedkeuren/afwijzen (alleen beheerder)
 // ============================================================
 async function renderBeheer() {
@@ -2014,6 +2035,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   buildScorebug();
   setInterval(scorebugLoop, 1000);
   initAmbient();
+  initReveal();
 
   // Anoniem-schakelaar (presence): stand inladen + live bijwerken.
   const anonToggle = $('#anonToggle');

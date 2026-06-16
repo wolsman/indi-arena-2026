@@ -250,10 +250,21 @@ html { scroll-behavior: smooth; }
   color: var(--veld); background: rgba(14,184,74,.16);
   padding: .12rem .4rem; border-radius: .4rem;
 }
-.spark { width: 54px; height: 16px; display: block; margin-top: .2rem; }
-.spark polyline { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.spark { width: 64px; height: 22px; display: block; margin-top: .25rem; }
+.spark polyline { fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .spark.up polyline   { stroke: var(--veld); }
 .spark.down polyline { stroke: var(--rood); }
+.spark .spark-area { stroke: none; opacity: .15; }
+.spark.up   .spark-area { fill: var(--veld); }
+.spark.down .spark-area { fill: var(--rood); }
+.spark .spark-dot { stroke: none; }
+.spark.up   .spark-dot { fill: var(--veld); }
+.spark.down .spark-dot { fill: var(--rood); }
+
+/* Scroll-reveal (Fase 5): subtiele fade-up als een kaart in beeld komt. */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .55s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; } }
 
 .lb-pts-cell { width: 9rem; flex-shrink: 0; text-align: right; }
 .lb-pts-main {
