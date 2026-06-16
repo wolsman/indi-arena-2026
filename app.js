@@ -1672,6 +1672,26 @@ setTimeout(() => {
   refreshHenkBubble();
 }, 4500);
 
+// Fase 3 — bottom-UI ontstapelen: de Henk-launcher in de live-bar dokken zodat
+// reacties + chat + Henk één rij vormen i.p.v. een losse zwevende FAB. social.js
+// bouwt de dock async → kort pollen; ontbreekt de dock (geen config) dan blijft
+// de FAB gewoon staan (nette fallback).
+(function dockHenkLauncher() {
+  let tries = 0;
+  const tryDock = () => {
+    const toggle = document.getElementById('henkToggle');
+    const bar = document.querySelector('.live-react-bar');
+    if (toggle && bar && !toggle.classList.contains('in-dock')) {
+      toggle.classList.add('in-dock');
+      bar.appendChild(toggle); // verplaatst de knop; click-handler blijft gebonden
+      return true;
+    }
+    return false;
+  };
+  if (tryDock()) return;
+  const iv = setInterval(() => { if (tryDock() || ++tries > 40) clearInterval(iv); }, 250);
+})();
+
 // ============================================================
 // CONFETTI
 // ============================================================

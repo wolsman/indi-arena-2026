@@ -786,10 +786,20 @@ html { scroll-behavior: smooth; }
   transition: all .15s;
 }
 .henk-toggle:hover { transform: scale(1.1); }
-.henk-toggle:has(+ .henk-bubble:not(.hidden)) { display: none; }
+.henk-toggle:not(.in-dock):has(+ .henk-bubble:not(.hidden)) { display: none; }
 /* Fallback when :has not supported */
-.henk-bubble:not(.hidden) ~ .henk-toggle { display: none; }
-body.henk-open .henk-toggle { display: none; }
+.henk-bubble:not(.hidden) ~ .henk-toggle:not(.in-dock) { display: none; }
+body.henk-open .henk-toggle:not(.in-dock) { display: none; }
+
+/* Fase 3: Henk-launcher gedockt in de live-bar (rij-knop i.p.v. zwevende FAB). */
+.henk-toggle.in-dock {
+  position: static; width: 40px; height: 40px; font-size: 19px;
+  box-shadow: none; z-index: auto; flex: 0 0 auto;
+}
+.henk-toggle.in-dock:hover { transform: translateY(-2px) scale(1.12); }
+@media (max-width: 560px) {
+  .henk-toggle.in-dock { width: 33px; height: 33px; font-size: 17px; }
+}
 
 /* ============================================================
    HENK-MARK (Fase 4) — consistent broadcast-monogram: ring + on-air-stip.
