@@ -1114,7 +1114,7 @@ function renderBadges() {
   const unlocked = list.filter(b => b.holder).length;
 
   $('#badges').innerHTML = list.map(b => `
-    <div class="badge-card ${b.holder ? 'unlocked' : 'locked'}">
+    <div class="badge-card ${b.holder ? 'unlocked' : 'locked'}" data-badge="${escHtml(b.name)}">
       <span class="icon">${b.icon}</span>
       <div class="badge-name">${escHtml(b.name)}</div>
       <div class="badge-desc">${escHtml(b.desc)}</div>
@@ -1130,6 +1130,65 @@ function renderBadges() {
   if (p) p.textContent = unlocked
     ? 'Verdiend op basis van echte picks en de stand. Henk houdt de eregalerij bij.'
     : 'Allemaal nog te verdienen zodra de bal rolt. Wie pakt de eerste?';
+
+  // Vier badges die zijn bijgekomen sinds het vorige bezoek.
+  checkBadgeUnlocks(list);
+}
+
+// Detecteer welke unlocked badges (op naam+houder) nieuw zijn t.o.v. het vorige
+// bezoek — localStorage-baseline, net als checkLeaderChange. Eerste bezoek legt
+// alleen de baseline vast en viert niets (geen blast van bestaande badges).
+function checkBadgeUnlocks(list) {
+  const unlocked = list.filter(b => b.holder);
+  const keyOf = b => `${b.name}|${b.holder}`;
+  const nowKeys = unlocked.map(keyOf);
+  let prev = null;
+  try { prev = localStorage.getItem('indi-arena-badges'); } catch {}
+  try { localStorage.setItem('indi-arena-badges', JSON.stringify(nowKeys)); } catch {}
+  if (prev == null) return [];          // eerste bezoek → alleen vastleggen
+  let prevSet;
+  try { prevSet = new Set(JSON.parse(prev)); } catch { prevSet = new Set(); }
+  const fresh = unlocked.filter(b => !prevSet.has(keyOf(b)));
+  if (fresh.length) fireBadgeUnlocks(fresh);
+  return fresh;
+}
+
+function fireBadgeUnlocks(fresh) {
+  // Markeer de net-verdiende kaarten; de pop speelt zodra ze in beeld scrollen
+  // (de Hall of Fame zit onder de Pool-DNA-tab en is vaak nog verborgen).
+  fresh.forEach(b => {
+    const card = document.querySelector(`#badges .badge-card[data-badge="${(window.CSS && CSS.escape) ? CSS.escape(b.name) : b.name}"]`);
+    if (card) card.dataset.justUnlocked = '1';
+  });
+  observeUnlockPops();
+
+  // Henk kondigt het aan via de globale toast (zichtbaar op elke tab).
+  if (fresh.length === 1) {
+    const b = fresh[0];
+    henkSay('🏆 NIEUWE BADGE', `${b.holder} · ${b.name}`,
+      `${b.holder} grijpt '${b.name}'.${b.detail ? ' ' + b.detail + '.' : ''} Eregalerij bijgewerkt — de rest mag toekijken.`, 100);
+  } else {
+    const names = fresh.map(b => b.name).slice(0, 4).join(', ');
+    henkSay('🏆 BADGES VERGEVEN', `${fresh.length} nieuwe badges`,
+      `${fresh.length} badges van eigenaar gewisseld: ${names}${fresh.length > 4 ? ' …' : ''}. Loop maar even langs de eregalerij.`, 110);
+  }
+}
+
+// Speel de pop-animatie zodra een net-verdiende badge in beeld komt.
+function observeUnlockPops() {
+  const cards = [...document.querySelectorAll('#badges .badge-card[data-just-unlocked]')];
+  if (!cards.length) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) {
+    cards.forEach(c => c.classList.add('just-unlocked'));
+    return;
+  }
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('just-unlocked'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.4 });
+  cards.forEach(c => io.observe(c));
 }
 
 // ============================================================
