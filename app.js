@@ -367,6 +367,24 @@ function nextHenkQuote() {
   return henkQueue.pop();
 }
 
+// "Henk pakt aan vandaag" — roterend dagslachtoffer uit POOL_HENK.dailyTarget.
+// Verborgen als er (nog) geen doelwit is gegenereerd.
+function renderHenkTarget() {
+  const card = document.getElementById('henkTargetCard');
+  if (!card) return;
+  const dt = (window.POOL_HENK || {}).dailyTarget;
+  if (!dt || !dt.name || !Array.isArray(dt.lines) || !dt.lines.length) {
+    card.classList.add('hidden');
+    return;
+  }
+  const safe = dt.name.replace(/'/g, "\\'");
+  const nameEl = document.getElementById('htName');
+  const linesEl = document.getElementById('htLines');
+  if (nameEl) nameEl.innerHTML = `<button class="ht-target-name" onclick="openPlayerModal('${safe}')">${escHtml(dt.name)}</button>`;
+  if (linesEl) linesEl.innerHTML = dt.lines.map(l => `<p>${escHtml(l)}</p>`).join('');
+  card.classList.remove('hidden');
+}
+
 // Typewriter: typt platte tekst, zet daarna de opgemaakte versie neer.
 function typeInto(el, html, speed = 12) {
   const tmp = document.createElement('div');
@@ -490,6 +508,7 @@ function renderToday() {
 
   // Henks dagmonoloog
   $('#henkToday').innerHTML = dailyMonoloog();
+  renderHenkTarget();
   $('#qaPlayers').textContent = POOL_PLAYERS.filter(p => p.name).length;
 }
 
