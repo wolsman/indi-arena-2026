@@ -876,6 +876,14 @@ body.henk-open .henk-toggle:not(.in-dock) { display: none; }
 .arena-card.is-live { border-color: rgba(255,59,92,.45); background: rgba(255,59,92,.05); }
 .arena-card.is-final { border-color: rgba(14,184,74,.35); }
 .arena-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.arena-pending {
+  margin-top: .8rem; padding: .7rem .9rem; border-radius: .7rem;
+  background: rgba(255,107,0,.08); border: 1px dashed rgba(255,107,0,.3);
+  font-size: .85rem; line-height: 1.45; color: rgba(255,255,255,.7);
+}
+.arena-pending .ap-spin { display: inline-block; animation: apSpin 2.4s linear infinite; }
+@keyframes apSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .arena-pending .ap-spin { animation: none; } }
 .arena-teams { font-weight: 800; font-size: 1.05rem; }
 .arena-vs { color: rgba(255,255,255,.3); margin: 0 .25rem; }
 .arena-live { display: inline-flex; align-items: center; gap: .35rem; font-size: .72rem; font-weight: 800; letter-spacing: .1em; color: var(--rood); }
@@ -1283,7 +1291,8 @@ body.is-matchday .bg-mesh::before {
   .lb-name-cell .avatar { width: 30px; height: 30px; }
   .lb-pos { font-size: .95rem; }
   .pts-val { font-size: 1rem; }
-  .mover-badge, .spark { display: none; }
+  .mover-badge { display: none; }
+  .spark { width: 48px; height: 15px; margin-top: .15rem; }  /* compacte trend op mobiel i.p.v. verbergen */
 }
 
 /* ============================================================
@@ -1311,7 +1320,10 @@ body.is-matchday .bg-mesh::before {
   transform: translateX(-50%);
   z-index: 61; display: flex; flex-direction: column; align-items: center; gap: 10px;
   pointer-events: none; max-width: 100vw;
+  transition: transform .3s cubic-bezier(.2,.7,.2,1), opacity .3s ease;
 }
+.live-dock.dock-hidden { transform: translate(-50%, 150%); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .live-dock { transition: none; } }
 .live-react-bar {
   pointer-events: auto; display: flex; gap: 4px; padding: 6px;
   background: rgba(15,21,37,.82); backdrop-filter: blur(10px);

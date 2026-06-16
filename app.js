@@ -1353,18 +1353,30 @@ function henkMatchTake(m, picks, result, liveScore) {
 }
 
 function arenaMatches() {
-  if (!window.POOL_PREDICTIONS) return [];
   const now = Date.now();
-  return Object.keys(POOL_PREDICTIONS).map(k => {
-    const idx = +k;
-    const m = POOL_CALENDAR[idx];
-    if (!m) return null;
-    const picks = POOL_PREDICTIONS[k];
-    const result = resultFor(m);
+  const byIdx = {};
+  // (a) wedstrijden waarvan de picks al gescraped zijn
+  if (window.POOL_PREDICTIONS) {
+    Object.keys(POOL_PREDICTIONS).forEach(k => {
+      const idx = +k; const m = POOL_CALENDAR[idx];
+      if (m) byIdx[idx] = { idx, m, picks: POOL_PREDICTIONS[k] };
+    });
+  }
+  // (b) kalenderwedstrijden die qua TIJD live zijn — ook al heeft de scraper de
+  // picks nog niet binnen. Zo staat een duel meteen bij de aftrap in de Arena
+  // (de kaart upgradet vanzelf zodra de picks binnenkomen).
+  POOL_CALENDAR.forEach((m, idx) => {
+    if (!m || byIdx[idx]) return;
     const start = new Date(m.date).getTime();
+    const liveByTime = !resultFor(m) && now >= start && (now - start) <= LIVE_WINDOW_MIN * 60000;
+    if (liveByTime) byIdx[idx] = { idx, m, picks: null };
+  });
+  return Object.values(byIdx).map(o => {
+    const result = resultFor(o.m);
+    const start = new Date(o.m.date).getTime();
     const live = !result && now >= start && (now - start) <= LIVE_WINDOW_MIN * 60000;
-    return { idx, m, picks, result, live, start };
-  }).filter(Boolean).sort((a, b) => (b.live - a.live) || (b.start - a.start)).slice(0, 6);
+    return { ...o, result, live, start };
+  }).sort((a, b) => (b.live - a.live) || (b.start - a.start)).slice(0, 6);
 }
 
 function renderArena() {
@@ -1376,16 +1388,30 @@ function renderArena() {
     return;
   }
   wrap.innerHTML = matches.map(({ idx, m, picks, result, live }) => {
-    const s = pickStats(picks);
-    const total = s.total || 1;
     const when = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     const ls = live ? liveScoreFor(m) : null;
-    const liveKey = ls ? `${ls.hs}-${ls.as}` : null;
     const status = result
       ? `<span class="arena-final">${result.replace('-', ' - ')}</span>`
       : (live
           ? `<span class="arena-live"><span class="live-dot"></span> LIVE${ls ? ` <b class="arena-livescore">${ls.hs}-${ls.as}</b>` : ''}</span>`
           : `<span class="arena-soon">${when}</span>`);
+
+    // Net begonnen, picks nog niet gescraped → toon live + placeholder; de kaart
+    // upgradet vanzelf zodra POOL_PREDICTIONS de picks bevat (bij de volgende render).
+    if (!Array.isArray(picks) || !picks.length) {
+      return `
+        <div class="arena-card ${live ? 'is-live arena-hero' : ''}" data-idx="${idx}">
+          <div class="arena-head">
+            <div class="arena-teams">${flagFor(m.home)} ${m.home} <span class="arena-vs">—</span> ${m.away} ${flagFor(m.away)}</div>
+            ${status}
+          </div>
+          <div class="arena-pending"><span class="ap-spin">⏳</span> Voorspellingen verschijnen zodra wkpooltjes ze vrijgeeft — meestal binnen een paar minuten.</div>
+        </div>`;
+    }
+
+    const s = pickStats(picks);
+    const total = s.total || 1;
+    const liveKey = ls ? `${ls.hs}-${ls.as}` : null;
     const top3 = s.exact.slice(0, 3).map(([sc, n]) =>
       `<span class="ascore${sc === liveKey ? ' hot' : ''}">${sc}<b>${n}×</b></span>`).join('');
     // Wat-als + inzet: bij de huidige live stand, wie juicht en wie baalt?
@@ -1695,6 +1721,25 @@ setTimeout(() => {
   };
   if (tryDock()) return;
   const iv = setInterval(() => { if (tryDock() || ++tries > 40) clearInterval(iv); }, 250);
+})();
+
+// Auto-verberg de live-bar bij omlaag scrollen (terug bij omhoog) → reclaimt de
+// onderste ruimte voor content. Blijft staan bovenaan en zolang de chat open is.
+(function autoHideDock() {
+  let lastY = window.scrollY || 0, ticking = false;
+  const apply = () => {
+    ticking = false;
+    const dock = document.querySelector('.live-dock');
+    if (!dock) return;
+    const chatOpen = !(document.getElementById('liveChat') || {}).classList?.contains('hidden') &&
+                     document.getElementById('liveChat'); // chat open → niet verbergen
+    const y = window.scrollY || 0;
+    if (chatOpen || y < 80) dock.classList.remove('dock-hidden');
+    else if (y > lastY + 6) dock.classList.add('dock-hidden');
+    else if (y < lastY - 6) dock.classList.remove('dock-hidden');
+    lastY = y;
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }, { passive: true });
 })();
 
 // ============================================================
