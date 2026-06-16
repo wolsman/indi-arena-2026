@@ -509,6 +509,7 @@ function renderToday() {
   // Henks dagmonoloog
   $('#henkToday').innerHTML = dailyMonoloog();
   renderHenkTarget();
+  renderKickoffHero();
   $('#qaPlayers').textContent = POOL_PLAYERS.filter(p => p.name).length;
 }
 
@@ -1782,6 +1783,40 @@ function buildScorebug() {
   }
 }
 
+// Kickoff-hero op de Vandaag-tab: groot, tikkend "tot de aftrap"-moment dat
+// naar een LIVE-prompt flipt zodra de bal rolt. Hergebruikt nextScheduledMatch
+// + fmtCountdown; de seconde-tik loopt mee in scorebugLoop.
+function renderKickoffHero() {
+  const el = document.getElementById('kickoffHero');
+  if (!el) return;
+  const live = liveMatches();
+  if (live.length) {
+    const m = live[0];
+    const ls = liveScoreFor(m);
+    const score = ls ? `${ls.hs}–${ls.as}` : '–';
+    el.className = 'kickoff-hero is-live';
+    el.innerHTML =
+      `<div class="kh-top"><span class="kh-dot"></span><span class="kh-label">Live nu${live.length > 1 ? ` · ${live.length} duels` : ''}</span></div>` +
+      `<div class="kh-match">${flagFor(m.home)} <b>${m.home}</b> <span class="kh-score">${score}</span> <b>${m.away}</b> ${flagFor(m.away)}</div>` +
+      `<div class="kh-foot"><span class="kh-min" data-kh-min>${liveClock(ls)}</span><span class="kh-cta">→ Volg het in de Arena</span></div>`;
+    el.classList.remove('hidden');
+    return;
+  }
+  const nm = nextScheduledMatch();
+  if (!nm) { el.classList.add('hidden'); return; }
+  const d = new Date(nm.date);
+  const time = d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  const sameDay = d.toDateString() === new Date().toDateString();
+  const day = d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+  el.className = 'kickoff-hero is-countdown';
+  el.innerHTML =
+    `<div class="kh-top"><span class="kh-dot countdown"></span><span class="kh-label">Tot de aftrap${sameDay ? '' : ` · ${day}`} · ${time}</span></div>` +
+    `<div class="kh-match">${flagFor(nm.home)} <b>${nm.home}</b> <span class="kh-vs">—</span> <b>${nm.away}</b> ${flagFor(nm.away)}</div>` +
+    `<div class="kh-cd" data-kh-cd>${fmtCountdown(d.getTime() - Date.now())}</div>` +
+    `<div class="kh-cta muted">De Arena opent zodra de bal rolt.</div>`;
+  el.classList.remove('hidden');
+}
+
 function scorebugLoop() {
   if (document.hidden || !$('#scorebug')) return;
   const liveN = liveMatches().length;
@@ -1789,6 +1824,7 @@ function scorebugLoop() {
   if (liveN !== _sbLiveN) {                 // modus/aantal gewijzigd → herbouw
     _sbLiveN = liveN; _sbIdx = 0; _sbTick = 0;
     buildScorebug();
+    renderKickoffHero();
     return;
   }
   _sbTick++;
@@ -1798,14 +1834,21 @@ function scorebugLoop() {
     return;
   }
   // anders alleen dynamische tekst verversen (geen rebuild → pulse blijft vloeiend)
+  const nm = nextScheduledMatch();
   const cd = document.querySelector('[data-sb-cd]');
   if (cd) {
-    const nm = nextScheduledMatch();
     if (nm) cd.textContent = fmtCountdown(new Date(nm.date).getTime() - Date.now());
     else buildScorebug();
   }
+  const khCd = document.querySelector('[data-kh-cd]');
+  if (khCd && nm) khCd.textContent = fmtCountdown(new Date(nm.date).getTime() - Date.now());
   const minEl = document.querySelector('[data-sb-min]');
-  if (minEl && liveN) minEl.textContent = liveClock(liveScoreFor(liveMatches()[_sbIdx % liveN]));
+  const khMin = document.querySelector('[data-kh-min]');
+  if (liveN) {
+    const lc = liveClock(liveScoreFor(liveMatches()[_sbIdx % liveN]));
+    if (minEl) minEl.textContent = lc;
+    if (khMin) khMin.textContent = liveClock(liveScoreFor(liveMatches()[0]));
+  }
 }
 
 // ============================================================

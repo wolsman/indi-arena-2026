@@ -1092,6 +1092,50 @@ body.henk-open .henk-toggle { display: none; }
   70%  { box-shadow: 0 0 0 7px rgba(255,59,92,0); }
   100% { box-shadow: 0 0 0 0 rgba(255,59,92,0); }
 }
+/* Matchday: het top-stripje kleurt mee 'live' zodra er een duel loopt. */
+body.is-matchday .scorebug { background: linear-gradient(90deg, rgba(255,59,92,.18), transparent 62%); }
+
+/* ============================================================
+   KICKOFF-HERO (Fase 2) — tikkende 'tot de aftrap' op de Vandaag-tab,
+   flipt naar een LIVE-prompt zodra de bal rolt.
+   ============================================================ */
+.kickoff-hero {
+  margin-top: 1.25rem; cursor: pointer; user-select: none;
+  border-radius: 1.1rem; padding: 1rem 1.2rem 1.1rem; position: relative; overflow: hidden;
+  border: 1px solid rgba(255,107,0,.3);
+  background: linear-gradient(135deg, rgba(255,107,0,.10), rgba(12,17,32,.55));
+  transition: border-color .15s, transform .15s;
+}
+.kickoff-hero.hidden { display: none; }
+.kickoff-hero:hover { border-color: rgba(255,107,0,.55); transform: translateY(-1px); }
+.kickoff-hero .kh-top { display: flex; align-items: center; gap: .5rem; margin-bottom: .55rem; }
+.kh-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; background: var(--oranje); }
+.kickoff-hero.is-live .kh-dot { background: var(--rood); animation: sbPulse 1.4s infinite; }
+.kh-label { font-size: .64rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--oranje2); }
+.kickoff-hero.is-live .kh-label { color: var(--rood); }
+.kh-match { font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.kh-match .flag { width: 26px; height: auto; border-radius: 3px; }
+.kh-vs { color: rgba(255,255,255,.4); font-weight: 600; }
+.kh-score { font-family: 'Saira Condensed','Inter',sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--rood); }
+.kh-cd {
+  font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
+  font-size: 2.6rem; font-weight: 800; line-height: 1; margin-top: .55rem; color: #fff; letter-spacing: .02em;
+}
+.kh-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .55rem; }
+.kh-min { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 800; color: var(--rood); }
+.kh-cta { font-size: .8rem; font-weight: 700; color: var(--oranje2); }
+.kh-cta.muted { color: rgba(255,255,255,.45); font-weight: 600; }
+.kickoff-hero.is-live {
+  background: linear-gradient(135deg, rgba(255,59,92,.16), rgba(12,17,32,.55));
+  border-color: rgba(255,59,92,.42);
+}
+@media (max-width: 560px) {
+  .kh-cd { font-size: 2.1rem; }
+  .kh-match { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kickoff-hero.is-live .kh-dot { animation: none; }
+}
 .sb-tag { flex: 0 0 auto; font-weight: 800; font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rood); }
 .scorebug.is-countdown .sb-tag { color: var(--oranje2); }
 .sb-tag.muted { color: rgba(255,255,255,.4); }
