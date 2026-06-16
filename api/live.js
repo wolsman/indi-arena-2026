@@ -14,9 +14,12 @@
    ============================================================ */
 
 export default async function handler(req, res) {
-  // Edge-cache: hooguit ~1 upstream-call per 2 min (max ~30/uur), rest uit
-  // cache. Houdt ons ruim binnen de 100 calls/dag van het gratis API-Sports-plan.
-  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=180');
+  // Edge-cache: hooguit ~1 upstream-call per 5 min (max ~12/uur), rest uit cache.
+  // Bewust ruim: het gratis API-Sports-plan geeft 100 calls/dag, en live-polling
+  // over meerdere WK-duels per dag liep daar vroeger overheen (→ account-schorsing).
+  // ~5 min oude stand is voor een poule prima. stale-while-revalidate houdt de
+  // respons soepel tijdens het verversen.
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   const key = process.env.FOOTBALL_API_KEY;
