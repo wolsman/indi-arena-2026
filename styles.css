@@ -792,6 +792,30 @@ html { scroll-behavior: smooth; }
 body.henk-open .henk-toggle { display: none; }
 
 /* ============================================================
+   HENK-MARK (Fase 4) — consistent broadcast-monogram: ring + on-air-stip.
+   Pseudo's zijn position:absolute → vallen buiten de grid-centrering van de
+   "H" en clobberen geen bestaande box-shadow.
+   ============================================================ */
+.henk-mark::before {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.22); pointer-events: none;
+}
+.henk-mark::after {
+  content: ''; position: absolute; top: -1px; right: -1px;
+  width: .4em; height: .4em; border-radius: 50%;
+  background: var(--rood); box-shadow: 0 0 0 2px var(--ink2); pointer-events: none;
+}
+/* Henk als 'host' op de Henk-pakt-aan-kaart: mark + naamplaat + entree. */
+.ht-mark {
+  position: relative; width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--oranje), var(--rood));
+  color: var(--ink); font-weight: 900; font-size: .85rem;
+  display: grid; place-items: center; flex: 0 0 auto;
+}
+.henk-target { animation: slideUp .4s cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion: reduce) { .henk-target { animation: none; } }
+
+/* ============================================================
    NU LIVE — balk
    ============================================================ */
 .livebar {

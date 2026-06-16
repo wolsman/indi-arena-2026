@@ -378,6 +378,11 @@ function renderHenkTarget() {
     return;
   }
   const safe = dt.name.replace(/'/g, "\\'");
+  const headEl = card.querySelector('.ht-head');
+  if (headEl) headEl.innerHTML =
+    `<span class="ht-mark henk-mark">H</span>` +
+    `<span class="ht-badge">🎯 Henk pakt aan</span>` +
+    `<span class="ht-day">vandaag</span>`;
   const nameEl = document.getElementById('htName');
   const linesEl = document.getElementById('htLines');
   if (nameEl) nameEl.innerHTML = `<button class="ht-target-name" onclick="openPlayerModal('${safe}')">${escHtml(dt.name)}</button>`;

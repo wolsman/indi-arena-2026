@@ -134,7 +134,7 @@
 
       <!-- Henk-monoloog -->
       <div class="mt-6 relative pl-12 pr-4 py-4 rounded-2xl border border-oranje/30 bg-oranje/5">
-        <div class="absolute -left-3 top-4 w-10 h-10 rounded-full bg-gradient-to-br from-oranje to-rood grid place-items-center font-black text-ink text-sm shadow-lg shadow-oranje/30">H</div>
+        <div class="henk-mark absolute -left-3 top-4 w-10 h-10 rounded-full bg-gradient-to-br from-oranje to-rood grid place-items-center font-black text-ink text-sm shadow-lg shadow-oranje/30">H</div>
         <div class="flex items-center gap-2 text-[11px] uppercase tracking-widest text-oranje font-bold mb-1">
           <span>Henk · vandaag</span>
         </div>
@@ -370,14 +370,14 @@
 <!-- =================== HENK BUBBLE (persistent) =================== -->
 <div id="henkBubble" class="henk-bubble hidden">
   <button class="henk-bubble-close" onclick="document.getElementById('henkBubble').classList.add('hidden')">×</button>
-  <div class="henk-avatar">H</div>
+  <div class="henk-avatar henk-mark">H</div>
   <div class="henk-body">
     <div class="henk-name">Henk</div>
     <div class="henk-text" id="henkBubbleText">…</div>
     <button id="henkNewBtn" class="henk-newbtn">↻ nog één dan</button>
   </div>
 </div>
-<button id="henkToggle" class="henk-toggle">
+<button id="henkToggle" class="henk-toggle henk-mark">
   <span>H</span>
 </button>
 
