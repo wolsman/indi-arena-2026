@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-17T20:31:23.687Z",
+  syncedAt: "2026-06-17T21:05:32.011Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -67,7 +67,7 @@ window.POOL_PLAYERS = [
   { name: "Koninkie", matches: 72, winner: true, topscorer: true, paid: true, points: 1405, prevPos: 12 },
   { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: true, points: 1350, prevPos: 17 },
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 1520, prevPos: 6 },
-  { name: "RoanTuit(messi)", matches: 18, winner: true, topscorer: true, paid: true, points: 1140, prevPos: 35 },
+  { name: "RoanTuit(messi)", matches: 20, winner: true, topscorer: true, paid: true, points: 1140, prevPos: 35 },
   { name: "Christopheramboz", matches: 34, winner: true, topscorer: true, paid: true, points: 1450, prevPos: 9 },
   { name: "WillemCo", matches: 30, winner: false, topscorer: false, paid: true, points: 1305, prevPos: 22 },
   { name: "Nelson1983", matches: 23, winner: false, topscorer: false, paid: true, points: 525, prevPos: 52 }
