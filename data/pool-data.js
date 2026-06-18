@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-18T02:01:26.114Z",
+  syncedAt: "2026-06-18T02:31:25.223Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -24,7 +24,7 @@ window.POOL_PLAYERS = [
   { name: "Bertjuh", matches: 72, winner: true, topscorer: true, paid: true, points: 1370, prevPos: 22 },
   { name: "Bobcorn", matches: 72, winner: true, topscorer: true, paid: true, points: 1090, prevPos: 42 },
   { name: "UedaTopscorer", matches: 72, winner: true, topscorer: true, paid: true, points: 965, prevPos: 47 },
-  { name: "Oppie1978", matches: 24, winner: true, topscorer: true, paid: true, points: 1440, prevPos: 13 },
+  { name: "Oppie1978", matches: 37, winner: true, topscorer: true, paid: true, points: 1440, prevPos: 13 },
   { name: "El-Toro-Loco", matches: 21, winner: false, topscorer: false, paid: true, points: 650, prevPos: 51 },
   { name: "StudentjeIndicium", matches: 72, winner: true, topscorer: true, paid: true, points: 1470, prevPos: 11 },
   { name: "Mauricio1980", matches: 72, winner: true, topscorer: true, paid: true, points: 1140, prevPos: 38 },
