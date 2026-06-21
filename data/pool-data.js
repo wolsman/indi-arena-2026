@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-21T10:01:35.785Z",
+  syncedAt: "2026-06-21T10:31:33.536Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -38,7 +38,7 @@ window.POOL_PLAYERS = [
   { name: "BornBjorg", matches: 24, winner: true, topscorer: true, paid: true, points: 1710, prevPos: 49 },
   { name: "Fseton", matches: 50, winner: true, topscorer: true, paid: true, points: 2235, prevPos: 31 },
   { name: "Raymond de Haas", matches: 46, winner: true, topscorer: true, paid: true, points: 2305, prevPos: 26 },
-  { name: "THEGOAT37", matches: 53, winner: true, topscorer: true, paid: true, points: 2400, prevPos: 20 },
+  { name: "THEGOAT37", matches: 70, winner: true, topscorer: true, paid: true, points: 2400, prevPos: 20 },
   { name: "WesleyMerwe", matches: 43, winner: true, topscorer: true, paid: true, points: 2140, prevPos: 35 },
   { name: "Daisy010", matches: 50, winner: true, topscorer: true, paid: true, points: 2320, prevPos: 24 },
   { name: "Erol_Ulu", matches: 72, winner: true, topscorer: true, paid: true, points: 2820, prevPos: 2 },
@@ -67,7 +67,7 @@ window.POOL_PLAYERS = [
   { name: "Koninkie", matches: 72, winner: true, topscorer: true, paid: true, points: 2560, prevPos: 11 },
   { name: "Martijnmeestervoorspeller", matches: 72, winner: true, topscorer: true, paid: true, points: 2690, prevPos: 5 },
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 3020, prevPos: 1 },
-  { name: "RoanTuit(messi)", matches: 24, winner: true, topscorer: true, paid: true, points: 1575, prevPos: 51 },
+  { name: "RoanTuit(messi)", matches: 30, winner: true, topscorer: true, paid: true, points: 1575, prevPos: 51 },
   { name: "Christopheramboz", matches: 42, winner: true, topscorer: true, paid: true, points: 2455, prevPos: 17 },
   { name: "WillemCo", matches: 37, winner: false, topscorer: false, paid: true, points: 1990, prevPos: 40 },
   { name: "Nelson1983", matches: 34, winner: false, topscorer: false, paid: true, points: 1530, prevPos: 52 }
