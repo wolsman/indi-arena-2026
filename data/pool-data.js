@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-22T22:31:25.611Z",
+  syncedAt: "2026-06-22T23:01:34.212Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -32,7 +32,7 @@ window.POOL_PLAYERS = [
   { name: "Wisselbeker", matches: 48, winner: true, topscorer: true, paid: true, points: 2915, prevPos: 10 },
   { name: "Robertosxs", matches: 104, winner: true, topscorer: true, paid: true, points: 2820, prevPos: 15 },
   { name: "Reboss", matches: 72, winner: true, topscorer: true, paid: true, points: 2465, prevPos: 35 },
-  { name: "Mobicontrol-Xavier", matches: 53, winner: true, topscorer: true, paid: true, points: 2945, prevPos: 8 },
+  { name: "Mobicontrol-Xavier", matches: 56, winner: true, topscorer: true, paid: true, points: 2945, prevPos: 8 },
   { name: "Brokkenpiloot", matches: 53, winner: true, topscorer: true, paid: true, points: 2915, prevPos: 10 },
   { name: "Katinkadeb", matches: 72, winner: true, topscorer: true, paid: true, points: 2580, prevPos: 30 },
   { name: "BornBjorg", matches: 55, winner: true, topscorer: true, paid: true, points: 1710, prevPos: 52 },
