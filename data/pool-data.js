@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-22T08:31:36.599Z",
+  syncedAt: "2026-06-22T09:01:38.413Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -43,7 +43,7 @@ window.POOL_PLAYERS = [
   { name: "Daisy010", matches: 58, winner: true, topscorer: true, paid: true, points: 2570, prevPos: 20 },
   { name: "Erol_Ulu", matches: 72, winner: true, topscorer: true, paid: true, points: 3115, prevPos: 2 },
   { name: "Givano", matches: 72, winner: true, topscorer: true, paid: true, points: 2915, prevPos: 5 },
-  { name: "JanvdL", matches: 40, winner: true, topscorer: true, paid: true, points: 3030, prevPos: 3 },
+  { name: "JanvdL", matches: 43, winner: true, topscorer: true, paid: true, points: 3030, prevPos: 3 },
   { name: "Trauner_in_Oranje", matches: 40, winner: true, topscorer: true, paid: true, points: 2475, prevPos: 28 },
   { name: "Keepertje", matches: 72, winner: true, topscorer: true, paid: true, points: 1790, prevPos: 51 },
   { name: "John0504", matches: 72, winner: true, topscorer: true, paid: true, points: 1975, prevPos: 46 },
@@ -69,7 +69,7 @@ window.POOL_PLAYERS = [
   { name: "Crazy Dutchman", matches: 72, winner: true, topscorer: true, paid: true, points: 3135, prevPos: 1 },
   { name: "RoanTuit(messi)", matches: 30, winner: true, topscorer: true, paid: true, points: 1890, prevPos: 47 },
   { name: "Christopheramboz", matches: 42, winner: true, topscorer: true, paid: true, points: 2645, prevPos: 17 },
-  { name: "WillemCo", matches: 41, winner: false, topscorer: false, paid: true, points: 2160, prevPos: 42 },
+  { name: "WillemCo", matches: 46, winner: false, topscorer: false, paid: true, points: 2160, prevPos: 42 },
   { name: "Nelson1983", matches: 34, winner: false, topscorer: false, paid: true, points: 1845, prevPos: 50 }
 ];
 
