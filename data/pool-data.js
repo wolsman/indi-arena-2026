@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-24T05:01:40.930Z",
+  syncedAt: "2026-06-24T05:31:26.665Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -70,7 +70,7 @@ window.POOL_PLAYERS = [
   { name: "RoanTuit(messi)", matches: 37, winner: true, topscorer: true, paid: true, points: 2575, prevPos: 48 },
   { name: "Christopheramboz", matches: 55, winner: true, topscorer: true, paid: true, points: 3300, prevPos: 21 },
   { name: "WillemCo", matches: 46, winner: false, topscorer: false, paid: true, points: 2815, prevPos: 41 },
-  { name: "Nelson1983", matches: 38, winner: false, topscorer: false, paid: true, points: 2340, prevPos: 50 }
+  { name: "Nelson1983", matches: 51, winner: false, topscorer: false, paid: true, points: 2340, prevPos: 50 }
 ];
 
 // Volledige kalender — alle 104 wedstrijden, Nederlandse tijden.
