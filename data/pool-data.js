@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-06-30T11:01:36.633Z",
+  syncedAt: "2026-06-30T11:31:31.714Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
@@ -22,7 +22,7 @@ window.POOL_PLAYERS = [
   { name: "Wolsman", matches: 104, winner: true, topscorer: true, paid: true, points: 5520, prevPos: 5 },
   { name: "Kleine Flo", matches: 82, winner: true, topscorer: true, paid: true, points: 5050, prevPos: 21 },
   { name: "Bertjuh", matches: 88, winner: true, topscorer: true, paid: true, points: 4635, prevPos: 35 },
-  { name: "Bobcorn", matches: 88, winner: true, topscorer: true, paid: true, points: 4990, prevPos: 24 },
+  { name: "Bobcorn", matches: 89, winner: true, topscorer: true, paid: true, points: 4990, prevPos: 24 },
   { name: "UedaTopscorer", matches: 88, winner: true, topscorer: true, paid: true, points: 4290, prevPos: 43 },
   { name: "Oppie1978", matches: 87, winner: true, topscorer: true, paid: true, points: 5295, prevPos: 14 },
   { name: "El-Toro-Loco", matches: 80, winner: false, topscorer: false, paid: true, points: 4765, prevPos: 33 },
