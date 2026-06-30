@@ -109,14 +109,34 @@ const run = async () => {
     // 1) Inloggen via de echte loginpagina (hun JS versleutelt het wachtwoord)
     console.log('  ⟳ inloggen…');
     await page.goto(`${BASE}/login/`, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    // Cookiebanner wegklikken indien aanwezig (best effort)
+    // Cookiebanner wegklikken indien aanwezig (best effort, meerdere CMP's)
     try {
-      await page.click('button:has-text("Akkoord"), button:has-text("Accepteren"), .fc-cta-consent', { timeout: 4000 });
-    } catch { /* geen banner — prima */ }
+      await page.click('button:has-text("Akkoord"), button:has-text("Accepteren"), button:has-text("Alles accepteren"), .fc-cta-consent', { timeout: 4000 });
+    } catch { /* geen klikbare banner — prima */ }
+    // Hardnekkige consent-overlays (o.a. de nojazz.eu-CMP in een iframe) die de
+    // loginknop onderscheppen vendor-agnostisch verwijderen, inclusief hun
+    // full-screen wrapper. Best effort.
+    try {
+      await page.evaluate(() => {
+        document.querySelectorAll('iframe').forEach((f) => {
+          const sig = `${f.getAttribute('src') || ''} ${f.getAttribute('title') || ''}`;
+          if (!/consent|nojazz|cmp/i.test(sig)) return;
+          let el = f;
+          for (let i = 0; i < 4 && el.parentElement && el.parentElement !== document.body; i++) {
+            const cs = getComputedStyle(el.parentElement);
+            if (cs.position === 'fixed' || cs.position === 'absolute') el = el.parentElement; else break;
+          }
+          el.remove();
+        });
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+      });
+    } catch { /* niets te verwijderen */ }
 
     await page.fill('#playerName', EMAIL);
     await page.fill('#playerPassVis', PASS);
-    await page.click('input.submit[type="submit"]');
+    // force: klik landt op de knop ook als er onverhoopt nog een overlay overheen ligt.
+    await page.click('input.submit[type="submit"]', { force: true });
 
     // 2) Wachten tot we daadwerkelijk ingelogd zijn: pollen op echte ledendata
     console.log('  ⟳ login verifiëren…');
