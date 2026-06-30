@@ -99,13 +99,13 @@ const run = async () => {
   for (const m of toWelcome) {
     if (!m.email) continue;
     try {
-      if (DRY) { console.log(`  · zou welkom sturen → ${m.email} (${m.poule_naam || '?'})`); okW++; continue; }
+      if (DRY) { console.log(`  · zou welkom sturen → ${m.poule_naam || '(geen naam)'}`); okW++; continue; }
       await (await mailer()).sendMail({ from, to: m.email, subject: welcomeSubject(m), html: welcomeHtml(m) });
       const pr = await sbPatch(`members?id=eq.${m.id}`, { welcomed_at: new Date().toISOString() });
-      if (!pr.ok) console.log(`  ⚠ welcomed_at niet gezet voor ${m.email} (${pr.status}) — kan dubbel worden`);
+      if (!pr.ok) console.log(`  ⚠ welcomed_at niet gezet voor ${m.poule_naam || '(geen naam)'} (${pr.status}) — kan dubbel worden`);
       okW++;
       await sleep(400);
-    } catch (e) { console.log(`  ✗ welkom ${m.email}: ${e.message}`); }
+    } catch (e) { console.log(`  ✗ welkom ${m.poule_naam || '(geen naam)'}: ${e.message}`); }
   }
   console.log(`  ✓ welkom: ${okW}/${toWelcome.length}`);
 
@@ -118,14 +118,14 @@ const run = async () => {
   } else {
     try {
       if (DRY) {
-        console.log(`  · zou pending-seintje sturen → ${ADMIN}: ${pend.map((m) => m.poule_naam || m.email).join(', ')}`);
+        console.log(`  · zou pending-seintje sturen → de beheerder: ${pend.map((m) => m.poule_naam || '(geen naam)').join(', ')}`);
       } else {
         await (await mailer()).sendMail({ from, to: ADMIN, subject: pendingSubject(pend.length), html: pendingHtml(pend) });
         for (const m of pend) {
           const pr = await sbPatch(`members?id=eq.${m.id}`, { pending_notified_at: new Date().toISOString() });
-          if (!pr.ok) console.log(`  ⚠ pending_notified_at niet gezet voor ${m.email} (${pr.status})`);
+          if (!pr.ok) console.log(`  ⚠ pending_notified_at niet gezet voor ${m.poule_naam || '(geen naam)'} (${pr.status})`);
         }
-        console.log(`  ✓ pending: ${pend.length} gemeld aan ${ADMIN}`);
+        console.log(`  ✓ pending: ${pend.length} gemeld aan de beheerder`);
       }
     } catch (e) { console.log(`  ✗ pending-seintje: ${e.message}`); }
   }
