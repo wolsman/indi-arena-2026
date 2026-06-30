@@ -47,9 +47,21 @@ const TEAM_ISO = {
   oezbekistan:'uz', congo:'cg', kroatie:'hr', engeland:'gb-eng', panama:'pa', ghana:'gh'
 };
 function flagFor(name) {
-  const code = TEAM_ISO[norm(name)];
+  const code = TEAM_ISO[norm(displayName(name))];
   if (code) return `<img class="flag" src="https://flagcdn.com/${code}.svg" alt="" loading="lazy">`;
-  return (window.POOL_FLAGS && POOL_FLAGS[norm(name)]) || '';
+  return (window.POOL_FLAGS && POOL_FLAGS[norm(displayName(name))]) || '';
+}
+// "A1"/"B2"/... → echte landnaam zodra de groepsstand binnen is. Alleen voor
+// WEERGAVE — POOL_CALENDAR/predictions/resultFor blijven op de originele tekst.
+// Onbekend (groep nog niet af, of bv. "Beste nr. 3 (...)") → originele tekst.
+function displayName(label) {
+  if (typeof label !== 'string') return label;
+  const m = /^([A-L])([1-4])$/.exec(label.trim());
+  if (!m) return label;
+  const st = window.POOL_STANDINGS && POOL_STANDINGS[m[1]];
+  if (!Array.isArray(st)) return label;
+  const row = st[parseInt(m[2], 10) - 1];
+  return (row && row.team) ? row.team : label;
 }
 // Uitslag van een wedstrijd (of null) — kijkt in POOL_RESULTS op home|away.
 function resultFor(m) {
@@ -205,7 +217,7 @@ function showHenkToast(type, m, ls, line) {
   if (!toast) return;
   const flash = $('#goalFlash');
   if (flash) flash.textContent = EVENT_FLASH[type] || '⚽ GOAL';
-  $('#goalScore').innerHTML = `${flagFor(m.home)} ${m.home} <b>${ls.hs} - ${ls.as}</b> ${m.away} ${flagFor(m.away)}`;
+  $('#goalScore').innerHTML = `${flagFor(m.home)} ${displayName(m.home)} <b>${ls.hs} - ${ls.as}</b> ${displayName(m.away)} ${flagFor(m.away)}`;
   $('#goalHenk').textContent = line;
   toast.classList.remove('hidden');
   void toast.offsetWidth; // restart animatie
@@ -514,7 +526,7 @@ function renderToday() {
     if ((ph.mode === 'today' || ph.mode === 'tournament') && today.length) {
       wrap.innerHTML = today.map(m => {
         const t = new Date(m.date).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-        return `<span class="today-chip"><span class="tc-time">${t}</span> ${m.home} — ${m.away}</span>`;
+        return `<span class="today-chip"><span class="tc-time">${t}</span> ${displayName(m.home)} — ${displayName(m.away)}</span>`;
       }).join('');
     } else {
       wrap.innerHTML = '';
@@ -984,9 +996,9 @@ function renderMatchRadar() {
         <div class="when">${when}</div>
         <div class="city">${place}</div>
         <div class="teams">
-          <div class="team">${flagFor(m.home)} ${m.home}</div>
+          <div class="team">${flagFor(m.home)} ${displayName(m.home)}</div>
           <div class="vs">VS</div>
-          <div class="team right">${m.away} ${flagFor(m.away)}</div>
+          <div class="team right">${displayName(m.away)} ${flagFor(m.away)}</div>
         </div>
         ${analysis}
       </div>`;
@@ -1262,7 +1274,7 @@ function renderLiveNow() {
       <div class="livebar">
         <span class="live-dot"></span>
         <span class="live-label">LIVE</span>
-        <span class="live-match">${flagFor(m.home)} ${m.home} <span class="live-vs">${score}</span> ${m.away} ${flagFor(m.away)}</span>
+        <span class="live-match">${flagFor(m.home)} ${displayName(m.home)} <span class="live-vs">${score}</span> ${displayName(m.away)} ${flagFor(m.away)}</span>
         <span class="live-meta">${clock}</span>
       </div>`;
   }).join('');
@@ -1445,7 +1457,7 @@ function renderArena() {
       return `
         <div class="arena-card ${live ? 'is-live arena-hero' : ''}" data-idx="${idx}">
           <div class="arena-head">
-            <div class="arena-teams">${flagFor(m.home)} ${m.home} <span class="arena-vs">—</span> ${m.away} ${flagFor(m.away)}</div>
+            <div class="arena-teams">${flagFor(m.home)} ${displayName(m.home)} <span class="arena-vs">—</span> ${displayName(m.away)} ${flagFor(m.away)}</div>
             ${status}
           </div>
           ${live ? `<div class="arena-livebig"><span class="alb-score${ls ? '' : ' muted'}">${bigScore}</span><span class="alb-min">${liveMin != null ? `${liveMin}'` : 'bezig'}</span></div>` : ''}
@@ -1490,14 +1502,14 @@ function renderArena() {
           ${status}
         </div>
         <div class="arena-dist">
-          <div class="ad-seg veld" style="flex:${s.h || 0.001}" title="${m.home}: ${s.h}"></div>
+          <div class="ad-seg veld" style="flex:${s.h || 0.001}" title="${displayName(m.home)}: ${s.h}"></div>
           <div class="ad-seg grijs" style="flex:${s.d || 0.001}" title="gelijk: ${s.d}"></div>
-          <div class="ad-seg oranje" style="flex:${s.a || 0.001}" title="${m.away}: ${s.a}"></div>
+          <div class="ad-seg oranje" style="flex:${s.a || 0.001}" title="${displayName(m.away)}: ${s.a}"></div>
         </div>
         <div class="arena-legend">
-          <span class="text-veld">${s.h}× ${m.home}</span>
+          <span class="text-veld">${s.h}× ${displayName(m.home)}</span>
           <span>${s.d}× gelijk</span>
-          <span class="text-oranje">${s.a}× ${m.away}</span>
+          <span class="text-oranje">${s.a}× ${displayName(m.away)}</span>
         </div>
         <div class="arena-scores">${top3}</div>
         ${watals}
@@ -1664,9 +1676,9 @@ function renderSchedule() {
         return `
           <div class="sched-row">
             <span class="sched-time">${t}</span>
-            <span class="sched-team home">${m.home} ${fH}</span>
+            <span class="sched-team home">${displayName(m.home)} ${fH}</span>
             <span class="sched-score">${res ? res.replace('-', ' - ') : '<span class="text-white/25">—</span>'}</span>
-            <span class="sched-team away">${fA} ${m.away}</span>
+            <span class="sched-team away">${fA} ${displayName(m.away)}</span>
           </div>`;
       }).join('')}
     </div>`).join('');
@@ -1880,7 +1892,7 @@ function buildScorebug() {
     el.className = 'scorebug is-live';
     el.innerHTML =
       `<span class="sb-dot"></span><span class="sb-tag">Live</span>` +
-      `<span class="sb-match">${flagFor(m.home)} <b>${m.home}</b> <span class="sb-score">${score}</span> <b>${m.away}</b> ${flagFor(m.away)}</span>` +
+      `<span class="sb-match">${flagFor(m.home)} <b>${displayName(m.home)}</b> <span class="sb-score">${score}</span> <b>${displayName(m.away)}</b> ${flagFor(m.away)}</span>` +
       rot +
       `<span class="sb-time" data-sb-min>${liveClock(m, ls)}</span>` +
       `<span class="sb-cta">→ Arena</span>`;
@@ -1895,7 +1907,7 @@ function buildScorebug() {
                    d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
       el.innerHTML =
         `<span class="sb-dot countdown"></span><span class="sb-tag">Volgende</span>` +
-        `<span class="sb-match">${flagFor(nm.home)} <b>${nm.home}</b> — <b>${nm.away}</b> ${flagFor(nm.away)} <span class="sb-when">${when}</span></span>` +
+        `<span class="sb-match">${flagFor(nm.home)} <b>${displayName(nm.home)}</b> — <b>${displayName(nm.away)}</b> ${flagFor(nm.away)} <span class="sb-when">${when}</span></span>` +
         `<span class="sb-time" data-sb-cd>${fmtCountdown(d.getTime() - Date.now())}</span>`;
     }
   }
@@ -1915,7 +1927,7 @@ function renderKickoffHero() {
     el.className = 'kickoff-hero is-live';
     el.innerHTML =
       `<div class="kh-top"><span class="kh-dot"></span><span class="kh-label">Live nu${live.length > 1 ? ` · ${live.length} duels` : ''}</span></div>` +
-      `<div class="kh-match">${flagFor(m.home)} <b>${m.home}</b> <span class="kh-score">${score}</span> <b>${m.away}</b> ${flagFor(m.away)}</div>` +
+      `<div class="kh-match">${flagFor(m.home)} <b>${displayName(m.home)}</b> <span class="kh-score">${score}</span> <b>${displayName(m.away)}</b> ${flagFor(m.away)}</div>` +
       `<div class="kh-foot"><span class="kh-min" data-kh-min>${liveClock(m, ls)}</span><span class="kh-cta">→ Volg het in de Arena</span></div>`;
     el.classList.remove('hidden');
     return;
@@ -1929,7 +1941,7 @@ function renderKickoffHero() {
   el.className = 'kickoff-hero is-countdown';
   el.innerHTML =
     `<div class="kh-top"><span class="kh-dot countdown"></span><span class="kh-label">Tot de aftrap${sameDay ? '' : ` · ${day}`} · ${time}</span></div>` +
-    `<div class="kh-match">${flagFor(nm.home)} <b>${nm.home}</b> <span class="kh-vs">—</span> <b>${nm.away}</b> ${flagFor(nm.away)}</div>` +
+    `<div class="kh-match">${flagFor(nm.home)} <b>${displayName(nm.home)}</b> <span class="kh-vs">—</span> <b>${displayName(nm.away)}</b> ${flagFor(nm.away)}</div>` +
     `<div class="kh-cd" data-kh-cd>${fmtCountdown(d.getTime() - Date.now())}</div>` +
     `<div class="kh-cta muted">De Arena opent zodra de bal rolt.</div>`;
   el.classList.remove('hidden');
