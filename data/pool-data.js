@@ -9,7 +9,7 @@ window.POOL_META = {
   name: "Indicium WK Poule 2026",
   totalPlayers: 52,
   capacityMax: 75,
-  syncedAt: "2026-07-01T13:01:28.365Z",
+  syncedAt: "2026-07-01T13:31:30.631Z",
   firstMatchAt: "2026-06-11T21:00:00+02:00",
   predictionsPublic: false,
   // Wordt true zodra de scraper echte punten ziet — de ranglijst
